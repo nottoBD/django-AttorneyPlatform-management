@@ -6,6 +6,22 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 <div class="card shadow-sm">
+                    {% if request.user == user or request.user.is_superuser %}
+                        {% if user.is_deletion_pending %}
+                            <p>{% trans "Your account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"d-m-Y" }}.</p>
+                            <a href="{% url 'accounts:cancel_deletion' user.pk %}">{% trans "Cancel Deletion Request" %}</a>
+                        {% else %}
+                            <a href="{% url 'accounts:request_deletion' user.pk %}">{% trans "Request Account Deletion" %}</a>
+                        {% endif %}
+                    {% endif %}
+                    {% if not request.user == user %}
+                        {% if not request.user.is_superuser %}
+                        {% if user.is_deletion_pending %}
+                            <p>{% trans "User has requested account deletion." %}</p>
+                        {% endif %}
+
+                        {% endif %}
+                    {% endif %}
                     <div class="card-header bg-primary text-white">
                         <h3 class="text-center mb-0">
                             {% trans "Profile" %}: {{ user.get_role_display }}
@@ -15,19 +31,7 @@
                         <div class="d-flex align-items-center mb-3">
                             <img src="{{ user.profile_image.url }}" alt="{% trans "Profile image" %}" width="100" height="100" class="rounded-circle me-3">
                             <div>
-                                {% if request.user == user and not request.user.is_superuser %}
-                                    {% if user.is_deletion_pending %}
-                                        <p>{% trans "Your account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"Y-m-d" }}.</p>
-                                        <a href="{% url 'accounts:cancel_deletion' user.pk %}">{% trans "Cancel Deletion Request" %}</a>
-                                    {% else %}
-                                        <a href="{% url 'accounts:request_deletion' user.pk %}">{% trans "Request Account Deletion" %}</a>
-                                    {% endif %}
-                                {% endif %}
-                                {% if request.user.is_superuser %}
-                                    {% if user.is_deletion_pending %}
-                                        <p>{% trans "User has requested account deletion." %}</p>
-                                    {% endif %}
-                                {% endif %}
+
                                 <h4>{{ user.last_name }} {{ user.first_name }}</h4>
                                 {% if form.fields.is_active %}
                                     <div class="form-check form-switch">
