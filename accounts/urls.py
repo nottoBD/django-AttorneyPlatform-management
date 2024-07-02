@@ -4,8 +4,7 @@ from django.urls import path, reverse_lazy
 from django.conf import settings
 
 from . import views
-from .views import register_magistrate, ResetPasswordView, PasswordResetConfirmationView
-
+from .views import register_magistrate, ResetPasswordView, PasswordResetConfirmationView, delete_user
 
 app_name = 'accounts'
 urlpatterns = [
@@ -22,4 +21,5 @@ urlpatterns = [
 
     path('request_deletion/<int:pk>/', views.request_deletion, name='request_deletion'),
     path('cancel_deletion/<int:pk>/', views.cancel_deletion, name='cancel_deletion'),
+    path('delete/<int:pk>/', delete_user, name='delete_user'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

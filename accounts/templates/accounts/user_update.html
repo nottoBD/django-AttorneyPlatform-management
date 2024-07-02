@@ -8,19 +8,29 @@
                 <div class="card shadow-sm">
                     {% if request.user == user or request.user.is_superuser %}
                         {% if user.is_deletion_pending %}
-                            <p>{% trans "Your account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"d-m-Y" }}.</p>
+                            <p>{% trans "This account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"d-m-Y" }}.</p>
                             <a href="{% url 'accounts:cancel_deletion' user.pk %}">{% trans "Cancel Deletion Request" %}</a>
                         {% else %}
+                            {% if not user.is_superuser%}
                             <a href="{% url 'accounts:request_deletion' user.pk %}">{% trans "Request Account Deletion" %}</a>
+                            {% endif %}
                         {% endif %}
                     {% endif %}
                     {% if not request.user == user %}
-                        {% if not request.user.is_superuser %}
+                    {% if not request.user.is_superuser %}
                         {% if user.is_deletion_pending %}
                             <p>{% trans "User has requested account deletion." %}</p>
                         {% endif %}
 
-                        {% endif %}
+                    {% endif %}
+                    {% endif %}
+                    {% if request.user.is_administrator and user.is_deletion_pending %}
+                        <form method="post" action="{% url 'accounts:delete_user' user.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" title="{% trans 'Delete User' %}" onclick="return confirm('{% trans 'Are you sure you want to permanently delete this user?' %}')">
+                                &#128465; <!-- Unicode for trashcan icon -->
+                            </button>
+                        </form>
                     {% endif %}
                     <div class="card-header bg-primary text-white">
                         <h3 class="text-center mb-0">
@@ -31,7 +41,6 @@
                         <div class="d-flex align-items-center mb-3">
                             <img src="{{ user.profile_image.url }}" alt="{% trans "Profile image" %}" width="100" height="100" class="rounded-circle me-3">
                             <div>
-
                                 <h4>{{ user.last_name }} {{ user.first_name }}</h4>
                                 {% if form.fields.is_active %}
                                     <div class="form-check form-switch">

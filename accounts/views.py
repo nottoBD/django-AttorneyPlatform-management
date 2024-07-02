@@ -319,3 +319,14 @@ def cancel_deletion(request, pk):
     else:
         form = CancelDeletionForm()
     return render(request, 'accounts/cancel_deletion.html', {'form': form})
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser, login_url='/login/')
+def delete_user(request, pk):
+    if request.user.is_administrator:
+        user_to_delete = get_object_or_404(User, pk=pk)
+        user_to_delete.delete()
+        messages.success(request, _("The user has been deleted successfully."))
+    else:
+        messages.error(request, _("You are not authorized to delete this user."))
+    return redirect('accounts:user_list')
