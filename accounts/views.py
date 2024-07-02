@@ -140,39 +140,65 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
                 return self.form_invalid(form)
 
         response = super().form_valid(form)
-        related_users_ids = set(form.cleaned_data.get('related_users').values_list('id', flat=True))
 
-        if self.object.role == 'lawyer':
-            relationship_field = 'parent'
-            own_field = 'avocat'
-            relationship_model = AvocatParent
-        elif self.object.role == 'judge':
-            relationship_field = 'parent'
-            own_field = 'juge'
-            relationship_model = JugeParent
-        elif self.object.role == 'parent':
-            relationship_field = 'juge'
-            own_field = 'parent'
-            relationship_model = JugeParent
-        else:
-            return response
+        if form.cleaned_data.get('related_users'):
+            related_users_ids = set(form.cleaned_data.get('related_users').values_list('id', flat=True))
 
-        current_relations = set(relationship_model.objects.filter(**{own_field: self.object}).values_list(
-            relationship_field + '_id', flat=True))
+            if self.object.role == 'lawyer':
+                relationship_field = 'parent'
+                own_field = 'avocat'
+                relationship_model = AvocatParent
+            elif self.object.role == 'judge':
+                relationship_field = 'parent'
+                own_field = 'juge'
+                relationship_model = JugeParent
+            elif self.object.role == 'parent':
+                relationship_field = 'juge'
+                own_field = 'parent'
+                relationship_model = JugeParent
+            else:
+                return response
 
-        relationships_to_add = related_users_ids - current_relations
-        relationships_to_remove = current_relations - related_users_ids
+            current_relations = set(relationship_model.objects.filter(**{own_field: self.object}).values_list(
+                relationship_field + '_id', flat=True))
 
-        relationship_model.objects.filter(
-            **{own_field: self.object, relationship_field + '_id__in': relationships_to_remove}).delete()
+            relationships_to_add = related_users_ids - current_relations
+            relationships_to_remove = current_relations - related_users_ids
 
-        for user_id in relationships_to_add:
-            user_instance = User.objects.get(pk=user_id)
-            relationship_model.objects.get_or_create(**{
-                own_field: self.object,
-                relationship_field: user_instance
-            })
+            relationship_model.objects.filter(
+                **{own_field: self.object, relationship_field + '_id__in': relationships_to_remove}).delete()
+
+            for user_id in relationships_to_add:
+                user_instance = User.objects.get(pk=user_id)
+                relationship_model.objects.get_or_create(**{
+                    own_field: self.object,
+                    relationship_field: user_instance
+                })
+
         return response
+
+    def post(self, request, *args, **kwargs):
+        if 'deassign' in request.POST:
+            return self.deassign_user()
+        return super().post(request, *args, **kwargs)
+
+    def deassign_user(self):
+        user_to_update = self.get_object()
+        if self.request.user.role == 'lawyer':
+            relationship = AvocatParent.objects.filter(avocat=self.request.user, parent=user_to_update)
+        elif self.request.user.role == 'judge':
+            relationship = JugeParent.objects.filter(juge=self.request.user, parent=user_to_update)
+        else:
+            messages.error(self.request, _("You are not authorized to deassign this user."))
+            return redirect('accounts:user_update', pk=user_to_update.pk)
+
+        if relationship.exists():
+            relationship.delete()
+            messages.success(self.request, _("You have been deassigned from this parent."))
+            return redirect('accounts:user_list')
+        else:
+            messages.error(self.request, _("You are not assigned to this parent."))
+            return redirect('accounts:user_update', pk=user_to_update.pk)
 
     def post(self, request, *args, **kwargs):
         if 'deassign' in request.POST:
