@@ -110,7 +110,7 @@ class UserListView(LoginRequiredMixin, ListView):
 
 
 class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = get_user_model()
+    model = User
     template_name = 'accounts/user_update.html'
     form_class = UserUpdateForm
     success_url = reverse_lazy('accounts:user_list')
@@ -118,14 +118,14 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         user_to_update = self.get_object()
 
+        if self.request.user == user_to_update:
+            return True
         if self.request.user.is_superuser:
             return True
         if self.request.user.role == 'lawyer':
             return AvocatParent.objects.filter(avocat=self.request.user, parent=user_to_update).exists()
         if self.request.user.role == 'judge':
             return JugeParent.objects.filter(juge=self.request.user, parent=user_to_update).exists()
-        if self.request.user == user_to_update:
-            return True
         return False
 
     def get_form_kwargs(self):
@@ -136,7 +136,7 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def form_valid(self, form):
         if not self.request.user.is_superuser:
             if 'role' in form.changed_data:
-                form.add_error('role', "Vous n'êtes pas autorisé à modifier le rôle.")
+                form.add_error('role', _("You are not authorized to change the role."))
                 return self.form_invalid(form)
 
         response = super().form_valid(form)
@@ -166,7 +166,6 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         relationship_model.objects.filter(
             **{own_field: self.object, relationship_field + '_id__in': relationships_to_remove}).delete()
 
-        User = get_user_model()
         for user_id in relationships_to_add:
             user_instance = User.objects.get(pk=user_id)
             relationship_model.objects.get_or_create(**{
@@ -175,6 +174,28 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             })
         return response
 
+    def post(self, request, *args, **kwargs):
+        if 'deassign' in request.POST:
+            return self.deassign_user()
+        return super().post(request, *args, **kwargs)
+
+    def deassign_user(self):
+        user_to_update = self.get_object()
+        if self.request.user.role == 'lawyer':
+            relationship = AvocatParent.objects.filter(avocat=self.request.user, parent=user_to_update)
+        elif self.request.user.role == 'judge':
+            relationship = JugeParent.objects.filter(juge=self.request.user, parent=user_to_update)
+        else:
+            messages.error(self.request, _("You are not authorized to deassign this user."))
+            return redirect('accounts:user_update', pk=user_to_update.pk)
+
+        if relationship.exists():
+            relationship.delete()
+            messages.success(self.request, _("You have been deassigned from this parent."))
+            return redirect('accounts:user_list')
+        else:
+            messages.error(self.request, _("You are not assigned to this parent."))
+            return redirect('accounts:user_update', pk=user_to_update.pk)
 
 @login_required
 @permission_required('accounts.add_user', raise_exception=True)
@@ -191,6 +212,7 @@ def register_magistrate(request):
     return render(request, 'registration/register_magistrate.html', {'form': form})
 
 
+@login_required
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
@@ -198,22 +220,24 @@ def register(request):
             user = form.save(commit=False)
             user.role = 'parent'
             user.national_number_raw = form.cleaned_data['national_number']
-            formatted_number = form.cleaned_data['national_number'][:2] + '.' + form.cleaned_data['national_number'][2:4] + '.' + form.cleaned_data['national_number'][4:6] + '-' + form.cleaned_data['national_number'][6:9] + '.' + form.cleaned_data['national_number'][9:]
+            formatted_number = (
+                    form.cleaned_data['national_number'][:2] + '.' +
+                    form.cleaned_data['national_number'][2:4] + '.' +
+                    form.cleaned_data['national_number'][4:6] + '-' +
+                    form.cleaned_data['national_number'][6:9] + '.' +
+                    form.cleaned_data['national_number'][9:]
+            )
             user.national_number = formatted_number
             user.save()
 
-            if not request.user.is_authenticated:
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                messages.success(request, _("Your account has been created! You are now logged in."))
-                return redirect('home')
-            else:
-                if request.user.role == 'avocat':
-                    AvocatParent.objects.create(avocat=request.user, parent=user)
-                elif request.user.role == 'juge':
-                    JugeParent.objects.create(juge=request.user, parent=user)
+            # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
+            if request.user.role == 'lawyer':
+                AvocatParent.objects.create(avocat=request.user, parent=user)
+            elif request.user.role == 'judge':
+                JugeParent.objects.create(juge=request.user, parent=user)
 
-                messages.success(request, _("The parent account has been successfully created."))
-                return redirect('/accounts/list/')
+            messages.success(request, _("The parent account has been successfully created."))
+            return redirect('/accounts/list/')
     else:
         form = UserRegisterForm()
     return render(request, 'registration/register.html', {'form': form})
@@ -239,15 +263,15 @@ class PasswordResetConfirmationView(PasswordResetConfirmView):
 @login_required
 def request_deletion(request, pk):
     user = get_object_or_404(User, pk=pk)
-    if user.is_superuser:
-        messages.error(request, _('Superuser accounts cannot be deleted.'))
+    if request.user != user or user.is_superuser:
+        messages.error(request, _('You are not authorized to delete this account.'))
         return redirect('user_update', pk=user.pk)
 
     if request.method == 'POST':
         form = DeletionRequestForm(request.POST)
         if form.is_valid():
             user.request_deletion()
-            messages.success(request, 'Account deletion requested successfully.')
+            messages.success(request, _('Account deletion requested successfully.'))
             return redirect('home')
     else:
         form = DeletionRequestForm()
@@ -256,11 +280,15 @@ def request_deletion(request, pk):
 @login_required
 def cancel_deletion(request, pk):
     user = get_object_or_404(User, pk=pk)
+    if request.user != user:
+        messages.error(request, _('You are not authorized to cancel the deletion of this account.'))
+        return redirect('user_update', pk=user.pk)
+
     if request.method == 'POST':
         form = CancelDeletionForm(request.POST)
         if form.is_valid():
             user.cancel_deletion()
-            messages.success(request, 'Account deletion request cancelled successfully.')
+            messages.success(request, _('Account deletion request cancelled successfully.'))
             return redirect('home')
     else:
         form = CancelDeletionForm()

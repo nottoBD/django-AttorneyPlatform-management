@@ -8,30 +8,27 @@
                 <div class="card shadow-sm">
                     <div class="card-header bg-primary text-white">
                         <h3 class="text-center mb-0">
-                            {% trans "Profile" %}: {% trans user.role %}
+                            {% trans "Profile" %}: {{ user.get_role_display }}
                         </h3>
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-center mb-3">
                             <img src="{{ user.profile_image.url }}" alt="{% trans "Profile image" %}" width="100" height="100" class="rounded-circle me-3">
                             <div>
-                                {% if user.is_deletion_pending %}
-                                    <p>{% trans "Your account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"Y-m-d" }}.</p>
-                                    <a href="{% url 'accounts:cancel_deletion' user.pk %}">{% trans "Cancel Deletion Request" %}</a>
-                                {% else %}
-                                    <a href="{% url 'accounts:request_deletion' user.pk %}">{% trans "Request Account Deletion" %}</a>
+                                {% if request.user == user and not request.user.is_superuser %}
+                                    {% if user.is_deletion_pending %}
+                                        <p>{% trans "Your account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"Y-m-d" }}.</p>
+                                        <a href="{% url 'accounts:cancel_deletion' user.pk %}">{% trans "Cancel Deletion Request" %}</a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:request_deletion' user.pk %}">{% trans "Request Account Deletion" %}</a>
+                                    {% endif %}
                                 {% endif %}
-
-                            {% if request.user.is_superuser %}
-                                {% if user.is_deletion_pending %}
-                                    <p>{% trans "User has requested account deletion." %}</p>
-{#TODO: pictogramme poubelle pour supprimer toutes les données par un superuser#}
-{#                                    <img src="{% static 'images/red_bin.png' %}" alt="{% trans "Delete Requested" %}">#}
+                                {% if request.user.is_superuser %}
+                                    {% if user.is_deletion_pending %}
+                                        <p>{% trans "User has requested account deletion." %}</p>
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
-
                                 <h4>{{ user.last_name }} {{ user.first_name }}</h4>
-                                <!-- switch is_active -->
                                 {% if form.fields.is_active %}
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" id="isActiveSwitch" name="is_active_toggle" {% if user.is_active %}checked{% endif %}>
@@ -51,6 +48,14 @@
                             {% endfor %}
                             <button type="submit" class="btn btn-outline-primary">{% trans "Save changes" %}</button>
                         </form>
+                        {% if user.role == 'parent' and request.user != user %}
+                            {% if request.user.role == 'judge' or request.user.role == 'lawyer' %}
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" name="deassign" class="btn btn-danger" onclick="return confirm('{% trans "Are you sure you want to deassign?" %}')">{% trans "Deassign" %}</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
