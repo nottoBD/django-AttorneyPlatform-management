@@ -28,6 +28,38 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     form_class = UserUpdateForm
     success_url = reverse_lazy('accounts:user_list')
 
+    def form_valid(self, form):
+        if not self.request.user.is_superuser and 'role' in form.changed_data:
+            form.add_error('role', _("You are not authorized to change the role."))
+            return self.form_invalid(form)
+
+
+        user = form.save(commit=False)
+        user.is_active = form.cleaned_data.get('is_active', False)
+        print(f"Debug: is_active value being saved: {user.is_active}")
+        user.save()
+
+        if 'related_users' in form.cleaned_data:
+            related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
+            related_users_ids = set(related_users_ids)  # integers
+            if self.object.role == 'parent':
+                form._handle_parent_relationships(related_users_ids)
+            elif self.object.role in ['lawyer', 'judge']:
+                form._handle_lawyer_judge_relationships(related_users_ids)
+
+        return super().form_valid(form)
+
+    def post(self, request, *args, **kwargs):
+        if 'deassign' in request.POST:
+            return self.deassign_user()
+        return super().post(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request_user'] = self.request.user
+        return kwargs
+
+
     def test_func(self):
         user_to_update = self.get_object()
         if self.request.user == user_to_update:
@@ -41,33 +73,6 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         if self.request.user.is_administrator:
             return True
         return False
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['request_user'] = self.request.user
-        return kwargs
-
-    def form_valid(self, form):
-        if not self.request.user.is_superuser and 'role' in form.changed_data:
-            form.add_error('role', _("You are not authorized to change the role."))
-            return self.form_invalid(form)
-
-        response = super().form_valid(form)
-
-        if 'related_users' in form.cleaned_data:
-            related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
-            related_users_ids = set(related_users_ids)  # integers
-            if self.object.role == 'parent':
-                form._handle_parent_relationships(related_users_ids)
-            elif self.object.role in ['lawyer', 'judge']:
-                form._handle_lawyer_judge_relationships(related_users_ids)
-
-        return response
-
-    def post(self, request, *args, **kwargs):
-        if 'deassign' in request.POST:
-            return self.deassign_user()
-        return super().post(request, *args, **kwargs)
 
     def deassign_user(self):
         user_to_update = self.get_object()
@@ -245,8 +250,9 @@ class PasswordResetConfirmationView(PasswordResetConfirmView):
 def request_deletion(request, pk):
     user = get_object_or_404(User, pk=pk)
     if request.user != user or user.is_superuser:
-        messages.error(request, _('You are not authorized to delete this account.'))
-        return redirect('user_update', pk=user.pk)
+        if user.is_superuser:
+            messages.error(request, _('You are not authorized to delete this account.'))
+            return redirect('accounts:user_update', pk=user.pk)
 
     if request.method == 'POST':
         form = DeletionRequestForm(request.POST)
@@ -261,9 +267,12 @@ def request_deletion(request, pk):
 @login_required
 def cancel_deletion(request, pk):
     user = get_object_or_404(User, pk=pk)
-    if request.user != user:
+    if request.user != user and not request.user.is_superuser:
         messages.error(request, _('You are not authorized to cancel the deletion of this account.'))
         return redirect('user_update', pk=user.pk)
+    if user.is_superuser:
+        messages.error(request, _('You cannot cancel deletion for an administrator account.'))
+        return redirect('accounts:user_update', pk=user.pk)
 
     if request.method == 'POST':
         form = CancelDeletionForm(request.POST)

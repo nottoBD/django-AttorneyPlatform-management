@@ -20,7 +20,18 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'email', 'profile_image', 'related_users']
+        fields = ['last_name', 'first_name', 'email', 'profile_image', 'related_users', 'is_active']
+
+
+    def clean_is_active(self):
+        is_active = self.cleaned_data.get('is_active')
+        print(f"Debug: clean_is_active called with is_active = {is_active}")
+        if 'is_active' in self.changed_data:
+            if not self.request_user.is_superuser and not self.request_user.is_administrator:
+                raise forms.ValidationError(_("You are not authorized to change the active status."))
+        return is_active if is_active else False
+
+
 
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop('request_user', None)
@@ -94,7 +105,7 @@ class UserUpdateForm(forms.ModelForm):
 
         if 'related_users' in form.cleaned_data:
             related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
-            related_users_ids = set(related_users_ids)  # Ensure IDs are integers
+            related_users_ids = set(related_users_ids)
             if self.instance.role == 'parent':
                 self._handle_parent_relationships(related_users_ids)
             elif self.instance.role in ['lawyer', 'judge']:
