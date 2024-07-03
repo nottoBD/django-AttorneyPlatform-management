@@ -61,16 +61,14 @@ class UserUpdateForm(forms.ModelForm):
         if target_user == self.request_user:
             self.fields.pop('related_users', None)
         elif target_user.role == 'parent':
-            if self.request_user.is_lawyer():
-                assigned_parents = AvocatParent.objects.filter(avocat=self.request_user).values_list('parent', flat=True)
-            elif self.request_user.is_judge():
-                assigned_parents = JugeParent.objects.filter(juge=self.request_user).values_list('parent', flat=True)
-            if target_user.pk in assigned_parents:
-                self.fields['related_users'].queryset = User.objects.filter(pk=target_user.pk)
-                self.fields['related_users'].initial = [target_user.pk]
-                self.fields['related_users'].widget.attrs['disabled'] = True
-            else:
-                self.fields.pop('related_users', None)
+            assigned_users = User.objects.filter(
+                id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
+            ) | User.objects.filter(
+                id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
+            )
+            self.fields['related_users'].queryset = assigned_users
+            self.fields['related_users'].initial = assigned_users
+            self.fields['related_users'].widget.attrs['disabled'] = True
         else:
             self.fields.pop('related_users', None)
 
