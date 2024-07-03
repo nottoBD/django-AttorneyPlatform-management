@@ -2,7 +2,6 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import MagistrateParent
 
 
 class UserAdmin(BaseUserAdmin):
@@ -30,4 +29,4 @@ class MagistrateParentAdmin(admin.ModelAdmin):
 
 
 admin.site.register(User, UserAdmin)
-admin.site.register(MagistrateParent, MagistrateParentAdmin)
+# admin.site.register(MagistrateParent, MagistrateParentAdmin)

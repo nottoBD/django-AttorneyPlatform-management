@@ -3,93 +3,95 @@
 
 {% block content %}
 
-<link rel="stylesheet" href="{% static 'accounts/css/user_list.css' %}">
+    <link rel="stylesheet" href="{% static 'accounts/css/user_list.css' %}">
 
-<!--  Filtres  -->
-<div class="filter-section mb-3">
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="isActiveFilter" checked>
-        <label class="form-check-label" for="isActiveFilter">{% trans "Active" %}</label>
+    <!--  Filters  -->
+    <div class="filter-section mb-3">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="isActiveFilter" checked>
+            <label class="form-check-label" for="isActiveFilter">{% trans "Active" %}</label>
+        </div>
     </div>
-</div>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2 class="card-title">{% trans "Attorneys - Lawyers - Judges" %}</h2>
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th></th>
-                            <th>{% trans "Last Name" %}</th>
-                            <th>{% trans "First Name" %}</th>
-                            <th>{% trans "Email" %}</th>
-                            <th>{% trans "Role" %}</th>
-                            <th>{% trans "Case" %}</th>
-                        </tr>
-                        </thead>
-                        <tbody class="magistrates-list">
-                        {% for magistrate in magistrates %}
-                        <tr class="magistrate-item" data-user-id="{{ magistrate.id }}">
-                            <td><img src="{{ magistrate.profile_image.url }}" alt="{{ magistrate.first_name }} {{ magistrate.last_name }}" width="30" height="30" class="rounded-circle"></td>
-                            <td>{{ magistrate.last_name }}</td>
-                            <td>{{ magistrate.first_name }}</td>
-                            <td>{{ magistrate.email }}</td>
-                            <td>
-                                {% if magistrate.is_superuser %}Administrator
-                                {% elif magistrate.role == 'admin' %}Administrator
-                                {% elif magistrate.role == 'magistrate' %}Magistrate
-                                {% elif magistrate.role == 'lawyer' %}Lawyer
-                                {% elif magistrate.role == 'judge' %}Judge
-                                {% else %}Parent
-                                {% endif %}
-                            </td>
-                            <td>{{ magistrate.parents_count }}</td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">{% trans "Attorneys - Lawyers - Judges" %}</h2>
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>{% trans "Last Name" %}</th>
+                                <th>{% trans "First Name" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "Role" %}</th>
+                                <th>{% trans "Case" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody class="magistrates-list">
+                            {% for magistrate in magistrates %}
+                                <tr class="magistrate-item" data-user-id="{{ magistrate.id }}">
+                                    <td><img src="{{ magistrate.profile_image_url }}" alt="{{ magistrate.first_name }} {{ magistrate.last_name }}" width="30" height="30" class="rounded-circle"></td>
+                                    <td>{{ magistrate.last_name }}</td>
+                                    <td>{{ magistrate.first_name }}</td>
+                                    <td>{{ magistrate.email }}</td>
+                                    <td>
+                                        {% if magistrate.is_superuser %}Administrator
+                                        {% elif magistrate.role == 'admin' %}Administrator
+                                        {% elif magistrate.role == 'lawyer' %}Lawyer
+                                        {% elif magistrate.role == 'judge' %}Judge
+                                        {% else %}Parent
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ magistrate.parents_count }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">{% trans "Parents List" %}</h2>
+                        <!-- Parents table -->
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>{% trans "Last Name" %}</th>
+                                <th>{% trans "First Name" %}</th>
+                                <th>{% trans "Email" %}</th>
+                                <th>{% trans "Referent" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody class="parents-list">
+                            {% for parent in parents %}
+                                <tr class="parent-item" data-user-id="{{ parent.id }}">
+                                    <td><img src="{{ parent.profile_image_url }}" alt="{% trans 'Profile Image' %}" width="30" height="30" class="rounded-circle"></td>
+                                    <td>{{ parent.last_name }}</td>
+                                    <td>{{ parent.first_name }}</td>
+                                    <td>{{ parent.email }}</td>
+                                    <td>
+                                        {% for avocat in parent.avocats_assigned %}
+                                            {{ avocat.avocat.last_name }}<br>
+                                        {% endfor %}
+                                        {% for juge in parent.juges_assigned %}
+                                            {{ juge.juge.last_name }}<br>
+                                        {% endfor %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-12">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h2 class="card-title">{% trans "Parents List" %}</h2>
-                    <!-- Parents table -->
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th></th>
-                            <th>{% trans "Last Name" %}</th>
-                            <th>{% trans "First Name" %}</th>
-                            <th>{% trans "Email" %}</th>
-                            <th>{% trans "Referent" %}</th>
-                        </tr>
-                        </thead>
-                        <tbody class="parents-list">
-                        {% for parent in parents %}
-                        <tr class="parent-item" data-user-id="{{ parent.id }}">
-                            <td><img src="{{ parent.profile_image.url }}" alt="{% trans 'Profile Image' %}" width="30" height="30" class="rounded-circle"></td>
-                            <td>{{ parent.last_name }}</td>
-                            <td>{{ parent.first_name }}</td>
-                            <td>{{ parent.email }}</td>
-                            <td>
-                                {% for magistrate in parent.magistrates_assigned.all %}
-                                {{ magistrate.first_name }} {{ magistrate.last_name }}<br>
-                                {% endfor %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
-</div>
-<script src="{% static 'accounts/js/user_list.js' %}"></script>
+    <script src="{% static 'accounts/js/user_list.js' %}"></script>
 
 {% endblock %}

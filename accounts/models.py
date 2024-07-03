@@ -31,8 +31,7 @@ class CustomUserManager(BaseUserManager):
 class User(AbstractUser, PermissionsMixin):
     ROLE_CHOICES = [
         ('administrator', 'Administrator'),
-        ('magistrate', 'Magistrate'),
-        ('lawyer', 'Lawyer'),
+        ('lawyer', 'Attorney'),
         ('judge', 'Judge'),
         ('parent', 'Parent'),
     ]
@@ -70,10 +69,6 @@ class User(AbstractUser, PermissionsMixin):
         return self.role == 'judge'
 
     @property
-    def is_magistrate(self):
-        return self.role == 'magistrate'
-
-    @property
     def is_parent(self):
         return self.role == 'parent'
 
@@ -88,13 +83,24 @@ class User(AbstractUser, PermissionsMixin):
     def is_deletion_pending(self):
         return self.deletion_requested_at and (timezone.now() < self.deletion_requested_at + timedelta(days=30))
 
-class MagistrateParent(models.Model):
-    objects = None
-    magistrate = models.ForeignKey(User, related_name='parents_assigned', on_delete=models.CASCADE)
-    parent = models.ForeignKey(User, related_name='magistrates_assigned', on_delete=models.CASCADE)
+
+class AvocatParent(models.Model):
+    avocat = models.ForeignKey(User, related_name='assigned_parents', on_delete=models.CASCADE)
+    parent = models.ForeignKey(User, related_name='avocats_assigned', on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = (('magistrate', 'parent'),)
+        unique_together = (('avocat', 'parent'),)
 
     def __str__(self):
-        return f"{self.magistrate.email} assigned to {self.parent.email}"
+        return f"{self.avocat.email} assigned to {self.parent.email}"
+
+
+class JugeParent(models.Model):
+    juge = models.ForeignKey(User, related_name='assigned_parents_judge', on_delete=models.CASCADE)
+    parent = models.ForeignKey(User, related_name='juges_assigned', on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = (('juge', 'parent'),)
+
+    def __str__(self):
+        return f"{self.juge.email} assigned to {self.parent.email}"

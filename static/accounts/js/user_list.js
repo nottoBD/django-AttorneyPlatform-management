@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(data => {
-                // console.log('Data fetched:', data);
                 const magistratesTab = document.querySelector('.magistrates-list');
                 const parentsTab = document.querySelector('.parents-list');
 
@@ -39,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 magistratesTab.innerHTML = '';
                 parentsTab.innerHTML = '';
 
-                // Avocats...
                 data.magistrates.forEach(magistrate => {
                     const tr = document.createElement('tr');
                     tr.setAttribute('data-user-id', magistrate.id);
@@ -48,27 +46,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     magistratesTab.appendChild(tr);
                 });
 
-                // Parents
                 data.parents.forEach(parent => {
                     const tr = document.createElement('tr');
                     tr.setAttribute('data-user-id', parent.id);
                     tr.classList.add('parent-item');
-                    tr.innerHTML = `<td><img src="${parent.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td><td>${parent.last_name}</td><td>${parent.first_name}</td><td>${parent.email}</td><td>${parent.magistrates_assigned.join('<br>')}</td>`;
+                    tr.innerHTML = `<td><img src="${parent.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td><td>${parent.last_name}</td><td>${parent.first_name}</td><td>${parent.email}</td><td>${parent.avocats_assigned.join('<br>')}<br>${parent.juges_assigned.join('<br>')}</td>`;
                     parentsTab.appendChild(tr);
                 });
 
                 attachRowEventListeners();
-                reapplyHighlight(); //reapply highlight
+                reapplyHighlight();
             })
             .catch(error => console.error('Fetch error:', error));
     }
 
     function attachRowEventListeners() {
-        // console.log('Attaching row event listeners');
-
         document.querySelectorAll('tr[data-user-id]').forEach(row => {
             row.addEventListener('click', function(event) {
-                // console.log('Click event detected');
                 clearTimeout(clickTimeout);
                 clickTimeout = setTimeout(function() {
                     if (!event.ctrlKey) {
@@ -78,12 +72,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     row.classList.toggle('highlight');
                     highlightedRowId = row.classList.contains('highlight') ? row.getAttribute('data-user-id') : null;
-                    // console.log('Row highlighted:', row);
-                }, 200); //single clic
+                }, 200);
             });
 
             row.addEventListener('dblclick', function(event) {
-                // console.log('Double click event detected');
                 clearTimeout(clickTimeout);
                 let userId = row.getAttribute('data-user-id');
                 window.location.href = `/accounts/update/${userId}/`;
@@ -110,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     let clickTimeout;
-
 
     fetchUsers();
     isActiveCheckbox.addEventListener('change', fetchUsers);

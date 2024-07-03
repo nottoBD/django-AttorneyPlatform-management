@@ -12,11 +12,86 @@ from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import ListView, UpdateView
+from pip._internal.utils import logging
 
 from .forms import MagistrateRegistrationForm, UserRegisterForm, UserUpdateForm, CancelDeletionForm, DeletionRequestForm
-from .models import User, MagistrateParent
+from .models import User, AvocatParent, JugeParent
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
+
+
+class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = User
+    template_name = 'accounts/user_update.html'
+    form_class = UserUpdateForm
+    success_url = reverse_lazy('accounts:user_list')
+
+    def form_valid(self, form):
+        if not self.request.user.is_superuser and 'role' in form.changed_data:
+            form.add_error('role', _("You are not authorized to change the role."))
+            return self.form_invalid(form)
+
+        user = form.save(commit=False)
+        user.is_active = form.cleaned_data.get('is_active', False)
+        print(f"Debug: is_active value being saved: {user.is_active}")
+        user.save()
+
+        if 'related_users' in form.cleaned_data:
+            related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
+            related_users_ids = set(related_users_ids)  # integers
+            if self.object.role == 'parent':
+                form._handle_parent_relationships(related_users_ids)
+            elif self.object.role in ['lawyer', 'judge']:
+                form._handle_lawyer_judge_relationships(related_users_ids)
+
+        return super().form_valid(form)
+
+    def post(self, request, *args, **kwargs):
+        if 'deassign' in request.POST:
+            return self.deassign_user()
+        return super().post(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['request_user'] = self.request.user
+        return kwargs
+
+    def test_func(self):
+        user_to_update = self.get_object()
+        if self.request.user == user_to_update:
+            return True
+        if self.request.user.is_superuser:
+            return True
+        if self.request.user.role == 'lawyer':
+            return AvocatParent.objects.filter(avocat=self.request.user, parent=user_to_update).exists()
+        if self.request.user.role == 'judge':
+            return JugeParent.objects.filter(juge=self.request.user, parent=user_to_update).exists()
+        if self.request.user.is_administrator:
+            return True
+        return False
+
+    def deassign_user(self):
+        user_to_update = self.get_object()
+        if self.request.user.role == 'lawyer':
+            relationship = AvocatParent.objects.filter(avocat=self.request.user, parent=user_to_update)
+        elif self.request.user.role == 'judge':
+            relationship = JugeParent.objects.filter(juge=self.request.user, parent=user_to_update)
+        elif self.request.user.is_administrator:
+            relationship = AvocatParent.objects.filter(parent=user_to_update) | JugeParent.objects.filter(
+                parent=user_to_update)
+        else:
+            messages.error(self.request, _("You are not authorized to deassign this user."))
+            return redirect('accounts:user_update', pk=user_to_update.pk)
+
+        if relationship.exists():
+            relationship.delete()
+            messages.success(self.request, _("You have been deassigned from this parent."))
+            return redirect('accounts:user_list')
+        else:
+            messages.error(self.request, _("You are not assigned to this parent."))
+            return redirect('accounts:user_update', pk=user_to_update.pk)
 
 
 class UserListView(LoginRequiredMixin, ListView):
@@ -25,7 +100,6 @@ class UserListView(LoginRequiredMixin, ListView):
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_staff:
-            # messages.error(request, _('You do not have permission to view this page.'))
             return HttpResponseRedirect(reverse('home'))
         return super().dispatch(request, *args, **kwargs)
 
@@ -37,29 +111,37 @@ class UserListView(LoginRequiredMixin, ListView):
 
     def render_to_response(self, context, **response_kwargs):
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            magistrates_list = [{
-                'id': mag.id,
-                'profile_image_url': self.get_image_url(mag),
-                'first_name': mag.first_name,
-                'last_name': mag.last_name,
-                'email': mag.email,
-                'role': mag.role,
-                'parents_count': mag.parents_count
-            } for mag in context['magistrates']]
+            try:
+                magistrates_list = [{
+                    'id': mag.id,
+                    'profile_image_url': self.get_image_url(mag),
+                    'first_name': mag.first_name,
+                    'last_name': mag.last_name,
+                    'email': mag.email,
+                    'role': mag.role,
+                    'parents_count': mag.assigned_parents.count() + mag.assigned_parents_judge.count()
+                } for mag in context['magistrates']]
 
-            parents_list = [{
-                'id': parent.id,
-                'profile_image_url': self.get_image_url(parent),
-                'first_name': parent.first_name,
-                'last_name': parent.last_name,
-                'email': parent.email,
-                'magistrates_assigned': [
-                    mag.magistrate.last_name for mag in parent.magistrates_assigned.all()
-                    if mag.magistrate.is_active or not parent.is_active
-                ]  #inclusion parent & magistrat actives
-            } for parent in context['parents_filtered']]
+                parents_list = [{
+                    'id': parent.id,
+                    'profile_image_url': self.get_image_url(parent),
+                    'first_name': parent.first_name,
+                    'last_name': parent.last_name,
+                    'email': parent.email,
+                    'avocats_assigned': [
+                        avocat.avocat.last_name for avocat in parent.avocats_assigned.all()
+                        if avocat.avocat.is_active or not parent.is_active
+                    ],
+                    'juges_assigned': [
+                        juge.juge.last_name for juge in parent.juges_assigned.all()
+                        if juge.juge.is_active or not parent.is_active
+                    ]
+                } for parent in context['parents_filtered']]
 
-            return JsonResponse({'magistrates': magistrates_list, 'parents': parents_list})
+                return JsonResponse({'magistrates': magistrates_list, 'parents': parents_list})
+            except Exception as e:
+                logger.error(f"Error in AJAX response: {e}")
+                return JsonResponse({'error': str(e)}, status=500)
         else:
             return super().render_to_response(context, **response_kwargs)
 
@@ -67,24 +149,34 @@ class UserListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         is_active = self.get_active_status_filter()
 
-        magistrates_query = User.objects.filter(
-            Q(is_staff=True) | Q(is_superuser=True) | Q(role='admin') | Q(role='magistrate')
-        )
-        parents_query = User.objects.exclude(id__in=magistrates_query.values('id')).prefetch_related('magistrates_assigned__magistrate')
+        try:
+            magistrates_query = User.objects.filter(
+                Q(is_staff=True) | Q(is_superuser=True) | Q(role='administrator') | Q(role='lawyer') | Q(role='judge')
+            )
+            parents_query = User.objects.filter(role='parent').prefetch_related('avocats_assigned__avocat',
+                                                                                'juges_assigned__juge')
 
-        if is_active is not None:
-            magistrates_query = magistrates_query.filter(is_active=is_active)
-            parents_query = parents_query.filter(is_active=is_active)
+            if is_active is not None:
+                magistrates_query = magistrates_query.filter(is_active=is_active)
+                parents_query = parents_query.filter(is_active=is_active)
 
-        context['magistrates'] = magistrates_query.annotate(parents_count=Count('parents_assigned'))
+            context['magistrates'] = magistrates_query.annotate(
+                parents_count=Count('assigned_parents') + Count('assigned_parents_judge'))
 
-        if self.request.user.role == 'magistrate':
-            context['parents_filtered'] = parents_query.filter(magistrates_assigned__magistrate=self.request.user).distinct()
-        else:
-            context['parents_filtered'] = parents_query
+            if self.request.user.role == 'lawyer':
+                context['parents_filtered'] = parents_query.filter(
+                    avocats_assigned__avocat=self.request.user).distinct()
+            elif self.request.user.role == 'judge':
+                context['parents_filtered'] = parents_query.filter(juges_assigned__juge=self.request.user).distinct()
+            else:
+                context['parents_filtered'] = parents_query
+
+        except Exception as e:
+            logger.error(f"Error in context data: {e}")
+            context['magistrates'] = []
+            context['parents_filtered'] = []
 
         return context
-
 
     def get_image_url(self, user):
         if user.profile_image and hasattr(user.profile_image, 'url'):
@@ -92,66 +184,6 @@ class UserListView(LoginRequiredMixin, ListView):
         else:
             return self.request.build_absolute_uri(settings.MEDIA_URL + 'profile_images/default.jpg')
 
-
-class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = get_user_model()
-    template_name = 'accounts/user_update.html'
-    form_class = UserUpdateForm
-    success_url = reverse_lazy('accounts:user_list')
-
-    def test_func(self):
-        user_to_update = self.get_object()
-
-        if self.request.user.is_superuser:
-            return True
-        if self.request.user.role == 'magistrate':
-            return MagistrateParent.objects.filter(magistrate=self.request.user, parent=user_to_update).exists()
-        if self.request.user == user_to_update:
-            return True
-        return False
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['request_user'] = self.request.user
-        return kwargs
-
-    def form_valid(self, form):
-        if not self.request.user.is_superuser:
-            # Assurez-vous que le rôle n'a pas été modifié
-            if 'role' in form.changed_data:
-                form.add_error('role', "Vous n'êtes pas autorisé à modifier le rôle.")
-                return self.form_invalid(form)
-
-        response = super().form_valid(form)
-        related_users_ids = set(form.cleaned_data.get('related_users').values_list('id', flat=True))
-
-        if self.object.role == 'magistrate':
-            relationship_field = 'parent'
-            own_field = 'magistrate'
-        elif self.object.role == 'parent':
-            relationship_field = 'magistrate'
-            own_field = 'parent'
-        else:
-            return response
-
-        current_relations = set(MagistrateParent.objects.filter(**{own_field: self.object}).values_list(
-            relationship_field + '_id', flat=True))
-
-        relationships_to_add = related_users_ids - current_relations
-        relationships_to_remove = current_relations - related_users_ids
-
-        MagistrateParent.objects.filter(
-            **{own_field: self.object, relationship_field + '_id__in': relationships_to_remove}).delete()
-
-        User = get_user_model()
-        for user_id in relationships_to_add:
-            user_instance = User.objects.get(pk=user_id)
-            MagistrateParent.objects.get_or_create(**{
-                own_field: self.object,
-                relationship_field: user_instance
-            })
-
-        return response
 
 @login_required
 @permission_required('accounts.add_user', raise_exception=True)
@@ -161,13 +193,14 @@ def register_magistrate(request):
         form = MagistrateRegistrationForm(request.POST)
         if form.is_valid():
             magistrate = form.save()
-            messages.success(request, _('Magistrate "%s" registered successfully.' % magistrate.email))
+            messages.success(request, _('Lawyer "%s" registered successfully.' % magistrate.email))
             return redirect(reverse('accounts:user_list'))
     else:
         form = MagistrateRegistrationForm()
     return render(request, 'registration/register_magistrate.html', {'form': form})
 
 
+@login_required
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
@@ -175,37 +208,46 @@ def register(request):
             user = form.save(commit=False)
             user.role = 'parent'
             user.national_number_raw = form.cleaned_data['national_number']
-            formatted_number = form.cleaned_data['national_number'][:2] + '.' + form.cleaned_data['national_number'][2:4] + '.' + form.cleaned_data['national_number'][4:6] + '-' + form.cleaned_data['national_number'][6:9] + '.' + form.cleaned_data['national_number'][9:]
+            formatted_number = (
+                    form.cleaned_data['national_number'][:2] + '.' +
+                    form.cleaned_data['national_number'][2:4] + '.' +
+                    form.cleaned_data['national_number'][4:6] + '-' +
+                    form.cleaned_data['national_number'][6:9] + '.' +
+                    form.cleaned_data['national_number'][9:]
+            )
             user.national_number = formatted_number
             user.save()
 
-            if not request.user.is_authenticated:
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                messages.success(request, _("Your account has been created! You are now logged in."))
-                return redirect('home')
-            else:
-                if request.user.role == 'magistrate':
-                    MagistrateParent.objects.create(magistrate=request.user, parent=user)
+            # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
+            if request.user.role == 'lawyer':
+                AvocatParent.objects.create(avocat=request.user, parent=user)
+            elif request.user.role == 'judge':
+                JugeParent.objects.create(juge=request.user, parent=user)
 
-                messages.success(request, _("The parent account has been successfully created."))
-                return redirect('/accounts/list/')
+            messages.success(request, _("The parent account has been successfully created."))
+            return redirect('/accounts/list/')
     else:
         form = UserRegisterForm()
     return render(request, 'registration/register.html', {'form': form})
 
 
-class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
+class UserOrSuperuserRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and (user == self.request.user or user.is_superuser)
+
+
+class ResetPasswordView(UserOrSuperuserRequiredMixin, SuccessMessageMixin, PasswordResetView):
     template_name = 'registration/password_reset.html'
     email_template_name = 'registration/password_reset_mail.html'
     subject_template_name = 'registration/password_reset_subject.txt'
-    success_message = "We've emailed you instructions for setting your password, " \
-                      "if an account exists with the email you entered. You should receive them shortly. " \
-                      "If you don't receive an email, " \
-                      "please make sure you've entered the address you registered with, and check your spam folder."
+    success_message = _("We've emailed you instructions for setting your password, if an account exists with the "
+                        "email you entered. You should receive them shortly. If you don't receive an email, "
+                        "please make sure you've entered the address you registered with, and check your spam folder.")
     success_url = reverse_lazy('home')
 
 
-class PasswordResetConfirmationView(PasswordResetConfirmView):
+class PasswordResetConfirmationView(UserOrSuperuserRequiredMixin, PasswordResetConfirmView):
     template_name = 'registration/password_reset_confirmation.html'
     post_reset_login = False
     success_url = reverse_lazy('accounts:login')
@@ -214,29 +256,50 @@ class PasswordResetConfirmationView(PasswordResetConfirmView):
 @login_required
 def request_deletion(request, pk):
     user = get_object_or_404(User, pk=pk)
-    if user.is_superuser:
-        messages.error(request, _('Superuser accounts cannot be deleted.'))
-        return redirect('user_update', pk=user.pk)
+    if request.user != user or user.is_superuser:
+        if user.is_superuser:
+            messages.error(request, _('You are not authorized to delete this account.'))
+            return redirect('accounts:user_update', pk=user.pk)
 
     if request.method == 'POST':
         form = DeletionRequestForm(request.POST)
         if form.is_valid():
             user.request_deletion()
-            messages.success(request, 'Account deletion requested successfully.')
+            messages.success(request, _('Account deletion requested successfully.'))
             return redirect('home')
     else:
         form = DeletionRequestForm()
     return render(request, 'accounts/request_deletion.html', {'form': form})
 
+
 @login_required
 def cancel_deletion(request, pk):
     user = get_object_or_404(User, pk=pk)
+    if request.user != user and not request.user.is_superuser:
+        messages.error(request, _('You are not authorized to cancel the deletion of this account.'))
+        return redirect('user_update', pk=user.pk)
+    if user.is_superuser:
+        messages.error(request, _('You cannot cancel deletion for an administrator account.'))
+        return redirect('accounts:user_update', pk=user.pk)
+
     if request.method == 'POST':
         form = CancelDeletionForm(request.POST)
         if form.is_valid():
             user.cancel_deletion()
-            messages.success(request, 'Account deletion request cancelled successfully.')
+            messages.success(request, _('Account deletion request cancelled successfully.'))
             return redirect('home')
     else:
         form = CancelDeletionForm()
     return render(request, 'accounts/cancel_deletion.html', {'form': form})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser, login_url='/login/')
+def delete_user(request, pk):
+    if request.user.is_administrator:
+        user_to_delete = get_object_or_404(User, pk=pk)
+        user_to_delete.delete()
+        messages.success(request, _("The user has been deleted successfully."))
+    else:
+        messages.error(request, _("You are not authorized to delete this user."))
+    return redirect('accounts:user_list')

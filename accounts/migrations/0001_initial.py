@@ -49,14 +49,25 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='MagistrateParent',
+            name='AvocatParent',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('magistrate', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='parents_assigned', to=settings.AUTH_USER_MODEL)),
-                ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='magistrates_assigned', to=settings.AUTH_USER_MODEL)),
+                ('avocat', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assigned_parents', to=settings.AUTH_USER_MODEL)),
+                ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='avocats_assigned', to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'unique_together': {('magistrate', 'parent')},
+                'unique_together': {('avocat', 'parent')},
+            },
+        ),
+        migrations.CreateModel(
+            name='JugeParent',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('juge', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='assigned_parents_judge', to=settings.AUTH_USER_MODEL)),
+                ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='juges_assigned', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'unique_together': {('juge', 'parent')},
             },
         ),
     ]
