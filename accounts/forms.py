@@ -20,80 +20,139 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'email', 'date_of_birth', 'telephone', 'address', 'profile_image', 'related_users']
+        fields = ['last_name', 'first_name', 'email', 'profile_image', 'related_users']
 
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop('request_user', None)
-        super(UserUpdateForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         target_user = self.instance
 
-        # role Admin
         if self.request_user.is_administrator:
-            if target_user.role in ['judge', 'lawyer']:
-                queryset = User.objects.filter(role='parent')
-                if target_user.role == 'lawyer':
-                    assigned_parents = AvocatParent.objects.filter(avocat=target_user).values_list('parent', flat=True)
-                else:
-                    assigned_parents = JugeParent.objects.filter(juge=target_user).values_list('parent', flat=True)
-                self.fields['related_users'].queryset = queryset
-                self.fields['related_users'].initial = User.objects.filter(id__in=assigned_parents)
-            elif target_user.role == 'parent':
-                queryset = User.objects.filter(role__in=['judge', 'lawyer'])
-                assigned_users = User.objects.filter(
-                    id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
-                ) | User.objects.filter(
-                    id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
-                )
-                self.fields['related_users'].queryset = queryset
-                self.fields['related_users'].initial = assigned_users
-
-            if self.request_user == target_user:
-                self.fields.pop('related_users', None)
-
-        # role Lawyer ou Judge
+            self._setup_admin_form(target_user)
         elif self.request_user.is_lawyer() or self.request_user.is_judge():
-            if target_user == self.request_user:
-                self.fields.pop('related_users', None)
-            elif target_user.role == 'parent':
-                if self.request_user.is_lawyer():
-                    assigned_parents = AvocatParent.objects.filter(avocat=self.request_user).values_list('parent', flat=True)
-                else:
-                    assigned_parents = JugeParent.objects.filter(juge=self.request_user).values_list('parent', flat=True)
-                if target_user.pk in assigned_parents:
-                    self.fields['related_users'].queryset = User.objects.filter(pk=target_user.pk)
-                    self.fields['related_users'].initial = [target_user.pk]
-                    self.fields['related_users'].widget.attrs['disabled'] = True
-                else:
-                    self.fields.pop('related_users', None)
-            else:
-                self.fields.pop('related_users', None)
-
-        # role Parent
+            self._setup_lawyer_judge_form(target_user)
         elif self.request_user.is_parent:
-            if target_user == self.request_user:
-                assigned_users = User.objects.filter(
-                    id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
-                ) | User.objects.filter(
-                    id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
+            self._setup_parent_form(target_user)
+
+    def _setup_admin_form(self, target_user):
+        if target_user.role == 'parent':
+            queryset = User.objects.filter(role__in=['judge', 'lawyer'])
+            self.fields['related_users'].queryset = queryset
+            assigned_users = User.objects.filter(
+                id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
+            ) | User.objects.filter(
+                id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
+            )
+            self.fields['related_users'].initial = assigned_users
+        elif target_user.role in ['judge', 'lawyer']:
+            queryset = User.objects.filter(role='parent')
+            if target_user.role == 'lawyer':
+                assigned_parents = User.objects.filter(
+                    id__in=AvocatParent.objects.filter(avocat=target_user).values_list('parent', flat=True)
                 )
-                self.fields['related_users'].queryset = assigned_users
-                self.fields['related_users'].initial = assigned_users
+            elif target_user.role == 'judge':
+                assigned_parents = User.objects.filter(
+                    id__in=JugeParent.objects.filter(juge=target_user).values_list('parent', flat=True)
+                )
+            self.fields['related_users'].queryset = queryset
+            self.fields['related_users'].initial = assigned_parents
+
+    def _setup_lawyer_judge_form(self, target_user):
+        if target_user == self.request_user:
+            self.fields.pop('related_users', None)
+        elif target_user.role == 'parent':
+            if self.request_user.is_lawyer():
+                assigned_parents = AvocatParent.objects.filter(avocat=self.request_user).values_list('parent', flat=True)
+            elif self.request_user.is_judge():
+                assigned_parents = JugeParent.objects.filter(juge=self.request_user).values_list('parent', flat=True)
+            if target_user.pk in assigned_parents:
+                self.fields['related_users'].queryset = User.objects.filter(pk=target_user.pk)
+                self.fields['related_users'].initial = [target_user.pk]
                 self.fields['related_users'].widget.attrs['disabled'] = True
             else:
                 self.fields.pop('related_users', None)
+        else:
+            self.fields.pop('related_users', None)
+
+    def _setup_parent_form(self, target_user):
+        if target_user == self.request_user:
+            assigned_users = User.objects.filter(
+                id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
+            ) | User.objects.filter(
+                id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
+            )
+            self.fields['related_users'].queryset = assigned_users
+            self.fields['related_users'].initial = assigned_users
+            self.fields['related_users'].widget.attrs['disabled'] = True
+        else:
+            self.fields.pop('related_users', None)
+
+    def form_valid(self, form):
+        if not self.request_user.is_superuser and 'role' in form.changed_data:
+            form.add_error('role', _("You are not authorized to change the role."))
+            return super().form_invalid(form)
+
+        response = super().form_valid(form)
+
+        if 'related_users' in form.cleaned_data:
+            related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
+            related_users_ids = set(related_users_ids)  # Ensure IDs are integers
+            if self.instance.role == 'parent':
+                self._handle_parent_relationships(related_users_ids)
+            elif self.instance.role in ['lawyer', 'judge']:
+                self._handle_lawyer_judge_relationships(related_users_ids)
+
+        return response
+
+    def _handle_parent_relationships(self, related_users_ids):
+        related_users_ids = set(related_users_ids)
+
+        current_lawyer_relations = set(AvocatParent.objects.filter(parent=self.instance).values_list('avocat_id', flat=True))
+        current_judge_relations = set(JugeParent.objects.filter(parent=self.instance).values_list('juge_id', flat=True))
+
+        relationships_to_add = related_users_ids - current_lawyer_relations - current_judge_relations
+        relationships_to_remove = (current_lawyer_relations | current_judge_relations) - related_users_ids
+
+        AvocatParent.objects.filter(parent=self.instance, avocat_id__in=relationships_to_remove).delete()
+        JugeParent.objects.filter(parent=self.instance, juge_id__in=relationships_to_remove).delete()
+
+        for user_id in relationships_to_add:
+            user_instance = User.objects.get(pk=user_id)
+            if user_instance.role == 'lawyer':
+                AvocatParent.objects.get_or_create(parent=self.instance, avocat=user_instance)
+            elif user_instance.role == 'judge':
+                JugeParent.objects.get_or_create(parent=self.instance, juge=user_instance)
+
+    def _handle_lawyer_judge_relationships(self, related_users_ids):
+        related_users_ids = set(related_users_ids)
+
+        if self.instance.role == 'lawyer':
+            current_relations = set(AvocatParent.objects.filter(avocat=self.instance).values_list('parent_id', flat=True))
+            relationship_model = AvocatParent
+            own_field = 'avocat'
+        elif self.instance.role == 'judge':
+            current_relations = set(JugeParent.objects.filter(juge=self.instance).values_list('parent_id', flat=True))
+            relationship_model = JugeParent
+            own_field = 'juge'
+
+        relationships_to_add = related_users_ids - current_relations
+        relationships_to_remove = current_relations - related_users_ids
+
+        relationship_model.objects.filter(**{own_field: self.instance, 'parent_id__in': relationships_to_remove}).delete()
+
+        for user_id in relationships_to_add:
+            parent_instance = User.objects.get(pk=user_id)
+            relationship_model.objects.get_or_create(**{own_field: self.instance, 'parent': parent_instance})
 
     def clean_profile_image(self):
         profile_image = self.cleaned_data.get('profile_image')
-
         if profile_image:
             valid_mime_types = ['image/jpeg', 'image/png', 'image/gif']
             file_mime_type = magic.from_buffer(profile_image.read(2048), mime=True)
             profile_image.seek(0)
-
             if file_mime_type not in valid_mime_types:
                 raise ValidationError(_('Unsupported file type. Please upload a JPEG, PNG, or GIF image.'))
         return profile_image
-
 
 
 class MagistrateRegistrationForm(UserCreationForm):
