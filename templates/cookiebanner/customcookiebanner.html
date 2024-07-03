@@ -1,5 +1,4 @@
 {% load i18n %}
-
 <div id="cookiebannerModal" class="hidden" tabindex="-1" role="dialog" aria-labelledby="cookiebannerModalLabel" aria-hidden="true">
     <div id="cookiebannerModalDialog">
         <div id="cookiebannerModalHeader">
@@ -28,6 +27,12 @@
                                             <td>{{ cookie.description }}</td>
                                         </tr>
                                     {% endfor %}
+                                    {% if cookiegroup.id == 'essential' %}
+                                        <tr>
+                                            <td>django_language</td>
+                                            <td>{% trans "Stores the language preference of the user." %}</td>
+                                        </tr>
+                                    {% endif %}
                                 </table>
                             </div>
                         </div>
@@ -38,7 +43,7 @@
         <div id="cookiebannerModalFooter">
             <input type="submit" name="accept" class="cookiebannerSubmit btn" value="{% trans 'Accept' %}">
             <nav id="cookiebannerModalFooterLinks">
-                <p>{% trans "This website does not collect any data it does not require to function." %}</p>
+                <p>{% trans "This website does not collect any data not required to its basic functions." %}</p>
                 <span class="nav-item"><a class="nav-link" href="{% url 'privacy' %}">{% trans "Privacy Policy" %}</a></span>
             </nav>
         </div>
@@ -82,7 +87,7 @@
     }
 
     #cookiebannerModal {
-        --color-highlight: #73C229FF;
+        --color-highlight: #007BFF;
         --color-button-fg: white;
         position: fixed;
         bottom: 0;
