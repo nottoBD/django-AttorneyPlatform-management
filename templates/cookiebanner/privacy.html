@@ -15,6 +15,12 @@
     <h2>{% trans "Cookies" %}</h2>
     <p>{% trans "We use cookies to ensure that our website functions properly. These cookies are essential for the website's operation and do not track your personal data." %}</p>
 
+    <h2>{% trans "Data Deletion" %}</h2>
+    <p>
+        {% trans "If you request the deletion of your account, all your data will be permanently deleted from our servers within a maximum of 30 days." %}
+        <a href="{% url 'accounts:request_deletion' request.user.pk %}">{% trans "Request Account Deletion" %}</a>
+    </p>
+
     <h2>{% trans "Contact Us" %}</h2>
     <p>{% trans "If you have any questions or concerns about our privacy practices, please do not hesitate to contact us." %}</p>
 </div>
