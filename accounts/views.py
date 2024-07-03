@@ -200,7 +200,6 @@ def register_magistrate(request):
     return render(request, 'registration/register_magistrate.html', {'form': form})
 
 
-@login_required
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
