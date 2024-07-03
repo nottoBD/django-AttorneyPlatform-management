@@ -61,16 +61,20 @@
                                         {% endif %}
                                     {% endfor %}
                                     <button type="submit" class="btn btn-outline-primary">{% trans "Save changes" %}</button>
+                                    {% if request.user == user or request.user.is_superuser %}
+                                        <a href="{% url 'accounts:password_reset' %}" class="btn btn-outline-warning">{% trans "Reset Password" %}</a>
+                                    {% endif %}
+                                    {% if user.role == 'parent' and request.user != user %}
+                                        {% if request.user.role == 'judge' or request.user.role == 'lawyer' %}
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" name="deassign" class="btn btn-danger" onclick="return confirm('{% trans "Are you sure you want to deassign?" %}')">{% trans "Deassign" %}</button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
                                 </form>
 
-                        {% if user.role == 'parent' and request.user != user %}
-                            {% if request.user.role == 'judge' or request.user.role == 'lawyer' %}
-                                <form method="post">
-                                    {% csrf_token %}
-                                    <button type="submit" name="deassign" class="btn btn-danger" onclick="return confirm('{% trans "Are you sure you want to deassign?" %}')">{% trans "Deassign" %}</button>
-                                </form>
-                            {% endif %}
-                        {% endif %}
+
                     </div>
                 </div>
             </div>

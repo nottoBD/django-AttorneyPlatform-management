@@ -33,7 +33,6 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             form.add_error('role', _("You are not authorized to change the role."))
             return self.form_invalid(form)
 
-
         user = form.save(commit=False)
         user.is_active = form.cleaned_data.get('is_active', False)
         print(f"Debug: is_active value being saved: {user.is_active}")
@@ -59,7 +58,6 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         kwargs['request_user'] = self.request.user
         return kwargs
 
-
     def test_func(self):
         user_to_update = self.get_object()
         if self.request.user == user_to_update:
@@ -81,7 +79,8 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         elif self.request.user.role == 'judge':
             relationship = JugeParent.objects.filter(juge=self.request.user, parent=user_to_update)
         elif self.request.user.is_administrator:
-            relationship = AvocatParent.objects.filter(parent=user_to_update) | JugeParent.objects.filter(parent=user_to_update)
+            relationship = AvocatParent.objects.filter(parent=user_to_update) | JugeParent.objects.filter(
+                parent=user_to_update)
         else:
             messages.error(self.request, _("You are not authorized to deassign this user."))
             return redirect('accounts:user_update', pk=user_to_update.pk)
@@ -154,16 +153,19 @@ class UserListView(LoginRequiredMixin, ListView):
             magistrates_query = User.objects.filter(
                 Q(is_staff=True) | Q(is_superuser=True) | Q(role='administrator') | Q(role='lawyer') | Q(role='judge')
             )
-            parents_query = User.objects.filter(role='parent').prefetch_related('avocats_assigned__avocat', 'juges_assigned__juge')
+            parents_query = User.objects.filter(role='parent').prefetch_related('avocats_assigned__avocat',
+                                                                                'juges_assigned__juge')
 
             if is_active is not None:
                 magistrates_query = magistrates_query.filter(is_active=is_active)
                 parents_query = parents_query.filter(is_active=is_active)
 
-            context['magistrates'] = magistrates_query.annotate(parents_count=Count('assigned_parents') + Count('assigned_parents_judge'))
+            context['magistrates'] = magistrates_query.annotate(
+                parents_count=Count('assigned_parents') + Count('assigned_parents_judge'))
 
             if self.request.user.role == 'lawyer':
-                context['parents_filtered'] = parents_query.filter(avocats_assigned__avocat=self.request.user).distinct()
+                context['parents_filtered'] = parents_query.filter(
+                    avocats_assigned__avocat=self.request.user).distinct()
             elif self.request.user.role == 'judge':
                 context['parents_filtered'] = parents_query.filter(juges_assigned__juge=self.request.user).distinct()
             else:
@@ -181,7 +183,6 @@ class UserListView(LoginRequiredMixin, ListView):
             return self.request.build_absolute_uri(user.profile_image.url)
         else:
             return self.request.build_absolute_uri(settings.MEDIA_URL + 'profile_images/default.jpg')
-
 
 
 @login_required
@@ -230,7 +231,13 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 
-class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
+class UserOrSuperuserRequiredMixin(UserPassesTestMixin):
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and (user == self.request.user or user.is_superuser)
+
+
+class ResetPasswordView(UserOrSuperuserRequiredMixin, SuccessMessageMixin, PasswordResetView):
     template_name = 'registration/password_reset.html'
     email_template_name = 'registration/password_reset_mail.html'
     subject_template_name = 'registration/password_reset_subject.txt'
@@ -240,7 +247,7 @@ class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
     success_url = reverse_lazy('home')
 
 
-class PasswordResetConfirmationView(PasswordResetConfirmView):
+class PasswordResetConfirmationView(UserOrSuperuserRequiredMixin, PasswordResetConfirmView):
     template_name = 'registration/password_reset_confirmation.html'
     post_reset_login = False
     success_url = reverse_lazy('accounts:login')
@@ -264,6 +271,7 @@ def request_deletion(request, pk):
         form = DeletionRequestForm()
     return render(request, 'accounts/request_deletion.html', {'form': form})
 
+
 @login_required
 def cancel_deletion(request, pk):
     user = get_object_or_404(User, pk=pk)
@@ -283,6 +291,7 @@ def cancel_deletion(request, pk):
     else:
         form = CancelDeletionForm()
     return render(request, 'accounts/cancel_deletion.html', {'form': form})
+
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser, login_url='/login/')
