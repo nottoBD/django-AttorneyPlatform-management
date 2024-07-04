@@ -200,7 +200,6 @@ def register_magistrate(request):
     return render(request, 'registration/register_magistrate.html', {'form': form})
 
 
-@login_required
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
@@ -219,10 +218,11 @@ def register(request):
             user.save()
 
             # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
-            if request.user.role == 'lawyer':
-                AvocatParent.objects.create(avocat=request.user, parent=user)
-            elif request.user.role == 'judge':
-                JugeParent.objects.create(juge=request.user, parent=user)
+            if request.user.is_authenticated:
+                if request.user.role == 'lawyer':
+                    AvocatParent.objects.create(avocat=request.user, parent=user)
+                elif request.user.role == 'judge':
+                    JugeParent.objects.create(juge=request.user, parent=user)
 
             messages.success(request, _("The parent account has been successfully created."))
             return redirect('/accounts/list/')
