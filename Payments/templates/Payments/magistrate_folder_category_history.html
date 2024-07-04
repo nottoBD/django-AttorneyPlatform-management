@@ -84,7 +84,7 @@
                         <p>{% trans "No payments found for this category." %}</p>
                     {% endif %}
 
-                    <a href="{% url 'Payments:parent-payment-history' %}" class="btn btn-secondary btn-sm mt-3">
+                    <a href="{% url 'Payments:magistrate_folder_payment_history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
                         {% trans "Back to Payment History" %}
                     </a>
                 </div>

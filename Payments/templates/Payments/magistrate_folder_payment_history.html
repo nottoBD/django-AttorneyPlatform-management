@@ -1,83 +1,88 @@
 {% extends 'fExtra/base.html' %}
+{% load custom_filters %}
 {% load static i18n %}
 
 {% block content %}
-
 <link rel="stylesheet" href="{% static 'Payments/css/history.css' %}">
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-9">
+        <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h2 class="card-title mb-0">{% trans "Payments List" %}</h2>
-                        {% if request.user.role == 'lawyer' or request.user.role == 'parent' %}
-                        <a href="{% url 'Payments:lawyer-add-payment' folder_id=folder.id %}" class="btn btn-primary">{% trans "Add Payment Document" %}</a>
+                        <h2 class="card-title mb-0">{% trans "Payments Comparison" %}</h2>
+                        {% if request.user.role == 'lawyer' %}
+                        <a href="{% url 'Payments:lawyer-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
+                            {% trans "Add Payment Document" %}
+                        </a>
                         {% endif %}
                     </div>
-                    <!-- Payments table -->
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>{% trans "Username" %}</th>
-                                <th>{% trans "Date" %}</th>
-                                <th>{% trans "Amount" %}</th>
-                                <th>{% trans "Document" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="payments-list">
-                            {% for payment in payments %}
-                                <tr class="payment-item">
-                                    <td>
-                                        {% with user=payment.user %}
-                                            {{ user.first_name }} {{ user.last_name }}
-                                        {% endwith %}
-                                    </td>
-                                    <td>{{ payment.date }}</td>
-                                    <td>{{ payment.amount }}</td>
-                                    <td>
-                                        {% if payment.document %}
-                                            <div class="document-preview">
-                                                <a href="{{ payment.document.url }}" class="btn btn-warning" target="_blank" title= '{% trans "Document Preview" %}'>
-                                                    {% trans "View" %}
+                    <!-- Payments comparison table -->
+                    {% for type_id, type_data in categories_by_type.items %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th class="col-md-4">{{ type_data.type_name }}</th>
+                                        <th class="col-md-4">{{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
+                                        <th class="col-md-4">{{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="payments-list">
+                                    {% for category_entry in type_data.categories %}
+                                        <tr class="payment-item">
+                                            <td>{{ category_entry.category_name }}</td>
+                                            <td>
+                                                {{ category_entry.parent1_amount }} €
+                                                {% if category_entry.parent1_pending_amount > 0 %}
+                                                    ({{ category_entry.parent1_pending_amount }} € en attente)
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {{ category_entry.parent2_amount }} €
+                                                {% if category_entry.parent2_pending_amount > 0 %}
+                                                    ({{ category_entry.parent2_pending_amount }} € en attente)
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'Payments:magistrate-category-payments' folder.id category_entry.category_id %}" class="btn btn-primary btn-sm">
+                                                    {% trans "View Details" %}
                                                 </a>
-                                                <div class="tooltip">
-                                                    <img src="{{ payment.document.url }}" alt='{% trans "Document Preview" %}' style="width: 100px;">
-                                                </div>
-                                            </div>
-                                        {% else %}
-                                            {% trans "No Document" %}
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card mb-4">
                 <div class="card-body">
+                    <h2 class="card-title mb-4">{% trans "Balance Summary" %}</h2>
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th>{% trans "Total Amount" %}</th>
+                                <th>{% trans "Total for" %} {{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
+                                <th>{{ parent1_total }} €</th>
+                            </tr>
+                            <tr>
+                                <th>{% trans "Total for" %} {{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                <th>{{ parent2_total }} €</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr>
-                                <td>{{ folder.parent1.first_name }} {{ folder.parent1.last_name }} : {{ parent1_total }} €</td>
-                            </tr>
-                            <tr>
-                                <td>{{ folder.parent2.first_name }} {{ folder.parent2.last_name }} : {{ parent2_total }} €</td>
-                            </tr>
-                            <tr>
-                                <td>{{ difference }} € {% trans "In Favor Of" %}  {{ in_favor_of.first_name }} {{ in_favor_of.last_name }}</td>
-                            </tr>
-                        </tbody>
                     </table>
+                    <p class="mt-3">
+                        {% if difference != 0 %}
+                        {% trans "The difference is" %} {{ difference }} € {% trans "in favor of" %} {{ in_favor_of.get_full_name }}.
+                        {% endif %}
+                        {% if difference == 0 %}
+                        {% trans "Amount Balanced" %}.
+                        {% endif %}
+                    </p>
                 </div>
             </div>
         </div>

@@ -17,7 +17,7 @@ from .models import PaymentDocument, Folder, PaymentCategory, CategoryType
 User = get_user_model()
 
 
-# View for parent
+# View history of all category for parent
 class PaymentHistoryView(LoginRequiredMixin, ListView):
     model = PaymentDocument
     template_name = 'Payments/parent_payment_history.html'
@@ -137,8 +137,8 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         category_id = self.kwargs['category_id']
-        folder = get_object_or_404(Folder, Q(parent1=self.request.user) | Q(parent2=self.request.user))
-        return PaymentDocument.objects.filter(folder=folder, category_id=category_id)
+
+        return PaymentDocument.objects.filter(folder=self.get_folder_for_user(), category_id=category_id)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -157,6 +157,9 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
         context['parent2_name'] = folder.parent2.get_full_name()
 
         return context
+
+    def get_folder_for_user(self):
+        pass
 
 
 class PaymentDeleteView(LoginRequiredMixin, DeleteView):
@@ -180,8 +183,16 @@ class MagistrateFolderListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
-        # Filter cases by user logged in as judge or lawyer
-        return Folder.objects.filter(Q(judge=user) | Q(lawyer=user))
+
+        if user.role == 'parent':
+            # Filter cases by user logged in as a parent
+            return Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
+        elif user.role in ['judge', 'lawyer']:
+            # Filter cases by user logged in as judge or lawyer
+            return Folder.objects.filter(Q(judge=user) | Q(lawyer=user))
+        else:
+            # Default to an empty queryset if user's role is undefined
+            return Folder.objects.none()
 
 
 # For judge and lawyer (see all payments of one folder)
@@ -192,22 +203,134 @@ class FolderPaymentHistoryView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         folder = get_object_or_404(Folder, pk=self.kwargs['folder_id'])
-        return PaymentDocument.objects.filter(user__in=[folder.parent1, folder.parent2])
+        self.folder = folder
+        return PaymentDocument.objects.filter(folder=folder)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        folder = get_object_or_404(Folder, pk=self.kwargs['folder_id'])
+        folder = self.folder
+        parent1 = folder.parent1
+        parent2 = folder.parent2
+
+        # Retrieve only validated payments for both parents and group by category type
+        parent1_valid_payments = PaymentDocument.objects.filter(user=parent1, category__type__isnull=False,
+                                                                status='validated').values('category__type',
+                                                                                           'category').annotate(
+            total_amount=Sum('amount'))
+        parent2_valid_payments = PaymentDocument.objects.filter(user=parent2, category__type__isnull=False,
+                                                                status='validated').values('category__type',
+                                                                                           'category').annotate(
+            total_amount=Sum('amount'))
+
+        # Retrieve pending payments for both parents
+        parent1_pending_payments = PaymentDocument.objects.filter(user=parent1, category__type__isnull=False,
+                                                                  status='pending').values('category__type',
+                                                                                           'category').annotate(
+            total_amount=Sum('amount'))
+        parent2_pending_payments = PaymentDocument.objects.filter(user=parent2, category__type__isnull=False,
+                                                                  status='pending').values('category__type',
+                                                                                           'category').annotate(
+            total_amount=Sum('amount'))
+
+        # Create dictionaries to store payments by category type
+        parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
+                                       payment in parent1_valid_payments}
+        parent2_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
+                                       payment in parent2_valid_payments}
+        parent1_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in
+                                parent1_pending_payments}
+        parent2_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in
+                                parent2_pending_payments}
+
+        # Get all categories with their type
+        categories = PaymentCategory.objects.filter(type__isnull=False)
+
+        # Ensure all category types are included
+        categories_by_type = {}
+        for category in categories:
+            category_type_id = category.type_id
+            parent1_amount = parent1_valid_payments_dict.get((category_type_id, category.id), 0)
+            parent2_amount = parent2_valid_payments_dict.get((category_type_id, category.id), 0)
+            parent1_pending_amount = parent1_pending_dict.get((category_type_id, category.id), 0)
+            parent2_pending_amount = parent2_pending_dict.get((category_type_id, category.id), 0)
+
+            if parent1_amount == 0 and parent2_amount == 0 and parent1_pending_amount == 0 and parent2_pending_amount == 0:
+                continue
+
+            if category_type_id not in categories_by_type:
+                categories_by_type[category_type_id] = {
+                    'type_name': category.type.name,
+                    'categories': [],
+                }
+            categories_by_type[category_type_id]['categories'].append({
+                'category_id': category.id,
+                'category_name': category.name,
+                'parent1_amount': parent1_amount,
+                'parent2_amount': parent2_amount,
+                'parent1_pending_amount': parent1_pending_amount,
+                'parent2_pending_amount': parent2_pending_amount,
+            })
+
+        # Calculate totals and other comparative data
+        parent1_total = sum(parent1_valid_payments_dict.values())
+        parent2_total = sum(parent2_valid_payments_dict.values())
+        difference = abs(parent1_total - parent2_total)
+        in_favor_of = parent1 if parent1_total > parent2_total else parent2
+
+        context.update({
+            'folder': folder,
+            'parent1_user': parent1,
+            'parent2_user': parent2,
+            'categories_by_type': categories_by_type,
+            'parent1_total': parent1_total,
+            'parent2_total': parent2_total,
+            'total_amount': parent1_total + parent2_total,
+            'difference': difference,
+            'in_favor_of': in_favor_of,
+        })
+
+        # Pass user_can_delete for each payment
+        payments_with_permissions = [
+            {
+                'payment': payment,
+                'can_delete': payment.user_can_delete(self.request.user)
+            } for payment in self.get_queryset()
+        ]
+        context['payments_with_permissions'] = payments_with_permissions
+
+        return context
+
+
+class MagistrateCategoryPaymentsView(LoginRequiredMixin, ListView):
+    model = PaymentDocument
+    template_name = 'Payments/magistrate_folder_category_history.html'
+    context_object_name = 'payments'
+
+    def get_queryset(self):
+        category_id = self.kwargs['category_id']
+        folder_id = self.kwargs['folder_id']
+        folder = get_object_or_404(Folder, id=folder_id)
+        return PaymentDocument.objects.filter(folder=folder, category_id=category_id)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_id = self.kwargs['category_id']
+        folder_id = self.kwargs['folder_id']
+
+        category = get_object_or_404(PaymentCategory, id=category_id)
+        folder = get_object_or_404(Folder, id=folder_id)
+
+        context['category'] = category
         context['folder'] = folder
-        # Calculate the total amount for parent1 and parent2 separately
-        parent1_total = PaymentDocument.objects.filter(user=folder.parent1).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-        parent2_total = PaymentDocument.objects.filter(user=folder.parent2).aggregate(total_amount=Sum('amount'))['total_amount'] or 0
-        context['parent1_total'] = parent1_total
-        context['parent2_total'] = parent2_total
-        context['total_amount'] = parent1_total + parent2_total
-        # Calculate the difference between parent1 and parent2 totals
-        context['difference'] = abs(parent1_total - parent2_total)
-        # Determine who the total amount is in favor of
-        context['in_favor_of'] = folder.parent1 if parent1_total > parent2_total else folder.parent2
+
+        parent1_payments = PaymentDocument.objects.filter(folder=folder, category_id=category_id, user=folder.parent1)
+        parent2_payments = PaymentDocument.objects.filter(folder=folder, category_id=category_id, user=folder.parent2)
+
+        context['parent1_payments'] = parent1_payments
+        context['parent2_payments'] = parent2_payments
+        context['parent1_name'] = folder.parent1.get_full_name()
+        context['parent2_name'] = folder.parent2.get_full_name()
+
         return context
 
 

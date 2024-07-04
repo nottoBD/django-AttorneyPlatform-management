@@ -4,7 +4,8 @@ from django.conf import settings
 
 from . import views
 from .views import PaymentHistoryView, MagistrateFolderListView, FolderPaymentHistoryView, \
-    submit_payment_document_lawyer, PaymentDeleteView, CategoryPaymentsView, add_category
+    submit_payment_document_lawyer, PaymentDeleteView, CategoryPaymentsView, add_category, \
+    MagistrateCategoryPaymentsView
 
 app_name = 'Payments'
 urlpatterns = [
@@ -15,6 +16,7 @@ urlpatterns = [
     path('create_folder/', views.create_folder, name='create_folder'),
     path('list_folder/', MagistrateFolderListView.as_view(), name='list_folder'),
     path('magistrate-/<int:folder_id>/', FolderPaymentHistoryView.as_view(), name='magistrate_folder_payment_history'),
+    path('magistrate-payment-history/folder/<int:folder_id>/category/<int:category_id>/', MagistrateCategoryPaymentsView.as_view(), name='magistrate-category-payments'),
     path('lawyer-add-payment/<int:folder_id>/', submit_payment_document_lawyer, name='lawyer-add-payment'),
     path('delete-payment/<int:pk>/', PaymentDeleteView.as_view(), name='delete_payment'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

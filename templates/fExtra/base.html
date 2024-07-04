@@ -108,19 +108,9 @@
                                             <a href="/Payments/create_folder" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "Add folder" %}</a>
                                         </li>
                                     {% endif %}
-                                    {% if request.user.role == 'judge' or request.user.role == 'lawyer'%}
                                         <li>
                                             <a href="/Payments/list_folder" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "Folder list" %}</a>
                                         </li>
-                                    {% endif %}
-                                    {% if request.user.role == 'parent' %}
-                                        <li class="w-100">
-                                            <a href="/Payments/parent-add-payment" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "Add Payments" %}</a>
-                                        </li>
-                                        <li>
-                                            <a href="/Payments/parent-payment-history" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "History" %}</a>
-                                        </li>
-                                    {% endif %}
                                 </ul>
                             </li>
                         {% endif %}
