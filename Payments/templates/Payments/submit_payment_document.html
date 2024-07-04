@@ -9,7 +9,7 @@
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h3 class="text-center mb-0">{% trans "Add Payment Document" %}</h3>
+                    <h3 class="text-center mb-0">{% trans "Ajouter un paiement" %}</h3>
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
@@ -19,7 +19,7 @@
                         <div class="form-group">
                             <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
                             <select class="form-control" id="{{ form.category.id_for_label }}" name="{{ form.category.name }}">
-                                <option value="">{% trans "Select a category" %}</option>
+                                <option value="">{% trans "Choisir un catégorie" %}</option>
                                 {% for category_type, categories in grouped_categories.items %}
                                     <optgroup label="{{ category_type }}">
                                         {% for category in categories %}
@@ -30,7 +30,7 @@
                             </select>
                             <!-- Move button here and make it smaller -->
                             <button type="button" class="btn btn-secondary btn-sm mt-2" data-toggle="modal" data-target="#addCategoryModal">
-                                {% trans "Add New Category" %}
+                                {% trans "Ajouter une nouvelle catégorie" %}
                             </button>
                         </div>
                         {{ form.date|as_crispy_field }}
@@ -42,6 +42,9 @@
                             </div>
                         {% endif %}
                         <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Add" %}</button>
+                         <a href="{% url 'Payments:parent-payment-history' %}" class="btn btn-secondary btn-sm mt-3">
+                        {% trans "Back to Payment History" %}
+                         </a>
                     </form>
                 </div>
             </div>
