@@ -45,3 +45,12 @@ class FolderForm(forms.ModelForm):
         self.fields['judge'].queryset = User.objects.filter(role='judge')
         self.fields['parent1'].queryset = User.objects.filter(role='parent')
         self.fields['parent2'].queryset = User.objects.filter(role='parent')
+
+
+class ValidatePaymentsForm(forms.Form):
+    PAYMENTS_CHOICES = (
+        ('validate', 'Validate'),
+        ('reject', 'Reject'),
+    )
+    action = forms.ChoiceField(choices=PAYMENTS_CHOICES)
+    payments = forms.ModelMultipleChoiceField(queryset=PaymentDocument.objects.filter(status='pending'), widget=forms.CheckboxSelectMultiple)

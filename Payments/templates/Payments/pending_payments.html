@@ -1,0 +1,201 @@
+{% extends 'fExtra/base.html' %}
+{% load i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{% trans "Paiements en attente de validation" %}</h2>
+                    <form method="post" id="paymentForm" action="{% url 'Payments:pending-payments' folder_id=folder.id %}">
+                        {% csrf_token %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="paymentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Catégorie" %}</th>
+                                        <th>{% trans "Parent" %}</th>
+                                        <th>{% trans "Montant" %}</th>
+                                        <th>{% trans "Date" %}</th>
+                                        <th>{% trans "Document" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for payment in payments %}
+                                        <tr class="selectable-row" data-payment-id="{{ payment.id }}">
+                                            <td>{{ payment.category.name }}</td>
+                                            <td>{{ payment.user.first_name }} {{ payment.user.last_name }}</td>
+                                            <td>{{ payment.amount }} €</td>
+                                            <td>{{ payment.date }}</td>
+                                            <td>
+                                                {% if payment.document %}
+                                                    <a href="{{ payment.document.url }}" class="btn btn-primary btn-sm" target="_blank">
+                                                        {% trans "View Document" %}
+                                                    </a>
+                                                {% else %}
+                                                    {% trans "No Document" %}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="form-group mt-3 d-flex justify-content-between">
+                            <div>
+                                <button type="submit" class="btn btn-success mr-2" name="action" value="validate">{% trans "Valider" %}</button>
+                                <button type="submit" class="btn btn-danger mr-2" name="action" value="reject">{% trans "Rejeter" %}</button>
+                            </div>
+                            <div>
+                                <a href="javascript:history.back()" class="btn btn-secondary">{% trans "Retourner" %}</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const table = document.getElementById('paymentsTable');
+    const selectedPaymentsInput = document.getElementById('selectedPayments');
+    let lastChecked = null;
+
+     // Fonction pour mettre à jour le tableau des paiements
+    function updatePaymentsTable() {
+        const url = "{% url 'Payments:pending-payments' folder_id=folder.id %}";
+
+        fetch(url)
+            .then(response => response.text())
+            .then(data => {
+                // Créer un nouveau div pour parser le contenu sans exécuter les scripts
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data;
+
+                // Extraire seulement le contenu du tableau
+                const newTable = tempDiv.querySelector('#paymentsTable');
+                if (newTable) {
+                    table.innerHTML = newTable.innerHTML;
+                } else {
+                    console.error('Tableau de paiements non trouvé dans la réponse.');
+                }
+
+                // Réinitialiser les variables et l'état du formulaire
+                selectedPaymentsInput.value = '';
+                lastChecked = null;
+            })
+            .catch(error => console.error('Erreur lors de la récupération des paiements:', error));
+    }
+
+    // Event listener for table rows selection
+    table.addEventListener('click', function (e) {
+        const row = e.target.closest('.selectable-row');
+        if (!row) return;
+
+        if (!e.ctrlKey && !e.shiftKey) {
+            // Single click without Ctrl or Shift: deselect all and select the clicked row
+            document.querySelectorAll('.selectable-row').forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+        } else if (e.ctrlKey) {
+            // Ctrl+click: toggle the clicked row
+            row.classList.toggle('selected');
+        } else if (e.shiftKey && lastChecked) {
+            // Shift+click: select range
+            const rows = Array.from(document.querySelectorAll('.selectable-row'));
+            const start = rows.indexOf(row);
+            const end = rows.indexOf(lastChecked);
+            rows.slice(Math.min(start, end), Math.max(start, end) + 1)
+                .forEach(r => r.classList.add('selected'));
+        } else {
+            row.classList.toggle('selected');
+        }
+        lastChecked = row;
+
+        updateSelectedPayments();
+    });
+
+    // Function to update hidden input with selected payment IDs
+    function updateSelectedPayments() {
+        const selectedRows = document.querySelectorAll('.selectable-row.selected');
+        const selectedIds = Array.from(selectedRows).map(row => row.getAttribute('data-payment-id'));
+        selectedPaymentsInput.value = selectedIds.join(',');
+    }
+
+    // Prevent text selection on double-click
+    document.addEventListener('mousedown', function (e) {
+        if (e.detail > 1) {
+            e.preventDefault();
+        }
+    }, false);
+
+    // Submit form when the form is submitted
+    document.getElementById('paymentForm').addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(this); // Create FormData object from the form
+        const selectedIds = Array.from(document.querySelectorAll('.selectable-row.selected'))
+            .map(row => row.getAttribute('data-payment-id'));
+        formData.set('payments', selectedIds.join(',')); // Set selected payments to FormData
+
+        // Ajouter le champ action manuellement dans FormData
+        const action = document.querySelector('button[name="action"]:focus').value;
+        formData.set('action', action);
+
+        fetch("{% url 'Payments:pending-payments' folder_id=folder.id %}", {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                // Handle successful response (optional)
+                console.log('Form submitted successfully');
+                updatePaymentsTable();
+            } else {
+                // Handle error response (optional)
+                console.error('Form submission failed');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+    });
+});
+</script>
+
+<style>
+.selectable-row.selected {
+    background-color: #d3e5ff;
+    user-select: none; /* Empêche la sélection de texte */
+}
+
+/* Empêche la sélection de texte lors du clic sur une ligne */
+.selectable-row {
+    user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Annule l'effet de sélection de texte lorsque la souris est relâchée */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Styles de sélection de texte lorsqu'un texte est sélectionné */
+::selection {
+    background-color: transparent;
+    color: inherit;
+}
+
+/* Styles de sélection de texte lorsqu'un texte est sélectionné */
+::-moz-selection {
+    background-color: transparent;
+    color: inherit;
+}
+</style>
+
+{% endblock %}

@@ -83,10 +83,16 @@
                     {% else %}
                         <p>{% trans "No payments found for this category." %}</p>
                     {% endif %}
-
-                    <a href="{% url 'Payments:magistrate_folder_payment_history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
-                        {% trans "Back to Payment History" %}
-                    </a>
+                    {% if request.user.role == 'lawyer' or  request.user.role == 'judge'%}
+                        <a href="{% url 'Payments:magistrate_folder_payment_history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
+                            {% trans "Back to Payment History" %}
+                        </a>
+                    {% endif %}
+                    {% if request.user.role == 'lawyer' or  request.user.role == 'judge'%}
+                        <a href="{% url 'Payments:parent-payment-history' %}" class="btn btn-secondary btn-sm mt-3">
+                            {% trans "Back to Payment History" %}
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

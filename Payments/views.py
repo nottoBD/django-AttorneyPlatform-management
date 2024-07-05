@@ -11,16 +11,16 @@ from django.utils.text import capfirst
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DeleteView
 
-from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer
+from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer, ValidatePaymentsForm
 from .models import PaymentDocument, Folder, PaymentCategory, CategoryType
 
 User = get_user_model()
 
-
-# View history of all category for parent
+# View PARENT
+# ---------------------------------------------------------------------------------------------------------------------
 class PaymentHistoryView(LoginRequiredMixin, ListView):
     model = PaymentDocument
-    template_name = 'Payments/parent_payment_history.html'
+    template_name = 'Payments/folder_payment_history.html'
     context_object_name = 'payments'
 
     def dispatch(self, request, *args, **kwargs):
@@ -132,7 +132,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
 class CategoryPaymentsView(LoginRequiredMixin, ListView):
     model = PaymentDocument
-    template_name = 'Payments/parent_category_history.html'
+    template_name = 'Payments/folder_category_history.html'
     context_object_name = 'payments'
 
     def get_queryset(self):
@@ -162,43 +162,62 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
         pass
 
 
-class PaymentDeleteView(LoginRequiredMixin, DeleteView):
+@login_required
+@transaction.atomic
+def submit_payment_document(request):
+    user = request.user
+    folders = Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
+
+    if not folders.exists():
+        # Redirigez ou affichez un message si l'utilisateur n'a pas de dossier associé
+        return redirect('Payments:history')
+
+    categories = PaymentCategory.objects.order_by('type_id', 'name')
+
+    grouped_categories = {}
+    for category in categories:
+        if category.type not in grouped_categories:
+            grouped_categories[category.type] = []
+        grouped_categories[category.type].append(category)
+
+    if request.method == 'POST':
+        form = PaymentDocumentForm(request.POST, request.FILES)
+        new_category_name = request.POST.get('new_category', '').strip()
+
+        if form.is_valid():
+            payment_document = form.save(commit=False)
+            payment_document.user = user
+            payment_document.folder = folders.first()
+            payment_document.status = 'pending'
+
+            if new_category_name:
+                other_type, created = CategoryType.objects.get_or_create(name='Autre')
+                new_category, created = PaymentCategory.objects.get_or_create(
+                    name=new_category_name,
+                    defaults={'type': other_type}
+                )
+                payment_document.category = new_category
+
+            payment_document.save()
+            # Redirection vers une page de succès ou affichage d'un message
+            return redirect('Payments:parent-payment-history')
+    else:
+        form = PaymentDocumentForm()
+
+    context = {
+        'form': form,
+        'grouped_categories': grouped_categories,
+    }
+
+    return render(request, 'Payments/submit_payment_document.html', context)
+# ---------------------------------------------------------------------------------------------------------------------
+
+
+# View MAGISTRATE
+# ---------------------------------------------------------------------------------------------------------------------
+class MagistrateFolderPaymentHistoryView(LoginRequiredMixin, ListView):
     model = PaymentDocument
-
-    def get_queryset(self):
-        user = self.request.user
-        queryset = super().get_queryset()
-        return queryset.filter(user=user)
-
-    def get_success_url(self):
-        payment_document = self.object
-        return reverse('Payments:parent-payment-history')
-
-
-# For judge and lawyer (only see the folders assigned to them)
-class MagistrateFolderListView(LoginRequiredMixin, ListView):
-    model = Folder
-    template_name = 'Payments/list_folder.html'
-    context_object_name = 'folders'
-
-    def get_queryset(self):
-        user = self.request.user
-
-        if user.role == 'parent':
-            # Filter cases by user logged in as a parent
-            return Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
-        elif user.role in ['judge', 'lawyer']:
-            # Filter cases by user logged in as judge or lawyer
-            return Folder.objects.filter(Q(judge=user) | Q(lawyer=user))
-        else:
-            # Default to an empty queryset if user's role is undefined
-            return Folder.objects.none()
-
-
-# For judge and lawyer (see all payments of one folder)
-class FolderPaymentHistoryView(LoginRequiredMixin, ListView):
-    model = PaymentDocument
-    template_name = 'Payments/magistrate_folder_payment_history.html'
+    template_name = 'Payments/folder_payment_history.html'
     context_object_name = 'payments'
 
     def get_queryset(self):
@@ -303,7 +322,7 @@ class FolderPaymentHistoryView(LoginRequiredMixin, ListView):
 
 class MagistrateCategoryPaymentsView(LoginRequiredMixin, ListView):
     model = PaymentDocument
-    template_name = 'Payments/magistrate_folder_category_history.html'
+    template_name = 'Payments/folder_category_history.html'
     context_object_name = 'payments'
 
     def get_queryset(self):
@@ -335,57 +354,6 @@ class MagistrateCategoryPaymentsView(LoginRequiredMixin, ListView):
 
 
 @login_required
-# when parent add payments
-@transaction.atomic
-def submit_payment_document(request):
-    user = request.user
-    folders = Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
-
-    if not folders.exists():
-        # Redirigez ou affichez un message si l'utilisateur n'a pas de dossier associé
-        return redirect('Payments:history')
-
-    categories = PaymentCategory.objects.order_by('type_id', 'name')
-
-    grouped_categories = {}
-    for category in categories:
-        if category.type not in grouped_categories:
-            grouped_categories[category.type] = []
-        grouped_categories[category.type].append(category)
-
-    if request.method == 'POST':
-        form = PaymentDocumentForm(request.POST, request.FILES)
-        new_category_name = request.POST.get('new_category', '').strip()
-
-        if form.is_valid():
-            payment_document = form.save(commit=False)
-            payment_document.user = user
-            payment_document.folder = folders.first()
-            payment_document.status = 'pending'
-
-            if new_category_name:
-                other_type, created = CategoryType.objects.get_or_create(name='Autre')
-                new_category, created = PaymentCategory.objects.get_or_create(
-                    name=new_category_name,
-                    defaults={'type': other_type}
-                )
-                payment_document.category = new_category
-
-            payment_document.save()
-            # Redirection vers une page de succès ou affichage d'un message
-            return redirect('Payments:parent-payment-history')
-    else:
-        form = PaymentDocumentForm()
-
-    context = {
-        'form': form,
-        'grouped_categories': grouped_categories,
-    }
-
-    return render(request, 'Payments/submit_payment_document.html', context)
-
-
-# When lawyer add payment
 @transaction.atomic
 def submit_payment_document_lawyer(request, folder_id):
     folder = get_object_or_404(Folder, pk=folder_id)
@@ -416,6 +384,117 @@ def submit_payment_document_lawyer(request, folder_id):
         'folder': folder,
         'grouped_categories': grouped_categories,
     })
+
+
+@login_required
+def get_parent_choices(folder):
+    # Retrieve parent IDs from the folder in question
+    parent1_id = folder.parent1_id
+    parent2_id = folder.parent2_id
+
+    # Retrieve parents' full names using IDs
+    parent1 = get_user_model().objects.get(id=parent1_id)
+    parent2 = get_user_model().objects.get(id=parent2_id)
+
+    # Create a wish list using parents' full names
+    choices = [
+        (parent1.id, f"{parent1.first_name} {parent1.last_name}"),
+        (parent2.id, f"{parent2.first_name} {parent2.last_name}")
+    ]
+    return choices
+
+
+@login_required
+def create_folder(request):
+    if not request.user.is_authenticated or request.user.role != 'lawyer':
+        # Redirect to login page if user is not a logged in lawyer
+        return redirect('login')
+
+    if request.method == 'POST':
+        form = FolderForm(request.POST)
+        if form.is_valid():
+            folder = form.save(commit=False)
+            folder.lawyer = request.user
+            folder.save()
+            # Redirect to a list of folders or other success page
+            return redirect('Payments:list_folder')
+    else:
+        # Retrieve parents that are not already in a folder
+        existing_parents = Folder.objects.values_list('parent1', 'parent2')
+        existing_parents_ids = set()
+        for parent_pair in existing_parents:
+            existing_parents_ids.update(parent_pair)
+
+        # Exclude parents already in a folder
+        form = FolderForm(initial={'parent1': request.user})  # Initialiser avec l'utilisateur connecté par défaut
+        form.fields['parent1'].queryset = form.fields['parent1'].queryset.exclude(id__in=existing_parents_ids)
+        form.fields['parent2'].queryset = form.fields['parent2'].queryset.exclude(id__in=existing_parents_ids)
+
+    return render(request, 'Payments/create_folder.html', {'form': form})
+
+
+@login_required
+def pending_payments(request, folder_id):
+    folder = get_object_or_404(Folder, id=folder_id)
+    payments = PaymentDocument.objects.filter(folder=folder, status='pending')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        payment_ids_string = request.POST.get('payments')  # Récupérer la chaîne des IDs de paiements
+        payment_ids = payment_ids_string.split(',')  # Séparer la chaîne en une liste d'IDs
+
+        for payment_id in payment_ids:
+            payment_id = payment_id.strip()  # Enlever les espaces autour de chaque ID
+            if payment_id:
+                payment = get_object_or_404(PaymentDocument, id=int(payment_id))
+                if action == 'validate':
+                    payment.status = 'validated'
+                elif action == 'reject':
+                    payment.status = 'rejected'
+                payment.save()
+
+        return redirect('Payments:pending-payments', folder_id=folder_id)
+
+    context = {
+        'folder': folder,
+        'payments': payments,
+    }
+    return render(request, 'Payments/pending_payments.html', context)
+# ---------------------------------------------------------------------------------------------------------------------
+
+
+# EVERYONE
+# ---------------------------------------------------------------------------------------------------------------------
+class FolderListView(LoginRequiredMixin, ListView):
+    model = Folder
+    template_name = 'Payments/list_folder.html'
+    context_object_name = 'folders'
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if user.role == 'parent':
+            # Filter cases by user logged in as a parent
+            return Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
+        elif user.role in ['judge', 'lawyer']:
+            # Filter cases by user logged in as judge or lawyer
+            return Folder.objects.filter(Q(judge=user) | Q(lawyer=user))
+        else:
+            # Default to an empty queryset if user's role is undefined
+            return Folder.objects.none()
+
+
+class PaymentDeleteView(LoginRequiredMixin, DeleteView):
+    model = PaymentDocument
+
+    def get_queryset(self):
+        user = self.request.user
+        queryset = super().get_queryset()
+        return queryset.filter(user=user)
+
+    def get_success_url(self):
+        payment_document = self.object
+        return reverse('Payments:parent-payment-history')
 
 
 @require_POST
@@ -454,49 +533,4 @@ def add_category(request):
         return JsonResponse({'success': False, 'error': 'Category name is required.'})
 
     return JsonResponse({'success': False, 'error': 'Invalid request.'})
-
-
-def get_parent_choices(folder):
-    # Retrieve parent IDs from the folder in question
-    parent1_id = folder.parent1_id
-    parent2_id = folder.parent2_id
-
-    # Retrieve parents' full names using IDs
-    parent1 = get_user_model().objects.get(id=parent1_id)
-    parent2 = get_user_model().objects.get(id=parent2_id)
-
-    # Create a wish list using parents' full names
-    choices = [
-        (parent1.id, f"{parent1.first_name} {parent1.last_name}"),
-        (parent2.id, f"{parent2.first_name} {parent2.last_name}")
-    ]
-    return choices
-
-
-def create_folder(request):
-    if not request.user.is_authenticated or request.user.role != 'lawyer':
-        # Redirect to login page if user is not a logged in lawyer
-        return redirect('login')
-
-    if request.method == 'POST':
-        form = FolderForm(request.POST)
-        if form.is_valid():
-            folder = form.save(commit=False)
-            folder.lawyer = request.user
-            folder.save()
-            # Redirect to a list of folders or other success page
-            return redirect('Payments:list_folder')
-    else:
-        # Retrieve parents that are not already in a folder
-        existing_parents = Folder.objects.values_list('parent1', 'parent2')
-        existing_parents_ids = set()
-        for parent_pair in existing_parents:
-            existing_parents_ids.update(parent_pair)
-
-        # Exclude parents already in a folder
-        form = FolderForm(initial={'parent1': request.user})  # Initialiser avec l'utilisateur connecté par défaut
-        form.fields['parent1'].queryset = form.fields['parent1'].queryset.exclude(id__in=existing_parents_ids)
-        form.fields['parent2'].queryset = form.fields['parent2'].queryset.exclude(id__in=existing_parents_ids)
-
-    return render(request, 'Payments/create_folder.html', {'form': form})
-
+# ---------------------------------------------------------------------------------------------------------------------

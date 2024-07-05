@@ -16,6 +16,14 @@
                         <a href="{% url 'Payments:lawyer-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
                             {% trans "Ajouter un paiement" %}
                         </a>
+                         <a href="{% url 'Payments:pending-payments' folder_id=folder.id %}" class="btn btn-warning btn-sm">
+                            {% trans "Valider les paiements en attente" %}
+                        </a>
+                        {% endif %}
+                        {% if request.user.role == 'parent' %}
+                        <a href="{% url 'Payments:parent-add-payment' %}" class="btn btn-primary btn-sm">
+                            {% trans "Ajouter un paiement" %}
+                        </a>
                         {% endif %}
                     </div>
                     <!-- Payments comparison table -->
@@ -46,9 +54,16 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{% url 'Payments:magistrate-category-payments' folder.id category_entry.category_id %}" class="btn btn-primary btn-sm">
-                                                    {% trans "View Details" %}
-                                                </a>
+                                                {% if request.user.role == 'lawyer' %}
+                                                    <a href="{% url 'Payments:magistrate-category-payments' folder.id category_entry.category_id %}" class="btn btn-primary btn-sm">
+                                                            {% trans "View Details" %}
+                                                    </a>
+                                                {% endif %}
+                                                {% if request.user.role == 'parent' %}
+                                                    <a href="{{ category_entry.details_url }}" class="btn btn-primary btn-sm">
+                                                        {% trans "View Details" %}
+                                                    </a>
+                                                {% endif %}
                                             </td>
                                         </tr>
                                     {% endfor %}
