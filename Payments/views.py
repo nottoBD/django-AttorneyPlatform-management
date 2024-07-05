@@ -1,20 +1,20 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Sum, Q
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.template.loader import render_to_string
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils.text import capfirst
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DeleteView
 
-from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer, ValidatePaymentsForm
+from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer
 from .models import PaymentDocument, Folder, PaymentCategory, CategoryType
 
 User = get_user_model()
+
 
 # View PARENT
 # ---------------------------------------------------------------------------------------------------------------------
@@ -80,7 +80,8 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             parent2_pending_amount = parent2_pending_dict.get((category_type_id, category.id), 0)
 
             # Exclude categories where both parents have 0 amount
-            if parent1_amount == 0 and parent2_amount == 0 and parent1_pending_amount == 0 and parent2_pending_amount == 0:
+            if (parent1_amount == 0 and parent2_amount == 0 and parent1_pending_amount == 0
+                    and parent2_pending_amount == 0):
                 continue
 
             if category_type_id not in categories_by_type:
