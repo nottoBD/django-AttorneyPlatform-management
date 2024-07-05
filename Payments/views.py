@@ -387,7 +387,6 @@ def submit_payment_document_lawyer(request, folder_id):
     })
 
 
-@login_required
 def get_parent_choices(folder):
     # Retrieve parent IDs from the folder in question
     parent1_id = folder.parent1_id
