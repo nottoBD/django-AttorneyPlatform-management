@@ -88,7 +88,7 @@
                             {% trans "Back to Payment History" %}
                         </a>
                     {% endif %}
-                    {% if request.user.role == 'lawyer' or  request.user.role == 'judge'%}
+                    {% if request.user.role == 'parent'%}
                         <a href="{% url 'Payments:parent-payment-history' %}" class="btn btn-secondary btn-sm mt-3">
                             {% trans "Back to Payment History" %}
                         </a>

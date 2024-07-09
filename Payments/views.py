@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -29,7 +31,19 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         user = self.request.user
         self.folder = get_object_or_404(Folder, Q(parent1=user) | Q(parent2=user))
-        return PaymentDocument.objects.filter(folder=self.folder)
+
+        # Get the selected year and quarter from the request
+        selected_year = int(self.request.GET.get('year', datetime.now().year))
+        selected_quarter = int(self.request.GET.get('quarter', 1))
+
+        # Calculate the start and end dates for the selected quarter
+        start_month = (selected_quarter - 1) * 3 + 1
+        end_month = start_month + 2
+
+        start_date = datetime(selected_year, start_month, 1)
+        end_date = datetime(selected_year, end_month + 1, 1) if end_month < 12 else datetime(selected_year + 1, 1, 1)
+
+        return PaymentDocument.objects.filter(folder=self.folder, date__gte=start_date, date__lt=end_date)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -37,29 +51,35 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         folder = self.folder
         other_parent = folder.parent1 if user == folder.parent2 else folder.parent2
 
+        # Get the selected year and quarter from the request
+        selected_year = int(self.request.GET.get('year', datetime.now().year))
+        selected_quarter = int(self.request.GET.get('quarter', 1))
+
         # Retrieve only validated payments for both parents and group by category type
         parent1_valid_payments = PaymentDocument.objects.filter(user=folder.parent1, category__type__isnull=False,
-                                                                status='validated').values(
+                                                                status='validated', date__year=selected_year,
+                                                                date__quarter=selected_quarter).values(
             'category__type', 'category').annotate(total_amount=Sum('amount'))
         parent2_valid_payments = PaymentDocument.objects.filter(user=folder.parent2, category__type__isnull=False,
-                                                                status='validated').values(
+                                                                status='validated', date__year=selected_year,
+                                                                date__quarter=selected_quarter).values(
             'category__type', 'category').annotate(total_amount=Sum('amount'))
 
         # Retrieve pending payments for both parents
         parent1_pending_payments = PaymentDocument.objects.filter(user=folder.parent1, category__type__isnull=False,
-                                                                  status='pending').values(
+                                                                  status='pending', date__year=selected_year,
+                                                                  date__quarter=selected_quarter).values(
             'category__type', 'category').annotate(total_amount=Sum('amount'))
         parent2_pending_payments = PaymentDocument.objects.filter(user=folder.parent2, category__type__isnull=False,
-                                                                  status='pending').values(
+                                                                  status='pending', date__year=selected_year,
+                                                                  date__quarter=selected_quarter).values(
             'category__type', 'category').annotate(total_amount=Sum('amount'))
 
         # Create dictionaries to store payments by category type
         parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
-                                       payment
-                                       in parent1_valid_payments}
+                                       payment in parent1_valid_payments}
         parent2_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
-                                       payment
-                                       in parent2_valid_payments}
+                                       payment in parent2_valid_payments}
 
         parent1_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment
                                 in parent1_pending_payments}
@@ -105,6 +125,9 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         difference = abs(parent1_total - parent2_total)
         in_favor_of = folder.parent1 if parent1_total > parent2_total else folder.parent2
 
+        # Get the list of years for the filter
+        years = range(datetime.now().year - 10, datetime.now().year + 1)
+
         context.update({
             'parent1_user': folder.parent1,
             'parent2_user': folder.parent2,
@@ -117,6 +140,9 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'other_parent_name': f"{other_parent.first_name} {other_parent.last_name}",
             'other_parent_total': parent2_total if user == folder.parent1 else parent1_total,
             'your_total': parent1_total if user == folder.parent1 else parent2_total,
+            'years': years,
+            'selected_year': selected_year,
+            'selected_quarter': selected_quarter,
         })
 
         # Pass user_can_delete for each payment
