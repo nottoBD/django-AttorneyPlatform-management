@@ -1,22 +1,24 @@
 from datetime import datetime
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.text import capfirst
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DeleteView
 from xhtml2pdf import pisa
 
-from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer
-from .models import PaymentDocument, Folder, PaymentCategory, CategoryType
+from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer, IndexPaymentForm
+from .models import PaymentDocument, Folder, PaymentCategory, CategoryType, IndexHistory
 
 User = get_user_model()
 
@@ -191,6 +193,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'years': years,
             'selected_year': selected_year,
             'selected_quarter': selected_quarter,
+            'folder_id': folder.id,
         })
 
         # Pass user_can_delete for each payment
@@ -295,10 +298,33 @@ class MagistrateFolderPaymentHistoryView(LoginRequiredMixin, ListView):
     template_name = 'Payments/folder_payment_history.html'
     context_object_name = 'payments'
 
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
-        folder = get_object_or_404(Folder, pk=self.kwargs['folder_id'])
+        folder = get_object_or_404(Folder, pk=self.kwargs.get('folder_id'))
         self.folder = folder
-        return PaymentDocument.objects.filter(folder=folder)
+        queryset = PaymentDocument.objects.filter(folder=folder)
+
+        # Filtrage par année et trimestre
+        selected_year = self.request.GET.get('year')
+        selected_quarter = self.request.GET.get('quarter')
+
+        if selected_year and selected_quarter:
+            try:
+                selected_year = int(selected_year)
+                selected_quarter = int(selected_quarter)
+
+                start_month = (selected_quarter - 1) * 3 + 1
+                end_month = start_month + 2
+
+                start_date = datetime.date(selected_year, start_month, 1)
+                end_date = datetime.date(selected_year, end_month + 1, 1) if end_month < 12 else datetime.date(selected_year + 1, 1, 1)
+
+                queryset = queryset.filter(date__gte=start_date, date__lt=end_date)
+            except (TypeError, ValueError):
+                queryset = queryset.none()
+        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -306,40 +332,58 @@ class MagistrateFolderPaymentHistoryView(LoginRequiredMixin, ListView):
         parent1 = folder.parent1
         parent2 = folder.parent2
 
-        # Retrieve only validated payments for both parents and group by category type
-        parent1_valid_payments = PaymentDocument.objects.filter(user=parent1, category__type__isnull=False,
-                                                                status='validated').values('category__type',
-                                                                                           'category').annotate(
-            total_amount=Sum('amount'))
-        parent2_valid_payments = PaymentDocument.objects.filter(user=parent2, category__type__isnull=False,
-                                                                status='validated').values('category__type',
-                                                                                           'category').annotate(
-            total_amount=Sum('amount'))
+        # Initialize selected year and quarter as None
+        selected_year = None
+        selected_quarter = None
 
-        # Retrieve pending payments for both parents
-        parent1_pending_payments = PaymentDocument.objects.filter(user=parent1, category__type__isnull=False,
-                                                                  status='pending').values('category__type',
-                                                                                           'category').annotate(
-            total_amount=Sum('amount'))
-        parent2_pending_payments = PaymentDocument.objects.filter(user=parent2, category__type__isnull=False,
-                                                                  status='pending').values('category__type',
-                                                                                           'category').annotate(
-            total_amount=Sum('amount'))
+        # Get the selected year and quarter from the request if available
+        if 'year' in self.request.GET:
+            selected_year = self.request.GET['year']
+        if 'quarter' in self.request.GET:
+            selected_quarter = self.request.GET['quarter']
 
-        # Create dictionaries to store payments by category type
-        parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
-                                       payment in parent1_valid_payments}
-        parent2_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
-                                       payment in parent2_valid_payments}
-        parent1_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in
-                                parent1_pending_payments}
-        parent2_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in
-                                parent2_pending_payments}
+        if str(selected_year) != "None" and str(selected_quarter) != "None":
+            try:
+                parent1_valid_payments = PaymentDocument.objects.filter(
+                    user=parent1, category__type__isnull=False, status='validated', date__year=selected_year, date__quarter=selected_quarter
+                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+                parent2_valid_payments = PaymentDocument.objects.filter(
+                    user=parent2, category__type__isnull=False, status='validated', date__year=selected_year, date__quarter=selected_quarter
+                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
-        # Get all categories with their type
+                parent1_pending_payments = PaymentDocument.objects.filter(
+                    user=parent1, category__type__isnull=False, status='pending', date__year=selected_year, date__quarter=selected_quarter
+                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+                parent2_pending_payments = PaymentDocument.objects.filter(
+                    user=parent2, category__type__isnull=False, status='pending', date__year=selected_year, date__quarter=selected_quarter
+                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+            except (TypeError, ValueError):
+                parent1_valid_payments = []
+                parent2_valid_payments = []
+                parent1_pending_payments = []
+                parent2_pending_payments = []
+        else:
+            parent1_valid_payments = PaymentDocument.objects.filter(
+                user=parent1, category__type__isnull=False, status='validated'
+            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+            parent2_valid_payments = PaymentDocument.objects.filter(
+                user=parent2, category__type__isnull=False, status='validated'
+            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+
+            parent1_pending_payments = PaymentDocument.objects.filter(
+                user=parent1, category__type__isnull=False, status='pending'
+            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+            parent2_pending_payments = PaymentDocument.objects.filter(
+                user=parent2, category__type__isnull=False, status='pending'
+            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+
+        parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent1_valid_payments}
+        parent2_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent2_valid_payments}
+        parent1_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent1_pending_payments}
+        parent2_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent2_pending_payments}
+
         categories = PaymentCategory.objects.filter(type__isnull=False)
 
-        # Ensure all category types are included
         categories_by_type = {}
         for category in categories:
             category_type_id = category.type_id
@@ -365,11 +409,13 @@ class MagistrateFolderPaymentHistoryView(LoginRequiredMixin, ListView):
                 'parent2_pending_amount': parent2_pending_amount,
             })
 
-        # Calculate totals and other comparative data
         parent1_total = sum(parent1_valid_payments_dict.values())
         parent2_total = sum(parent2_valid_payments_dict.values())
         difference = abs(parent1_total - parent2_total)
         in_favor_of = parent1 if parent1_total > parent2_total else parent2
+
+        payment_years = PaymentDocument.objects.filter(folder=self.folder).dates('date', 'year')
+        years = [year.year for year in payment_years]
 
         context.update({
             'folder': folder,
@@ -381,9 +427,12 @@ class MagistrateFolderPaymentHistoryView(LoginRequiredMixin, ListView):
             'total_amount': parent1_total + parent2_total,
             'difference': difference,
             'in_favor_of': in_favor_of,
+            'years': years,
+            'selected_year': selected_year,
+            'selected_quarter': selected_quarter,
+            'folder_id': folder.id,
         })
 
-        # Pass user_can_delete for each payment
         payments_with_permissions = [
             {
                 'payment': payment,
@@ -572,22 +621,41 @@ class PaymentDeleteView(LoginRequiredMixin, DeleteView):
 
 
 class PaymentHistoryPDFView(LoginRequiredMixin, View):
-    def get(self, request, *args, **kwargs):
+    def get(self, request, folder_id=None, *args, **kwargs):
         user = self.request.user
-        folder = get_object_or_404(Folder, Q(parent1=user) | Q(parent2=user))
+
+        # Vérifier si folder_id est fourni
+        if folder_id is None:
+            return HttpResponse("No folder_id provided.", status=400)
+
+        # Vérifier si l'utilisateur est un parent ou un avocat
+        if user.role == 'lawyer':
+            folder = get_object_or_404(Folder, id=folder_id)
+        else:
+            folder = get_object_or_404(Folder, Q(parent1=user) | Q(parent2=user))
 
         # Obtenir les paramètres de la requête GET ou les définir à None si non présents
         selected_year = request.GET.get('year')
         selected_quarter = request.GET.get('quarter')
 
-        if str(selected_year) != "None":
+        if selected_year and selected_year != "None":
             selected_year = int(selected_year)
-        if str(selected_quarter) != "None":
-            selected_quarter = int(selected_quarter)
+        else:
+            selected_year = None
 
-        # Créer une instance de PaymentHistoryView et l'initialiser avec la requête
-        payment_history_view = PaymentHistoryView()
+        if selected_quarter and selected_quarter != "None":
+            selected_quarter = int(selected_quarter)
+        else:
+            selected_quarter = None
+
+        # Instancier la bonne vue en fonction du rôle de l'utilisateur
+        if user.role == 'lawyer':
+            payment_history_view = MagistrateFolderPaymentHistoryView()
+        else:
+            payment_history_view = PaymentHistoryView()
+
         payment_history_view.request = request
+        payment_history_view.kwargs = {'folder_id': folder_id}  # Passer folder_id comme kwargs
 
         # Appeler dispatch pour initialiser la vue correctement
         payment_history_view.dispatch(request, *args, **kwargs)
@@ -595,8 +663,7 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
         # Obtenir le contexte de la vue PaymentHistoryView
         context = payment_history_view.get_context_data()
 
-        if str(selected_year) == "None" or str(selected_quarter) == "None":
-            print("init")
+        if selected_year is None or selected_quarter is None:
             context['selected_year'] = datetime.now()
             context['selected_quarter'] = None
             filename = f'PaymentHistory_{context["selected_year"]}.pdf'
@@ -655,3 +722,41 @@ def add_category(request):
 
     return JsonResponse({'success': False, 'error': 'Invalid request.'})
 # ---------------------------------------------------------------------------------------------------------------------
+
+
+# ADMINISTRATOR
+#----------------------------------------------------------------------------------------------------------------------
+@login_required
+def index_payments(request):
+    if request.user.role != 'administrator':
+        return redirect('home')  # Redirect to an appropriate page if the user is not an administrator
+
+    current_year = timezone.now().year
+    confirm_required = False
+
+    if request.method == 'POST':
+        form = IndexPaymentForm(request.POST)
+        if form.is_valid():
+            percentage = form.cleaned_data['percentage']
+            confirm_indexation = request.POST.get('confirm_indexation', 'false') == 'true'
+            messages.info(request, f"confirm_indexation: {confirm_indexation}")  # Debug message
+
+            existing_index = IndexHistory.objects.filter(year=current_year).exists()
+            messages.info(request, f"existing_index: {existing_index}")  # Debug message
+
+            if existing_index and not confirm_indexation:
+                messages.warning(request, f"An indexation of {percentage}% already exists for the year {current_year}.")
+                confirm_required = True
+            else:
+                multiplier = 1 + (percentage / 100)
+                PaymentDocument.objects.all().update(amount=F('amount') * multiplier)
+
+                # Create a new entry in IndexHistory for the current year
+                IndexHistory.objects.create(year=current_year, percentage=percentage)
+
+                messages.success(request, f"All payments have been indexed by {percentage}%.")
+                return redirect('Payments:index_payments')
+    else:
+        form = IndexPaymentForm()
+
+    return render(request, 'Payments/index_payments.html', {'form': form, 'confirm_required': confirm_required})

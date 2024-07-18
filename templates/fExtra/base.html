@@ -97,23 +97,28 @@
                                 <i class="fs-4 bi-house"></i> <span class="ms-1 d-none d-sm-inline">{% trans "Home" %}</span>
                             </a>
                         </li>
-                        {% if request.user.role == 'parent' or request.user.role == 'judge' or request.user.role == 'lawyer' %}
-                            <li>
-                                <a href="#submenu2" data-bs-toggle="collapse" class="nav-link px-0 align-middle">
-                                    <i class="fs-4 bi-currency-dollar"></i> <span class="ms-1 d-none d-sm-inline">{% trans "Payments" %}</span>
-                                </a>
-                                <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
-                                    {% if request.user.role == 'lawyer' %}
-                                        <li class="w-100">
-                                            <a href="/Payments/create_folder" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "Add folder" %}</a>
-                                        </li>
-                                    {% endif %}
-                                        <li>
-                                            <a href="/Payments/list_folder" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "Folder list" %}</a>
-                                        </li>
-                                </ul>
-                            </li>
-                        {% endif %}
+                        <li>
+                            <a href="#submenu2" data-bs-toggle="collapse" class="nav-link px-0 align-middle">
+                                <i class="fs-4 bi-currency-dollar"></i> <span class="ms-1 d-none d-sm-inline">{% trans "Payments" %}</span>
+                            </a>
+                            <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
+                                {% if request.user.role == 'lawyer' %}
+                                    <li class="w-100">
+                                        <a href="/Payments/create_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add folder" %}</a>
+                                    </li>
+                                {% endif %}
+                                {% if request.user.role != 'administrator' %}
+                                    <li>
+                                        <a href="/Payments/list_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Folder list" %}</a>
+                                    </li>
+                                {% endif %}
+                                {% if request.user.role == 'administrator' %}
+                                    <li>
+                                        <a href="/Payments/index_payments" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Indexation" %}</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
                         {% if request.user.is_staff %}
                             <li>
                                 <a href="#submenu1" data-bs-toggle="collapse" class="nav-link px-0 align-middle">
@@ -121,14 +126,14 @@
                                 </a>
                                 <ul class="collapse nav flex-column ms-1" id="submenu1" data-bs-parent="#menu">
                                     <li class="w-100">
-                                        <a href="/accounts/list" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "List All" %}</a>
+                                        <a href="/accounts/list" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "List All" %}</a>
                                     </li>
                                     <li>
-                                        <a href="/accounts/register" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "Add Parent" %}</a>
+                                        <a href="/accounts/register" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add Parent" %}</a>
                                     </li>
                                     {% if request.user.role == 'administrator' %}
                                         <li>
-                                            <a href="/accounts/register-magistrate" class="nav-link px-0"> <span class="d-none d-sm-inline"></span>{% trans "Add" %} judge / lawyer</a>
+                                            <a href="/accounts/register-magistrate" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add" %} judge / lawyer</a>
                                         </li>
                                     {% endif %}
                                 </ul>
@@ -145,7 +150,7 @@
                             {% for lang in LANGUAGES %}
                                 {% if lang.0|compare_codes != LANGUAGE_CODE|compare_codes %}
                                     <li class="w-100">
-                                        <a href="#" class="nav-link px-0 language-selector" data-language="{{ lang.0 }}">
+                                        <a href="#" class="nav-link px-0 language-selector ms-4" data-language="{{ lang.0 }}">
                                             <span class="d-none d-sm-inline">{{ lang.1 }}</span>
                                             {{ lang.0|cut:"_BE"|cut:"-BE" }}
                                         </a>

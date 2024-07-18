@@ -10,7 +10,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="card-title mb-0">{% trans "Récapitulatif des paiements" %}</h2>
-                        <a href="{% url 'Payments:download_pdf' %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-success btn-sm">
+                        <a href="{% url 'Payments:download_pdf' folder_id=folder_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-success btn-sm">
                             {% trans "Télécharger en PDF" %}
                         </a>
                         {% if request.user.role == 'lawyer' %}

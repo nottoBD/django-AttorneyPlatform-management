@@ -1,5 +1,5 @@
 import re
-import magic
+from PIL import Image
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
@@ -156,11 +156,18 @@ class UserUpdateForm(forms.ModelForm):
     def clean_profile_image(self):
         profile_image = self.cleaned_data.get('profile_image')
         if profile_image:
-            valid_mime_types = ['image/jpeg', 'image/png', 'image/gif']
-            file_mime_type = magic.from_buffer(profile_image.read(2048), mime=True)
-            profile_image.seek(0)
-            if file_mime_type not in valid_mime_types:
-                raise ValidationError(_('Unsupported file type. Please upload a JPEG, PNG, or GIF image.'))
+            valid_formats = ['JPEG', 'PNG', 'GIF']
+
+            try:
+                image = Image.open(profile_image)
+                image_format = image.format
+                if image_format not in valid_formats:
+                    raise ValidationError(_('Unsupported file type. Please upload a JPEG, PNG, or GIF image.'))
+            except Exception as e:
+                raise ValidationError(_('Invalid image file. Please upload a valid image.'))
+            finally:
+                profile_image.seek(0)  # Reset file pointer
+
         return profile_image
 
 

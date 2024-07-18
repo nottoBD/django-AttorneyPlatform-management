@@ -54,3 +54,13 @@ class ValidatePaymentsForm(forms.Form):
     )
     action = forms.ChoiceField(choices=PAYMENTS_CHOICES)
     payments = forms.ModelMultipleChoiceField(queryset=PaymentDocument.objects.filter(status='pending'), widget=forms.CheckboxSelectMultiple)
+
+
+class IndexPaymentForm(forms.Form):
+    percentage = forms.DecimalField(label='Percentage (%)', min_value=0, max_value=100)
+    replace_existing = forms.BooleanField(
+        label='Replace existing indexation for the current year',
+        required=False,
+        initial=False
+    )
+    confirm_indexation = forms.CharField(widget=forms.HiddenInput(), required=False, initial='false')
