@@ -36,7 +36,7 @@
                         {{ form.date|as_crispy_field }}
                         {{ form.document|as_crispy_field }}
                         <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Submit" %}</button>
-                        <a href="{% url 'Payments:magistrate_folder_payment_history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
+                        <a href="{% url 'Payments:payment-history' %}" class="btn btn-secondary btn-sm mt-3">
                         {% trans "Back to Payment History" %}
                         </a>
                     </form>

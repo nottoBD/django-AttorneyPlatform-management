@@ -10,8 +10,12 @@
                 <div class="card-body">
                     <h2 class="card-title mb-4">{% trans "Payments for Category" %}: {{ category.name }}</h2>
                     
+                    {% if selected_year and selected_quarter %}
+                        <p><strong>{% trans "Selected Period:" %}</strong> {{ selected_year }} - T{{ selected_quarter }}</p>
+                    {% endif %}
+
                     {% if parent1_payments or parent2_payments %}
-                          <div class="mb-3">
+                        <div class="mb-3">
                             <span class="bg-success p-1 rounded">{% trans "Validated" %}</span>
                             <span class="bg-warning p-1 rounded">{% trans "Pending" %}</span>
                             <span class="bg-danger p-1 rounded">{% trans "Rejected" %}</span>
@@ -83,20 +87,12 @@
                     {% else %}
                         <p>{% trans "No payments found for this category." %}</p>
                     {% endif %}
-                    {% if request.user.role == 'lawyer' or  request.user.role == 'judge'%}
-                        <a href="{% url 'Payments:magistrate_folder_payment_history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
+                        <a href="{% url 'Payments:payment-history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
                             {% trans "Back to Payment History" %}
                         </a>
-                    {% endif %}
-                    {% if request.user.role == 'parent'%}
-                        <a href="{% url 'Payments:parent-payment-history' %}" class="btn btn-secondary btn-sm mt-3">
-                            {% trans "Back to Payment History" %}
-                        </a>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}

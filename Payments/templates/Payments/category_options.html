@@ -1,6 +1,0 @@
-{% for category_type in categories %}    <optgroup label="{{ category_type.name }}">
-        {% for category in category_type.payment_categories.all %}
-            <option value="{{ category.pk }}">{{ category.name }}</option>
-        {% endfor %}
-    </optgroup>
-{% endfor %}

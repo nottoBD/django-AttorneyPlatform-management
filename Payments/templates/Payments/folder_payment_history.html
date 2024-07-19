@@ -22,7 +22,7 @@
                         </a>
                         {% endif %}
                         {% if request.user.role == 'parent' %}
-                        <a href="{% url 'Payments:parent-add-payment' %}" class="btn btn-primary btn-sm">
+                        <a href="{% url 'Payments:parent-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
                             {% trans "Ajouter un paiement" %}
                         </a>
                         {% endif %}
@@ -56,16 +56,9 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                {% if request.user.role == 'lawyer' %}
-                                                    <a href="{% url 'Payments:magistrate-category-payments' folder.id category_entry.category_id %}" class="btn btn-primary btn-sm">
-                                                        {% trans "View Details" %}
-                                                    </a>
-                                                {% endif %}
-                                                {% if request.user.role == 'parent' %}
-                                                    <a href="{{ category_entry.details_url }}" class="btn btn-primary btn-sm">
-                                                        {% trans "View Details" %}
-                                                    </a>
-                                                {% endif %}
+                                                <a href="{% url 'Payments:category-payments' folder.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
+                                                    {% trans "View Details" %}
+                                                </a>
                                             </td>
                                         </tr>
                                     {% endfor %}

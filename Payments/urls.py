@@ -2,24 +2,23 @@ from django.conf.urls.static import static
 from django.urls import path
 from django.conf import settings
 
-from . import views
-from .views import PaymentHistoryView, FolderListView, MagistrateFolderPaymentHistoryView, \
-    submit_payment_document_lawyer, PaymentDeleteView, CategoryPaymentsView, add_category, \
-    MagistrateCategoryPaymentsView, PaymentHistoryPDFView, index_payments
+from .views import (PaymentHistoryView, FolderListView,
+                    submit_payment_document_lawyer, CategoryPaymentsView, add_category,
+                    PaymentHistoryPDFView, index_payments, delete_indexation, submit_payment_document, create_folder,
+                    pending_payments)
 
 app_name = 'Payments'
 urlpatterns = [
-    path('parent-add-payment/', views.submit_payment_document, name='parent-add-payment'),
     path('add_category/', add_category, name='add_category'),
-    path('parent-payment-history/', PaymentHistoryView.as_view(), name='parent-payment-history'),
-    path('parent-payment-history/category/<int:category_id>/', CategoryPaymentsView.as_view(), name='category-payments'),
-    path('create_folder/', views.create_folder, name='create_folder'),
+    path('payment-history/<int:folder_id>/', PaymentHistoryView.as_view(), name='payment-history'),
+    path('payment-history/<int:folder_id>/<int:category_id>/', CategoryPaymentsView.as_view(), name='category-payments'),
+    path('create_folder/', create_folder, name='create_folder'),
     path('list_folder/', FolderListView.as_view(), name='list_folder'),
-    path('magistrate/<int:folder_id>/', MagistrateFolderPaymentHistoryView.as_view(), name='magistrate_folder_payment_history'),
-    path('magistrate-payment-history/folder/<int:folder_id>/category/<int:category_id>/', MagistrateCategoryPaymentsView.as_view(), name='magistrate-category-payments'),
     path('download_pdf/<int:folder_id>/', PaymentHistoryPDFView.as_view(), name='download_pdf'),
-    path('pending-payments/<int:folder_id>/', views.pending_payments, name='pending-payments'),
+    path('pending-payments/<int:folder_id>/', pending_payments, name='pending-payments'),
+    path('parent-add-payment/<int:folder_id>/', submit_payment_document, name='parent-add-payment'),
     path('lawyer-add-payment/<int:folder_id>/', submit_payment_document_lawyer, name='lawyer-add-payment'),
-    path('delete-payment/<int:pk>/', PaymentDeleteView.as_view(), name='delete_payment'),
     path('index_payments/', index_payments, name='index_payments'),
+    path('delete-indexation/<int:index_id>/', delete_indexation, name='delete_indexation'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

@@ -58,9 +58,4 @@ class ValidatePaymentsForm(forms.Form):
 
 class IndexPaymentForm(forms.Form):
     percentage = forms.DecimalField(label='Percentage (%)', min_value=0, max_value=100)
-    replace_existing = forms.BooleanField(
-        label='Replace existing indexation for the current year',
-        required=False,
-        initial=False
-    )
     confirm_indexation = forms.CharField(widget=forms.HiddenInput(), required=False, initial='false')
