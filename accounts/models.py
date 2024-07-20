@@ -47,7 +47,7 @@ class User(AbstractUser, PermissionsMixin):
     date_of_birth = models.DateField(default=timezone.now)
     telephone = models.CharField(max_length=16, null=True, blank=True)
     address = models.CharField(null=True, blank=True, max_length=75)
-    national_number = models.CharField(max_length=11, blank=True, null=True)
+    national_number = models.CharField(max_length=11, blank=True, null=True, unique=True)
     profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg', validators=[validate_image])
 
     USERNAME_FIELD = 'email'
