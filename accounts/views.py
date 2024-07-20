@@ -14,7 +14,7 @@ from django.utils.translation import gettext as _
 from django.views.generic import ListView, UpdateView
 from pip._internal.utils import logging
 
-from .forms import MagistrateRegistrationForm, UserRegisterForm, UserUpdateForm, CancelDeletionForm, DeletionRequestForm
+from .forms import JusticeRegistrationForm, UserRegisterForm, UserUpdateForm, CancelDeletionForm, DeletionRequestForm
 from .models import User, AvocatParent, JugeParent
 
 User = get_user_model()
@@ -35,7 +35,6 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         user = form.save(commit=False)
         user.is_active = form.cleaned_data.get('is_active', False)
-        print(f"Debug: is_active value being saved: {user.is_active}")
         user.save()
 
         if 'related_users' in form.cleaned_data:
@@ -190,13 +189,13 @@ class UserListView(LoginRequiredMixin, ListView):
 @user_passes_test(lambda u: u.is_superuser, login_url='/login/')
 def register_magistrate(request):
     if request.method == 'POST':
-        form = MagistrateRegistrationForm(request.POST)
+        form = JusticeRegistrationForm(request.POST)
         if form.is_valid():
             magistrate = form.save()
-            messages.success(request, _('Lawyer "%s" registered successfully.' % magistrate.email))
+            messages.success(request, _('Attorney registered successfully.' % magistrate.email))
             return redirect(reverse('accounts:user_list'))
     else:
-        form = MagistrateRegistrationForm()
+        form = JusticeRegistrationForm()
     return render(request, 'registration/register_magistrate.html', {'form': form})
 
 
@@ -206,15 +205,7 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.role = 'parent'
-            user.national_number_raw = form.cleaned_data['national_number']
-            formatted_number = (
-                    form.cleaned_data['national_number'][:2] + '.' +
-                    form.cleaned_data['national_number'][2:4] + '.' +
-                    form.cleaned_data['national_number'][4:6] + '-' +
-                    form.cleaned_data['national_number'][6:9] + '.' +
-                    form.cleaned_data['national_number'][9:]
-            )
-            user.national_number = formatted_number
+            user.national_number_raw = form.cleaned_data['national_number'].replace('.', '').replace('-', '')
             user.save()
 
             # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
