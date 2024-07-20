@@ -16,7 +16,19 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = env('EMAIL_BACKEND')
+
+EMAIL_HOST = env('EMAIL_HOST')
+
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+
+EMAIL_PORT = env('EMAIL_PORT', cast=int)
+
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', cast=bool)
+
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 
 SITE_ID = 1
 
@@ -50,19 +62,19 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 LANGUAGES = [
     ('fr', 'French'),
     ('en', 'English'),
-    ('nl-BE', 'Dutch'),
+    ('nl-BE', 'Flemish'),
     ('de', 'German'),
 ]
 
@@ -92,7 +104,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'fExtra.wsgi.application'
 
-# Postgresql
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -102,16 +113,6 @@ DATABASES = {
         'PORT': '5432'
     }
 }
-
-# Mysql
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'neok',
-#         'USER': 'user',
-#         'PASSWORD': 'Neok',
-#     }
-# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -175,17 +176,6 @@ COOKIEBANNER = {
                 {
                     "pattern": "sessionid",
                     "description": _("This cookie is necessary to allow logging in, for example."),
-                },
-            ],
-        },
-        {
-            "id": "analytics",
-            "name": _("Analytics"),
-            "optional": True,
-            "cookies": [
-                {
-                    "pattern": "_pk_.*",
-                    "description": _("Matomo cookie for website analysis."),
                 },
             ],
         },
