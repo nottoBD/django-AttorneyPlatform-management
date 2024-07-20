@@ -42,13 +42,12 @@ class User(AbstractUser, PermissionsMixin):
     role = models.CharField(max_length=13, choices=ROLE_CHOICES, default='parent')
     is_staff = models.BooleanField(default=False)
     gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('X', 'They')], null=True, blank=True, default=' ')
-    last_name = models.CharField('last name', max_length=150, blank=True)
-    first_name = models.CharField('first name', max_length=30, blank=True)
+    last_name = models.CharField('last name', max_length=35, blank=True)
+    first_name = models.CharField('first name', max_length=25, blank=True)
     date_of_birth = models.DateField(default=timezone.now)
     telephone = models.CharField(max_length=16, null=True, blank=True)
     address = models.CharField(null=True, blank=True, max_length=75)
-    national_number_raw = models.CharField(max_length=11, blank=True, null=True)
-    national_number = models.CharField(max_length=15, blank=True, null=True)
+    national_number = models.CharField(max_length=11, blank=True, null=True)
     profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg', validators=[validate_image])
 
     USERNAME_FIELD = 'email'
@@ -82,6 +81,12 @@ class User(AbstractUser, PermissionsMixin):
 
     def is_deletion_pending(self):
         return self.deletion_requested_at and (timezone.now() < self.deletion_requested_at + timedelta(days=30))
+
+    def get_formatted_national_number(self):
+        nn = self.national_number_raw
+        if nn and len(nn) == 11:
+            return f"{nn[:2]}.{nn[2:4]}.{nn[4:6]}-{nn[6:9]}.{nn[9:]}"
+        return nn
 
 
 class AvocatParent(models.Model):

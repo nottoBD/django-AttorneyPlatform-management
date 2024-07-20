@@ -7,6 +7,10 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 from .models import AvocatParent, JugeParent
+from .validations import (
+    clean_email, validate_image, sanitize_text, validate_national_number,
+    validate_password, validate_telephone
+)
 
 User = get_user_model()
 
@@ -22,17 +26,6 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ['last_name', 'first_name', 'email', 'profile_image', 'related_users', 'is_active']
 
-
-    def clean_is_active(self):
-        is_active = self.cleaned_data.get('is_active')
-        print(f"Debug: clean_is_active called with is_active = {is_active}")
-        if 'is_active' in self.changed_data:
-            if not self.request_user.is_superuser and not self.request_user.is_administrator:
-                raise forms.ValidationError(_("You are not authorized to change the active status."))
-        return is_active if is_active else False
-
-
-
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop('request_user', None)
         super().__init__(*args, **kwargs)
@@ -44,6 +37,28 @@ class UserUpdateForm(forms.ModelForm):
             self._setup_lawyer_judge_form(target_user)
         elif self.request_user.is_parent:
             self._setup_parent_form(target_user)
+
+    # les méthodes clean_ sont automatiquements appelées par Django
+    def clean_email(self):
+        return clean_email(self.cleaned_data.get('email'))
+
+    def clean_first_name(self):
+        return sanitize_text(self.cleaned_data.get('first_name'))
+
+    def clean_last_name(self):
+        return sanitize_text(self.cleaned_data.get('last_name'))
+
+    def clean_profile_image(self):
+        profile_image = self.cleaned_data.get('profile_image')
+        return validate_image(profile_image) if profile_image else None
+
+    def clean_is_active(self):
+        is_active = self.cleaned_data.get('is_active')
+        if 'is_active' in self.changed_data:
+            if not self.request_user.is_superuser and not self.request_user.is_administrator:
+                raise forms.ValidationError(_("You are not authorized to change the active status."))
+        return is_active if is_active else False
+
 
     def _setup_admin_form(self, target_user):
         if target_user.role == 'parent':
@@ -96,22 +111,7 @@ class UserUpdateForm(forms.ModelForm):
         else:
             self.fields.pop('related_users', None)
 
-    def form_valid(self, form):
-        if not self.request_user.is_superuser and 'role' in form.changed_data:
-            form.add_error('role', _("You are not authorized to change the role."))
-            return super().form_invalid(form)
 
-        response = super().form_valid(form)
-
-        if 'related_users' in form.cleaned_data:
-            related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
-            related_users_ids = set(related_users_ids)
-            if self.instance.role == 'parent':
-                self._handle_parent_relationships(related_users_ids)
-            elif self.instance.role in ['lawyer', 'judge']:
-                self._handle_lawyer_judge_relationships(related_users_ids)
-
-        return response
 
     def _handle_parent_relationships(self, related_users_ids):
         related_users_ids = set(related_users_ids)
@@ -153,28 +153,27 @@ class UserUpdateForm(forms.ModelForm):
             parent_instance = User.objects.get(pk=user_id)
             relationship_model.objects.get_or_create(**{own_field: self.instance, 'parent': parent_instance})
 
-    def clean_profile_image(self):
-        profile_image = self.cleaned_data.get('profile_image')
-        if profile_image:
-            valid_formats = ['JPEG', 'PNG', 'GIF']
+    # def form_valid(self, form):
+    #     if not self.request_user.is_superuser and 'role' in form.changed_data:
+    #         form.add_error('role', _("You are not authorized to change the role."))
+    #         return super().form_invalid(form)
+    #
+    #     response = super().form_valid(form)
+    #
+    #     if 'related_users' in form.cleaned_data:
+    #         related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
+    #         related_users_ids = set(related_users_ids)
+    #         if self.instance.role == 'parent':
+    #             self._handle_parent_relationships(related_users_ids)
+    #         elif self.instance.role in ['lawyer', 'judge']:
+    #             self._handle_lawyer_judge_relationships(related_users_ids)
+    #
+    #     return response
 
-            try:
-                image = Image.open(profile_image)
-                image_format = image.format
-                if image_format not in valid_formats:
-                    raise ValidationError(_('Unsupported file type. Please upload a JPEG, PNG, or GIF image.'))
-            except Exception as e:
-                raise ValidationError(_('Invalid image file. Please upload a valid image.'))
-            finally:
-                profile_image.seek(0)  # Reset file pointer
-
-        return profile_image
-
-
-class MagistrateRegistrationForm(UserCreationForm):
+class JusticeRegistrationForm(UserCreationForm):
     ROLE_CHOICES = [
         ('judge', 'Judge'),
-        ('lawyer', 'Lawyer'),
+        ('lawyer', 'Attorney'),
     ]
 
     role = forms.ChoiceField(choices=ROLE_CHOICES, label="Role")
@@ -190,11 +189,32 @@ class MagistrateRegistrationForm(UserCreationForm):
                   'parents_assigned']
 
     def __init__(self, *args, **kwargs):
-        super(MagistrateRegistrationForm, self).__init__(*args, **kwargs)
+        super(JusticeRegistrationForm, self).__init__(*args, **kwargs)
         self.fields['email'].required = True
         self.fields['password1'].help_text = None
         self.fields['password2'].help_text = None
         self.fields['parents_assigned'].help_text = _("Press Control or Shift to select several Parents.")
+
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data['first_name']
+        return sanitize_text(first_name)
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data['last_name']
+        return sanitize_text(last_name)
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        return clean_email(email)
+
+    def clean_num_telephone(self):
+        telephone = self.cleaned_data.get('num_telephone', '')
+        return validate_telephone(telephone)
+
+    def clean_password1(self):
+        password1 = self.cleaned_data.get('password1')
+        return validate_password(password1)
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -219,45 +239,17 @@ class MagistrateRegistrationForm(UserCreationForm):
 class UserRegisterForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ["gender", "national_number", "last_name", "first_name", "email", "date_of_birth", "address",
+        fields = ["national_number", "last_name", "first_name", "email", "date_of_birth", "address",
                   "telephone", "password1", "password2"]
         widgets = {
             'date_of_birth': forms.DateInput(attrs={'type': 'date'})
         }
 
-    gender = forms.ChoiceField(choices=[('M', 'Male'), ('F', 'Female'), ('X', 'Other')], required=False,
-                               label=_("Gender"))
     national_number = forms.CharField(max_length=15, required=False, label=_("National Number"))
-    last_name = forms.CharField(max_length=150, required=True, label=_("Last Name"))
-    first_name = forms.CharField(max_length=30, required=True, label=_("First Name"))
-    telephone = forms.CharField(max_length=16, required=False, label=_("Telephone"))
+    last_name = forms.CharField(max_length=35, required=True, label=_("Last Name"))
+    first_name = forms.CharField(max_length=25, required=True, label=_("First Name"))
+    telephone = forms.CharField(max_length=13, required=False, label=_("Telephone"))
     address = forms.CharField(widget=forms.TextInput, required=False, label=_("Address"), max_length=70)
-
-    def clean_national_number(self):
-        national_number = self.cleaned_data.get('national_number')
-        unformatted_number = national_number.replace('.', '').replace('-', '')
-        if len(unformatted_number) != 11:
-            raise ValidationError(_("National number must be exactly 11 digits long."))
-        return unformatted_number
-
-    def clean_password(self):
-        password = self.cleaned_data.get('password')
-        if len(password) < 8:
-            raise ValidationError('The password must be at least 8 characters long.')
-        return password
-
-    def clean_confirm_password(self):
-        password = self.cleaned_data.get('password')
-        confirm_password = self.cleaned_data.get('confirm_password')
-        if password != confirm_password:
-            raise ValidationError('The passwords do not match.')
-        return confirm_password
-
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            raise ValidationError('Enter a valid email address.')
-        return email
 
     def __init__(self, *args, **kwargs):
         super(UserRegisterForm, self).__init__(*args, **kwargs)
@@ -265,6 +257,41 @@ class UserRegisterForm(UserCreationForm):
         self.fields['date_of_birth'].widget.format = '%d/%m/%Y'
         self.fields['password1'].help_text = None
         self.fields['password2'].help_text = None
+
+    def clean_national_number(self):
+        national_number = self.cleaned_data.get('national_number', '')
+        unformatted_number = ''.join(filter(str.isdigit, national_number))
+        return validate_national_number(unformatted_number)
+
+
+    def clean_first_name(self):
+        first_name = self.cleaned_data.get('first_name', '')
+        return sanitize_text(first_name)
+
+    def clean_last_name(self):
+        last_name = self.cleaned_data.get('last_name', '')
+        return sanitize_text(last_name)
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '')
+        return clean_email(email)
+
+    def clean_telephone(self):
+        telephone = self.cleaned_data.get('telephone', '')
+        return validate_telephone(telephone)
+
+    def clean_password1(self):
+        password1 = self.cleaned_data.get('password1', '')
+        return validate_password(password1)
+
+    def clean_password2(self):
+        # Ensure this password matches the first one entered
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+        if password1 and password2 and password1 != password2:
+            raise ValidationError(_('The passwords do not match.'))
+        return password2
+
 
 
 class DeletionRequestForm(forms.Form):

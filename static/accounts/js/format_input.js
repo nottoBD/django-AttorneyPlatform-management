@@ -6,21 +6,35 @@ document.addEventListener("DOMContentLoaded", function() {
         var input = e.target.value.replace(/\D/g, '');
         var formattedInput = input;
 
-        if(input.length > 2) {
+        if (input.length > 2) {
             formattedInput = input.substring(0, 2) + '.' + input.substring(2);
         }
-        if(input.length > 4) {
+        if (input.length > 4) {
             formattedInput = formattedInput.substring(0, 5) + '.' + input.substring(4);
         }
-        if(input.length > 6) {
+        if (input.length > 6) {
             formattedInput = formattedInput.substring(0, 8) + '-' + input.substring(6);
         }
-        if(input.length > 9) {
+        if (input.length > 9) {
             formattedInput = formattedInput.substring(0, 12) + '.' + input.substring(9);
         }
 
         e.target.value = formattedInput.substring(0, 15);
+
+        if (input.length >= 6) {
+            var month = parseInt(input.substring(2, 4), 10);
+            var day = parseInt(input.substring(4, 6), 10);
+
+            if (month < 1 || month > 12) {
+                e.target.setCustomValidity("The month must be between 01 and 12.");
+            } else if (day < 1 || day > 31) {
+                e.target.setCustomValidity("The day must be between 01 and 31.");
+            } else {
+                e.target.setCustomValidity("");
+            }
+        }
     }
+
 
     function validateDOB(e) {
         var input = e.target.value;
