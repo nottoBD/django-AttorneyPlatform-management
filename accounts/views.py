@@ -237,7 +237,7 @@ class UserOrSuperuserRequiredMixin(UserPassesTestMixin):
         return user.is_authenticated and (user == self.request.user or user.is_superuser)
 
 
-class ResetPasswordView(UserOrSuperuserRequiredMixin, SuccessMessageMixin, PasswordResetView):
+class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
     template_name = 'registration/password_reset.html'
     email_template_name = 'registration/password_reset_mail.html'
     subject_template_name = 'registration/password_reset_subject.txt'
@@ -247,7 +247,7 @@ class ResetPasswordView(UserOrSuperuserRequiredMixin, SuccessMessageMixin, Passw
     success_url = reverse_lazy('home')
 
 
-class PasswordResetConfirmationView(UserOrSuperuserRequiredMixin, PasswordResetConfirmView):
+class PasswordResetConfirmationView(PasswordResetConfirmView):
     template_name = 'registration/password_reset_confirmation.html'
     post_reset_login = False
     success_url = reverse_lazy('accounts:login')
