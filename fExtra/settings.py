@@ -153,7 +153,7 @@ ANONYMOUS_USER_NAME = None
 
 COOKIEBANNER = {
     "title": _("Cookie settings"),
-    "header_text": _("We are using cookies on this website. A few are essential, others are not."),
+    "header_text": _("We are using a few essential cookies on this website."),
     "footer_text": _("Please accept our cookies"),
     "footer_links": [
         {"title": _("Imprint"), "href": "/imprint"},
@@ -176,6 +176,10 @@ COOKIEBANNER = {
                 {
                     "pattern": "sessionid",
                     "description": _("This cookie is necessary to allow logging in, for example."),
+                },
+                {
+                    "pattern": "django_language",
+                    "description": _("Stores the language preference of the user."),
                 },
             ],
         },
