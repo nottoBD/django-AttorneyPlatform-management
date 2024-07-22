@@ -104,17 +104,17 @@
                             <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
                                 {% if request.user.role == 'lawyer' %}
                                     <li class="w-100">
-                                        <a href="/Payments/create_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add folder" %}</a>
+                                        <a href="/payments/create_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add folder" %}</a>
                                     </li>
                                 {% endif %}
                                 {% if request.user.role != 'administrator' %}
                                     <li>
-                                        <a href="/Payments/list_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Folder list" %}</a>
+                                        <a href="/payments/list_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Folder list" %}</a>
                                     </li>
                                 {% endif %}
                                 {% if request.user.role == 'administrator' %}
                                     <li>
-                                        <a href="/Payments/index_payments" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Indexation" %}</a>
+                                        <a href="/payments/index_payments" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Indexation" %}</a>
                                     </li>
                                 {% endif %}
                             </ul>

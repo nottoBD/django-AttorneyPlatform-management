@@ -46,7 +46,7 @@
                                 <td>{{ index.percentage }}%</td>
                                 <td>{{ index.created_at }}</td>
                                 <td>
-                                    <form action="{% url 'Payments:delete_indexation' index.id %}" method="post" style="display:inline;">
+                                    <form action="{% url 'payments:delete_indexation' index.id %}" method="post" style="display:inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{% trans "Are you sure you want to delete this indexation?" %}');">{% trans "Delete" %}</button>
                                     </form>

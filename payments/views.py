@@ -17,14 +17,16 @@ from django.views.generic import ListView
 from xhtml2pdf import pisa
 
 from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer, IndexPaymentForm
-from .models import PaymentDocument, Folder, PaymentCategory, CategoryType, IndexHistory
+from .models import Document, Folder, Category, CategoryType, IndexHistory
 
 User = get_user_model()
 
 
+# EVERYONE
+#----------------------------------------------------------------------------------------------------------------------
 class FolderListView(LoginRequiredMixin, ListView):
     model = Folder
-    template_name = 'Payments/list_folder.html'
+    template_name = 'payments/list_folder.html'
     context_object_name = 'folders'
 
     def get_queryset(self):
@@ -42,8 +44,8 @@ class FolderListView(LoginRequiredMixin, ListView):
 
 
 class PaymentHistoryView(LoginRequiredMixin, ListView):
-    model = PaymentDocument
-    template_name = 'Payments/folder_payment_history.html'
+    model = Document
+    template_name = 'payments/folder_payment_history.html'
     context_object_name = 'payments'
 
     def dispatch(self, request, *args, **kwargs):
@@ -76,7 +78,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         return folder.parent1 == user or folder.parent2 == user or user.role == "lawyer" or user.role == "judge"
 
     def get_queryset(self):
-        queryset = PaymentDocument.objects.filter(folder=self.folder)
+        queryset = Document.objects.filter(folder=self.folder)
         selected_year = self.request.GET.get('year')
         selected_quarter = self.request.GET.get('quarter')
 
@@ -93,14 +95,14 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
                 queryset = queryset.filter(date__gte=start_date, date__lt=end_date)
             except (TypeError, ValueError):
-                queryset = PaymentDocument.objects.filter(folder=self.folder)
+                queryset = Document.objects.filter(folder=self.folder)
                 print(queryset)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['folder_id'] = self.folder.id
-        context['categories'] = PaymentCategory.objects.all()
+        context['categories'] = Category.objects.all()
         folder = self.folder
         parent1 = folder.parent1
         parent2 = folder.parent2
@@ -111,20 +113,20 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
         if selected_year and selected_quarter:
             try:
-                parent1_valid_payments = PaymentDocument.objects.filter(
+                parent1_valid_payments = Document.objects.filter(
                     user=parent1, category__type__isnull=False, status='validated', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-                parent2_valid_payments = PaymentDocument.objects.filter(
+                parent2_valid_payments = Document.objects.filter(
                     user=parent2, category__type__isnull=False, status='validated', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
-                parent1_pending_payments = PaymentDocument.objects.filter(
+                parent1_pending_payments = Document.objects.filter(
                     user=parent1, category__type__isnull=False, status='pending', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-                parent2_pending_payments = PaymentDocument.objects.filter(
+                parent2_pending_payments = Document.objects.filter(
                     user=parent2, category__type__isnull=False, status='pending', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
@@ -134,17 +136,17 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
                 parent1_pending_payments = []
                 parent2_pending_payments = []
         else:
-            parent1_valid_payments = PaymentDocument.objects.filter(
+            parent1_valid_payments = Document.objects.filter(
                 user=parent1, category__type__isnull=False, status='validated'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-            parent2_valid_payments = PaymentDocument.objects.filter(
+            parent2_valid_payments = Document.objects.filter(
                 user=parent2, category__type__isnull=False, status='validated'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
-            parent1_pending_payments = PaymentDocument.objects.filter(
+            parent1_pending_payments = Document.objects.filter(
                 user=parent1, category__type__isnull=False, status='pending'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-            parent2_pending_payments = PaymentDocument.objects.filter(
+            parent2_pending_payments = Document.objects.filter(
                 user=parent2, category__type__isnull=False, status='pending'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
@@ -157,7 +159,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         parent2_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in
                                 parent2_pending_payments}
 
-        categories = PaymentCategory.objects.filter(type__isnull=False)
+        categories = Category.objects.filter(type__isnull=False)
 
         categories_by_type = {}
         category_ids = []
@@ -192,7 +194,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         difference = abs(parent1_total - parent2_total)
         in_favor_of = parent1 if parent1_total > parent2_total else parent2
 
-        payment_years = PaymentDocument.objects.filter(folder=self.folder).dates('date', 'year')
+        payment_years = Document.objects.filter(folder=self.folder).dates('date', 'year')
         years = [year.year for year in payment_years]
 
         context.update({
@@ -223,8 +225,8 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
 
 class CategoryPaymentsView(LoginRequiredMixin, ListView):
-    model = PaymentDocument
-    template_name = 'Payments/folder_category_history.html'
+    model = Document
+    template_name = 'payments/folder_category_history.html'
     context_object_name = 'payments'
 
     def get_context_data(self, **kwargs):
@@ -233,7 +235,7 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
         folder_id = self.kwargs.get('folder_id')
 
         # Vérifier et récupérer la catégorie
-        category = get_object_or_404(PaymentCategory, id=category_id)
+        category = get_object_or_404(Category, id=category_id)
         context['category'] = category
 
         if self.request.user.role == 'lawyer':
@@ -246,8 +248,8 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
         context['folder'] = folder
 
         # Récupérer les paiements pour les parents
-        parent1_payments = PaymentDocument.objects.filter(folder=folder, category_id=category_id, user=folder.parent1)
-        parent2_payments = PaymentDocument.objects.filter(folder=folder, category_id=category_id, user=folder.parent2)
+        parent1_payments = Document.objects.filter(folder=folder, category_id=category_id, user=folder.parent1)
+        parent2_payments = Document.objects.filter(folder=folder, category_id=category_id, user=folder.parent2)
 
         # Appliquer les filtres pour l'année et le trimestre
         year = self.request.GET.get('year')
@@ -326,7 +328,7 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
             filename = f'PaymentHistory_{context["selected_year"]}_Q{context["selected_quarter"]}.pdf'
 
         # Rendre le template avec les données de contexte
-        html_string = render_to_string('Payments/pdf_template.html', context)
+        html_string = render_to_string('payments/pdf_template.html', context)
 
         # Générer le PDF
         response = HttpResponse(content_type='application/pdf')
@@ -336,84 +338,6 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
         if pisa_status.err:
             return HttpResponse('We had some errors <pre>' + html_string + '</pre>')
         return response
-
-
-# PARENT
-#----------------------------------------------------------------------------------------------------------------------
-@login_required
-@transaction.atomic
-def submit_payment_document(request, folder_id):
-    user = request.user
-    folders = Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
-
-    # Vérifiez si le dossier demandé existe
-    folder = get_object_or_404(folders, id=folder_id)
-
-    categories = PaymentCategory.objects.order_by('type_id', 'name')
-    grouped_categories = {}
-    for category in categories:
-        if category.type not in grouped_categories:
-            grouped_categories[category.type] = []
-        grouped_categories[category.type].append(category)
-
-    if request.method == 'POST':
-        form = PaymentDocumentForm(request.POST, request.FILES)
-        new_category_name = request.POST.get('new_category', '').strip()
-
-        if form.is_valid():
-            payment_document = form.save(commit=False)
-            payment_document.user = user
-            payment_document.folder = folder
-            payment_document.status = 'pending'
-
-            if new_category_name:
-                other_type, created = CategoryType.objects.get_or_create(name='Autre')
-                new_category, created = PaymentCategory.objects.get_or_create(
-                    name=new_category_name,
-                    defaults={'type': other_type}
-                )
-                payment_document.category = new_category
-
-            payment_document.save()
-            return redirect('Payments:payment-history', folder_id=folder_id)
-    else:
-        form = PaymentDocumentForm()
-
-    context = {
-        'form': form,
-        'grouped_categories': grouped_categories,
-    }
-
-    return render(request, 'Payments/submit_payment_document.html', context)
-
-
-@login_required
-def pending_payments(request, folder_id):
-    folder = get_object_or_404(Folder, id=folder_id)
-    payments = PaymentDocument.objects.filter(folder=folder, status='pending')
-
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        payment_ids_string = request.POST.get('payments')  # Récupérer la chaîne des IDs de paiements
-        payment_ids = payment_ids_string.split(',')  # Séparer la chaîne en une liste d'IDs
-
-        for payment_id in payment_ids:
-            payment_id = payment_id.strip()  # Enlever les espaces autour de chaque ID
-            if payment_id:
-                payment = get_object_or_404(PaymentDocument, id=int(payment_id))
-                if action == 'validate':
-                    payment.status = 'validated'
-                elif action == 'reject':
-                    payment.status = 'rejected'
-                payment.save()
-
-        return redirect('Payments:pending-payments', folder_id=folder_id)
-
-    context = {
-        'folder': folder,
-        'payments': payments,
-    }
-    return render(request, 'Payments/pending_payments.html', context)
 
 
 @require_POST
@@ -428,7 +352,7 @@ def add_category(request):
             new_category_description = capfirst(new_category_description.strip())
 
             # Check if the category already exists
-            existing_category = PaymentCategory.objects.filter(name=new_category_name).exists()
+            existing_category = Category.objects.filter(name=new_category_name).exists()
 
             if existing_category:
                 return JsonResponse({'success': False, 'error': 'Category already exists.'})
@@ -437,7 +361,7 @@ def add_category(request):
             category_type_autre, created = CategoryType.objects.get_or_create(name="Autre")
 
             # Create the new category
-            new_category = PaymentCategory.objects.create(
+            new_category = Category.objects.create(
                 name=new_category_name,
                 description=new_category_description,
                 type=category_type_autre
@@ -477,13 +401,64 @@ def get_quarter_dates(year, quarter):
 
     return start_date, end_date
 
+
+# PARENT
+#----------------------------------------------------------------------------------------------------------------------
+@login_required
+@transaction.atomic
+def submit_payment_document(request, folder_id):
+    user = request.user
+    folder = Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
+
+    # Vérifiez si le dossier demandé existe
+    folder = get_object_or_404(folder, id=folder_id)
+
+    categories = Category.objects.order_by('type_id', 'name')
+    grouped_categories = {}
+    for category in categories:
+        if category.type not in grouped_categories:
+            grouped_categories[category.type] = []
+        grouped_categories[category.type].append(category)
+
+    if request.method == 'POST':
+        form = PaymentDocumentForm(request.POST, request.FILES)
+        new_category_name = request.POST.get('new_category', '').strip()
+
+        if form.is_valid():
+            payment_document = form.save(commit=False)
+            payment_document.user = user
+            payment_document.folder = folder
+            payment_document.status = 'pending'
+
+            if new_category_name:
+                other_type, created = CategoryType.objects.get_or_create(name='Autre')
+                new_category, created = Category.objects.get_or_create(
+                    name=new_category_name,
+                    defaults={'type': other_type}
+                )
+                payment_document.category = new_category
+
+            payment_document.save()
+            return redirect('payments:payment-history', folder_id=folder_id)
+    else:
+        form = PaymentDocumentForm()
+
+    context = {
+        'form': form,
+        'grouped_categories': grouped_categories,
+        'folder': folder,
+    }
+
+    return render(request, 'payments/submit_payment_document.html', context)
+
+
 # MAGISTRATE
 #----------------------------------------------------------------------------------------------------------------------
 @login_required
 @transaction.atomic
 def submit_payment_document_lawyer(request, folder_id):
     folder = get_object_or_404(Folder, pk=folder_id)
-    categories = PaymentCategory.objects.order_by('type_id', 'name')
+    categories = Category.objects.order_by('type_id', 'name')
 
     grouped_categories = {}
     for category in categories:
@@ -501,11 +476,11 @@ def submit_payment_document_lawyer(request, folder_id):
             payment_document.status = 'validated'  # Assurez-vous de définir le bon statut ici
             payment_document.user = get_user_model().objects.get(id=parent_user_id)
             payment_document.save()
-            return redirect(reverse('Payments:payment-history', kwargs={'folder_id': folder_id}))
+            return redirect(reverse('payments:payment-history', kwargs={'folder_id': folder_id}))
     else:
         form = PaymentDocumentFormLawyer(parent_choices=get_parent_choices(folder))
 
-    return render(request, 'Payments/submit_payment_document_lawyer.html', {
+    return render(request, 'payments/submit_payment_document_lawyer.html', {
         'form': form,
         'folder': folder,
         'grouped_categories': grouped_categories,
@@ -542,7 +517,7 @@ def create_folder(request):
             folder.lawyer = request.user
             folder.save()
             # Redirect to a list of folders or other success page
-            return redirect('Payments:list_folder')
+            return redirect('payments:list_folder')
     else:
         # Retrieve parents that are not already in a folder
         existing_parents = Folder.objects.values_list('parent1', 'parent2')
@@ -555,7 +530,36 @@ def create_folder(request):
         form.fields['parent1'].queryset = form.fields['parent1'].queryset.exclude(id__in=existing_parents_ids)
         form.fields['parent2'].queryset = form.fields['parent2'].queryset.exclude(id__in=existing_parents_ids)
 
-    return render(request, 'Payments/create_folder.html', {'form': form})
+    return render(request, 'payments/create_folder.html', {'form': form})
+
+
+@login_required
+def pending_payments(request, folder_id):
+    folder = get_object_or_404(Folder, id=folder_id)
+    payments = Document.objects.filter(folder=folder, status='pending')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        payment_ids_string = request.POST.get('payments')  # Récupérer la chaîne des IDs de paiements
+        payment_ids = payment_ids_string.split(',')  # Séparer la chaîne en une liste d'IDs
+
+        for payment_id in payment_ids:
+            payment_id = payment_id.strip()  # Enlever les espaces autour de chaque ID
+            if payment_id:
+                payment = get_object_or_404(Document, id=int(payment_id))
+                if action == 'validate':
+                    payment.status = 'validated'
+                elif action == 'reject':
+                    payment.status = 'rejected'
+                payment.save()
+
+        return redirect('payments:pending-payments', folder_id=folder_id)
+
+    context = {
+        'folder': folder,
+        'payments': payments,
+    }
+    return render(request, 'payments/pending_payments.html', context)
 
 
 # ADMINISTRATOR
@@ -578,26 +582,26 @@ def index_payments(request):
             existing_index = IndexHistory.objects.filter(year=current_year).exists()
 
             if existing_index and not confirm_indexation:
-                return render(request, 'Payments/index_payments.html', {
+                return render(request, 'payments/index_payments.html', {
                     'form': form,
                     'indexations': indexations,
                     'confirm_required': True
                 })
             else:
                 multiplier = 1 + (percentage / 100)
-                PaymentDocument.objects.all().update(amount=F('amount') * multiplier)
+                Document.objects.all().update(amount=F('amount') * multiplier)
 
                 # Create a new entry in IndexHistory for the current year
                 IndexHistory.objects.create(year=current_year, percentage=percentage)
 
                 messages.success(request, f"All payments have been indexed by {percentage}%.")
-                return redirect('Payments:index_payments')
+                return redirect('payments:index_payments')
     else:
         form = IndexPaymentForm()
 
     confirm_required = IndexHistory.objects.filter(year=current_year).exists()
 
-    return render(request, 'Payments/index_payments.html',
+    return render(request, 'payments/index_payments.html',
                   {'form': form, 'indexations': indexations, 'confirm_required': confirm_required})
 
 
@@ -613,11 +617,11 @@ def delete_indexation(request, index_id):
     if request.method == 'POST':
         # Reverser l'indexation
         multiplier = 1 / (1 + (percentage / 100))
-        PaymentDocument.objects.all().update(amount=F('amount') * multiplier)
+        Document.objects.all().update(amount=F('amount') * multiplier)
 
         # Supprimer l'indexation
         indexation.delete()
         messages.success(request, f"Indexation for the year {indexation.year} has been deleted.")
-        return redirect('Payments:index_payments')
+        return redirect('payments:index_payments')
 
-    return render(request, 'Payments/delete_indexation_confirm.html', {'indexation': indexation})
+    return render(request, 'payments/delete_indexation_confirm.html', {'indexation': indexation})

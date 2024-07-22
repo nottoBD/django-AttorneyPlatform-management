@@ -10,25 +10,25 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h2 class="card-title mb-0">{% trans "Récapitulatif des paiements" %}</h2>
-                        <a href="{% url 'Payments:download_pdf' folder_id=folder_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-success btn-sm">
+                        <a href="{% url 'payments:download_pdf' folder_id=folder_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-success btn-sm">
                             {% trans "Télécharger en PDF" %}
                         </a>
                         {% if request.user.role == 'lawyer' %}
-                        <a href="{% url 'Payments:lawyer-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
+                        <a href="{% url 'payments:lawyer-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
                             {% trans "Ajouter un paiement" %}
                         </a>
-                        <a href="{% url 'Payments:pending-payments' folder_id=folder.id %}" class="btn btn-warning btn-sm">
+                        <a href="{% url 'payments:pending-payments' folder_id=folder.id %}" class="btn btn-warning btn-sm">
                             {% trans "Valider les paiements en attente" %}
                         </a>
                         {% endif %}
                         {% if request.user.role == 'parent' %}
-                        <a href="{% url 'Payments:parent-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
+                        <a href="{% url 'payments:parent-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
                             {% trans "Ajouter un paiement" %}
                         </a>
                         {% endif %}
                     </div>
 
-                    <!-- Payments comparison table -->
+                    <!-- payments comparison table -->
                     {% for type_id, type_data in categories_by_type.items %}
                         <div class="table-responsive">
                             <table class="table table-bordered">
@@ -56,7 +56,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{% url 'Payments:category-payments' folder.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
+                                                <a href="{% url 'payments:category-payments' folder.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
                                                     {% trans "View Details" %}
                                                 </a>
                                             </td>

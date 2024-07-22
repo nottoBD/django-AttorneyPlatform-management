@@ -7,7 +7,7 @@ from .views import (PaymentHistoryView, FolderListView,
                     PaymentHistoryPDFView, index_payments, delete_indexation, submit_payment_document, create_folder,
                     pending_payments)
 
-app_name = 'Payments'
+app_name = 'payments'
 urlpatterns = [
     path('add_category/', add_category, name='add_category'),
     path('payment-history/<int:folder_id>/', PaymentHistoryView.as_view(), name='payment-history'),

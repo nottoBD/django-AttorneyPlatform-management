@@ -8,7 +8,7 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="card-title mb-4">{% trans "Paiements en attente de validation" %}</h2>
-                    <form method="post" id="paymentForm" action="{% url 'Payments:pending-payments' folder_id=folder.id %}">
+                    <form method="post" id="paymentForm" action="{% url 'payments:pending-payments' folder_id=folder.id %}">
                         {% csrf_token %}
                         <div class="table-responsive">
                             <table class="table table-bordered" id="paymentsTable">
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
      // Fonction pour mettre à jour le tableau des paiements
     function updatePaymentsTable() {
-        const url = "{% url 'Payments:pending-payments' folder_id=folder.id %}";
+        const url = "{% url 'payments:pending-payments' folder_id=folder.id %}";
 
         fetch(url)
             .then(response => response.text())
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const action = document.querySelector('button[name="action"]:focus').value;
         formData.set('action', action);
 
-        fetch("{% url 'Payments:pending-payments' folder_id=folder.id %}", {
+        fetch("{% url 'payments:pending-payments' folder_id=folder.id %}", {
             method: 'POST',
             body: formData
         }).then(response => {

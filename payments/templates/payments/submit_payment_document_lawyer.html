@@ -1,7 +1,6 @@
+<!-- add_payment_document.html -->
 {% extends 'fExtra/base.html' %}
-{% load i18n crispy_forms_tags %}
-
-{% block title %}{% trans "Ajouter paiement" %}{% endblock %}
+{% load static i18n crispy_forms_tags %}
 
 {% block content %}
 <div class="container mt-5">
@@ -9,43 +8,36 @@
         <div class="col-md-6">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h3 class="text-center mb-0">{% trans "Ajouter un paiement" %}</h3>
+                    <h3 class="text-center mb-0">{% trans "Add Payment Document" %}</h3>
                 </div>
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
+                        {{ form.parent|as_crispy_field }}
                         {{ form.amount|as_crispy_field }}
                         <div class="form-group">
                             <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
                             <select class="form-control" id="{{ form.category.id_for_label }}" name="{{ form.category.name }}">
-                                <option value="">{% trans "Choisir un catégorie" %}</option>
+                                <option value="">{% trans "Select a category" %}</option>
                                 {% for category_type, categories in grouped_categories.items %}
                                     <optgroup label="{{ category_type }}">
                                         {% for category in categories %}
-                                            <option value="{{ category.pk }}" data-description="{{ category.description }}">
-                                                {{ category.name }}
-                                            </option>
+                                            <option value="{{ category.pk }}" {% if category.pk == form.category.value %}selected{% endif %}>{{ category.name }}</option>
                                         {% endfor %}
                                     </optgroup>
                                 {% endfor %}
                             </select>
-                            <!-- Move button here and make it smaller -->
+                            <!-- Button to open modal to add a new category -->
                             <button type="button" class="btn btn-secondary btn-sm mt-2" data-toggle="modal" data-target="#addCategoryModal">
-                                {% trans "Ajouter une nouvelle catégorie" %}
+                                {% trans "Add New Category" %}
                             </button>
                         </div>
                         {{ form.date|as_crispy_field }}
                         {{ form.document|as_crispy_field }}
-                        <!-- Affichage de l'état du paiement -->
-                        {% if form.instance.status == 'pending' %}
-                            <div class="alert alert-warning" role="alert">
-                                {% trans "This payment is currently pending validation." %}
-                            </div>
-                        {% endif %}
-                        <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Add" %}</button>
-                        <a href="{% url 'Payments:payment-history' %}" class="btn btn-secondary btn-sm mt-3">
-                            {% trans "Back to Payment History" %}
+                        <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Submit" %}</button>
+                        <a href="{% url 'payments:payment-history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
+                        {% trans "Back to Payment History" %}
                         </a>
                     </form>
                 </div>
@@ -84,26 +76,15 @@
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
     $(document).ready(function() {
-        $('#{{ form.category.id_for_label }}').on('mouseenter', 'option', function() {
-            console.log("test");
-            var description = $(this).data('description');
-            $('#category-description').text(description);
-        });
-
-        $('#{{ form.category.id_for_label }}').mouseleave(function() {
-            $('#category-description').text('');
-        });
-
         $('#saveCategoryButton').on('click', function() {
             var newCategoryName = $('#new_category_name').val();
             var newCategoryDescription = $('#new_category_description').val();
             var csrfToken = $('[name="csrfmiddlewaretoken"]').val();
 
             $.ajax({
-                url: "{% url 'Payments:add_category' %}",
+                url: "{% url 'payments:add_category' %}",
                 type: "POST",
                 data: {
                     'new_category_name': newCategoryName,

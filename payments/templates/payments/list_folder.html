@@ -23,7 +23,7 @@
                 <td>{{ folder.parent2.first_name }} {{ folder.parent2.last_name }}</td>
                 <td>{{ folder.created_at }}</td>
                 <td>
-                    <a href="{% url 'Payments:payment-history' folder.id %}" class="btn btn-info">
+                    <a href="{% url 'payments:payment-history' folder.id %}" class="btn btn-info">
                         {% trans "View Payment History" %}
                     </a>
                 </td>

@@ -1,17 +1,17 @@
 from django import forms
 
 from accounts.views import User
-from .models import PaymentDocument, Folder, PaymentCategory
+from .models import Document, Folder, Category
 
 
 class PaymentDocumentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['category'].queryset = PaymentCategory.objects.order_by('type', 'name')
+        self.fields['category'].queryset = Category.objects.order_by('type', 'name')
         self.fields['category'].required = True
 
     class Meta:
-        model = PaymentDocument
+        model = Document
         fields = ['amount', 'category', 'date', 'document']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'})
@@ -22,7 +22,7 @@ class PaymentDocumentFormLawyer(forms.ModelForm):
     parent = forms.ChoiceField(choices=())
 
     class Meta:
-        model = PaymentDocument
+        model = Document
         fields = ['amount', 'category', 'date', 'document', 'parent']
         widgets = {
             'date': forms.DateInput(attrs={'type': 'date'})
@@ -53,7 +53,7 @@ class ValidatePaymentsForm(forms.Form):
         ('reject', 'Reject'),
     )
     action = forms.ChoiceField(choices=PAYMENTS_CHOICES)
-    payments = forms.ModelMultipleChoiceField(queryset=PaymentDocument.objects.filter(status='pending'), widget=forms.CheckboxSelectMultiple)
+    payments = forms.ModelMultipleChoiceField(queryset=Document.objects.filter(status='pending'), widget=forms.CheckboxSelectMultiple)
 
 
 class IndexPaymentForm(forms.Form):

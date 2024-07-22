@@ -1,7 +1,7 @@
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 from django.apps import apps
-from .models import PaymentCategory, CategoryType
+from .models import Category, CategoryType
 
 
 TYPE_MAPPING = {
@@ -14,7 +14,7 @@ TYPE_MAPPING = {
 
 @receiver(post_migrate)
 def create_default_payment_categories(sender, **kwargs):
-    if sender.name == 'Payments':
+    if sender.name == 'payments':
         categories = {
             1: [
                 {"name": "Traitement médecin/médicament",
@@ -69,7 +69,7 @@ def create_default_payment_categories(sender, **kwargs):
             category_type, created = CategoryType.objects.get_or_create(name=type_name)
 
             for category_data in categories[type_id]:
-                PaymentCategory.objects.get_or_create(
+                Category.objects.get_or_create(
                     name=category_data["name"],
                     type_id=category_type.id,  # .id pour régler TypeError
                     defaults={"description": category_data["description"]}

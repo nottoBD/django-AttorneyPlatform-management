@@ -170,6 +170,7 @@ class UserUpdateForm(forms.ModelForm):
     #
     #     return response
 
+
 class JusticeRegistrationForm(UserCreationForm):
     ROLE_CHOICES = [
         ('judge', 'Judge'),

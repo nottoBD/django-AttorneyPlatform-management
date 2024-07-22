@@ -11,7 +11,7 @@ class CategoryType(models.Model):
         return self.name
 
 
-class PaymentCategory(models.Model):
+class Category(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     type = models.ForeignKey(CategoryType, on_delete=models.CASCADE, related_name='payment_categories')
@@ -20,7 +20,7 @@ class PaymentCategory(models.Model):
         return self.name
 
 
-class PaymentDocument(models.Model):
+class Document(models.Model):
     STATUS_CHOICES = (
         ('pending', 'Pending'),  # En attente de validation
         ('validated', 'Validated'),  # Validé par l'avocat
@@ -30,7 +30,7 @@ class PaymentDocument(models.Model):
     folder = models.ForeignKey('Folder', on_delete=models.CASCADE, related_name='payment_documents', blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField(default=timezone.now)
-    category = models.ForeignKey(PaymentCategory, on_delete=models.CASCADE, related_name='payments', blank=False)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='payments', blank=False)
     document = models.FileField(upload_to='payment_documents/', blank=True, null=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
 

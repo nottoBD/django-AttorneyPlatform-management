@@ -9,7 +9,7 @@ from fExtra.views import privacy_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls', namespace='accounts')),
-    path('Payments/', include('Payments.urls', namespace='Payments')),
+    path('payments/', include('payments.urls', namespace='payments')),
 
     path('privacy/', privacy_view, name='privacy'),
     re_path(r'^i18n/setlang/$', set_language, name='set_language'),
