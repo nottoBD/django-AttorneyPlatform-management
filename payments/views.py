@@ -96,7 +96,6 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
                 queryset = queryset.filter(date__gte=start_date, date__lt=end_date)
             except (TypeError, ValueError):
                 queryset = Document.objects.filter(folder=self.folder)
-                print(queryset)
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -114,20 +113,20 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         if selected_year and selected_quarter:
             try:
                 parent1_valid_payments = Document.objects.filter(
-                    user=parent1, category__type__isnull=False, status='validated', date__year=selected_year,
+                    folder=folder, user=parent1, category__type__isnull=False, status='validated', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
                 parent2_valid_payments = Document.objects.filter(
-                    user=parent2, category__type__isnull=False, status='validated', date__year=selected_year,
+                    folder=folder, user=parent2, category__type__isnull=False, status='validated', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
                 parent1_pending_payments = Document.objects.filter(
-                    user=parent1, category__type__isnull=False, status='pending', date__year=selected_year,
+                    folder=folder, user=parent1, category__type__isnull=False, status='pending', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
                 parent2_pending_payments = Document.objects.filter(
-                    user=parent2, category__type__isnull=False, status='pending', date__year=selected_year,
+                    folder=folder, user=parent2, category__type__isnull=False, status='pending', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
             except (TypeError, ValueError):
@@ -137,17 +136,17 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
                 parent2_pending_payments = []
         else:
             parent1_valid_payments = Document.objects.filter(
-                user=parent1, category__type__isnull=False, status='validated'
+                folder=folder, user=parent1, category__type__isnull=False, status='validated'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
             parent2_valid_payments = Document.objects.filter(
-                user=parent2, category__type__isnull=False, status='validated'
+                folder=folder, user=parent2, category__type__isnull=False, status='validated'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
             parent1_pending_payments = Document.objects.filter(
-                user=parent1, category__type__isnull=False, status='pending'
+                folder=folder, user=parent1, category__type__isnull=False, status='pending'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
             parent2_pending_payments = Document.objects.filter(
-                user=parent2, category__type__isnull=False, status='pending'
+                folder=folder, user=parent2, category__type__isnull=False, status='pending'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
         parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
@@ -238,13 +237,8 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
         category = get_object_or_404(Category, id=category_id)
         context['category'] = category
 
-        if self.request.user.role == 'lawyer':
-            # Pour les avocats, obtenir le dossier et la catégorie en fonction des paramètres
-            folder = get_object_or_404(Folder, id=folder_id)
-        else:
-            # Pour les parents, obtenir le dossier basé sur les relations parent1/parent2
-            folder = get_object_or_404(Folder, Q(parent1=self.request.user) | Q(parent2=self.request.user))
-
+        # Obtenir le dossier basé sur le folder_id et les droits d'accès
+        folder = get_object_or_404(Folder, id=folder_id)
         context['folder'] = folder
 
         # Récupérer les paiements pour les parents
@@ -256,7 +250,7 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
         quarter = self.request.GET.get('quarter')
         if year and quarter:
             try:
-                start_date, end_date = get_quarter_dates(year, quarter)
+                start_date, end_date = self.get_quarter_dates(year, quarter)
                 parent1_payments = parent1_payments.filter(date__range=(start_date, end_date))
                 parent2_payments = parent2_payments.filter(date__range=(start_date, end_date))
             except ValueError as e:
@@ -273,6 +267,19 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
 
         return context
 
+    def get_quarter_dates(self, year, quarter):
+        year = int(year)
+        quarter = int(quarter)
+        start_month = (quarter - 1) * 3 + 1
+        end_month = start_month + 2
+
+        start_date = datetime(year, start_month, 1)
+        if end_month < 12:
+            end_date = datetime(year, end_month + 1, 1)
+        else:
+            end_date = datetime(year + 1, 1, 1)
+        return start_date, end_date
+
 
 class PaymentHistoryPDFView(LoginRequiredMixin, View):
     def get(self, request, folder_id=None, *args, **kwargs):
@@ -282,11 +289,7 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
         if folder_id is None:
             return HttpResponse("No folder_id provided.", status=400)
 
-        # Vérifier si l'utilisateur est un parent ou un avocat
-        if user.role == 'lawyer':
-            folder = get_object_or_404(Folder, id=folder_id)
-        else:
-            folder = get_object_or_404(Folder, Q(parent1=user) | Q(parent2=user) & Q(id=folder_id))
+        folder = get_object_or_404(Folder, id=folder_id)
 
         # Obtenir les paramètres de la requête GET ou les définir à None si non présents
         selected_year = request.GET.get('year')
@@ -513,22 +516,22 @@ def create_folder(request):
     if request.method == 'POST':
         form = FolderForm(request.POST)
         if form.is_valid():
-            folder = form.save(commit=False)
-            folder.lawyer = request.user
-            folder.save()
-            # Redirect to a list of folders or other success page
-            return redirect('payments:list_folder')
+            parent1 = form.cleaned_data['parent1']
+            parent2 = form.cleaned_data['parent2']
+            # Check if a folder with the same parent1 and parent2 already exists
+            existing_folder = Folder.objects.filter(parent1=parent1, parent2=parent2).exists() or Folder.objects.filter(parent1=parent2, parent2=parent1).exists()
+            if existing_folder:
+                messages.error(request, "Un dossier avec ces deux parents existe déjà.")
+            else:
+                folder = form.save(commit=False)
+                folder.lawyer = request.user
+                folder.save()
+                # Redirect to a list of folders or other success page
+                return redirect('payments:list_folder')
     else:
-        # Retrieve parents that are not already in a folder
-        existing_parents = Folder.objects.values_list('parent1', 'parent2')
-        existing_parents_ids = set()
-        for parent_pair in existing_parents:
-            existing_parents_ids.update(parent_pair)
-
-        # Exclude parents already in a folder
         form = FolderForm(initial={'parent1': request.user})  # Initialiser avec l'utilisateur connecté par défaut
-        form.fields['parent1'].queryset = form.fields['parent1'].queryset.exclude(id__in=existing_parents_ids)
-        form.fields['parent2'].queryset = form.fields['parent2'].queryset.exclude(id__in=existing_parents_ids)
+        form.fields['parent1'].queryset = form.fields['parent1'].queryset
+        form.fields['parent2'].queryset = form.fields['parent2'].queryset
 
     return render(request, 'payments/create_folder.html', {'form': form})
 
