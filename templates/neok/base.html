@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}{% trans "Neok Platform" %}{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'fExtra/css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'neok/css/base.css' %}">
     {% block head %}{% endblock %}
 </head>
 
@@ -106,12 +106,12 @@
                             <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
                                 {% if request.user.role == 'lawyer' %}
                                     <li class="w-100">
-                                        <a href="/payments/create_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add folder" %}</a>
+                                        <a href="/payments/create_case" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add case" %}</a>
                                     </li>
                                 {% endif %}
                                 {% if request.user.role != 'administrator' %}
                                     <li>
-                                        <a href="/payments/list_folder" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Folder list" %}</a>
+                                        <a href="/payments/list_case" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Case list" %}</a>
                                     </li>
                                 {% endif %}
                                 {% if request.user.role == 'administrator' %}
@@ -178,7 +178,7 @@
 </div>
 
 
-<script src="{% static 'fExtra/js/base.js' %}"></script>
+<script src="{% static 'neok/js/base.js' %}"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>

@@ -11,9 +11,9 @@ from .validations import validate_image
 
 
 # Permet un import différé pour éviter l'import circulaire et générer un message d'erreur
-def get_folder_model():
-    from payments.models import Folder
-    return Folder
+def get_case_model():
+    from payments.models import Case
+    return Case
 
 
 class CustomUserManager(BaseUserManager):
@@ -101,25 +101,25 @@ class User(AbstractUser, PermissionsMixin):
         return nn
 
 
-class AvocatFolder(models.Model):
+class AvocatCase(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     avocat = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents', on_delete=models.CASCADE)
-    folder = models.ForeignKey(get_folder_model(), on_delete=models.CASCADE, related_name='assigned_lawyers')
+    case = models.ForeignKey(get_case_model(), on_delete=models.CASCADE, related_name='assigned_lawyers')
 
     class Meta:
-        unique_together = (('avocat', 'folder'),)
+        unique_together = (('avocat', 'case'),)
 
     def __str__(self):
         return f"{self.avocat.email} assigned to folder {self.folder.id}"
 
 
-class JugeFolder(models.Model):
+class JugeCase(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     juge = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents_judge', on_delete=models.CASCADE)
-    folder = models.ForeignKey(get_folder_model(), on_delete=models.CASCADE, related_name='assigned_judges')
+    case = models.ForeignKey(get_case_model(), on_delete=models.CASCADE, related_name='assigned_judges')
 
     class Meta:
-        unique_together = (('juge', 'folder'),)
+        unique_together = (('juge', 'case'),)
 
     def __str__(self):
-        return f"{self.juge.email} assigned to folder {self.folder.id}"
+        return f"{self.juge.email} assigned to case {self.case.id}"

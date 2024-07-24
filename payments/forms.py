@@ -1,8 +1,7 @@
 from django import forms
 
-from accounts.models import JugeFolder, AvocatFolder
 from accounts.views import User
-from .models import Document, Folder, Category
+from .models import Document, Case, Category
 
 
 class PaymentDocumentForm(forms.ModelForm):
@@ -36,13 +35,13 @@ class PaymentDocumentFormLawyer(forms.ModelForm):
             self.fields['parent'].choices = parent_choices
 
 
-class FolderForm(forms.ModelForm):
+class CaseForm(forms.ModelForm):
     class Meta:
-        model = Folder
+        model = Case
         fields = ['parent1', 'parent2']
 
     def __init__(self, *args, **kwargs):
-        super(FolderForm, self).__init__(*args, **kwargs)
+        super(CaseForm, self).__init__(*args, **kwargs)
         self.fields['parent1'].queryset = User.objects.filter(role='parent')
         self.fields['parent2'].queryset = User.objects.filter(role='parent')
 
@@ -72,8 +71,8 @@ class AddJugeAvocatForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         required=False
     )
-    folder = forms.ModelChoiceField(
-        queryset=Folder.objects.all(),
+    case = forms.ModelChoiceField(
+        queryset=Case.objects.all(),
         widget=forms.HiddenInput(),
         required=True
     )

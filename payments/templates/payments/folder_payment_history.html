@@ -1,4 +1,4 @@
-{% extends 'fExtra/base.html' %}
+{% extends 'neok/base.html' %}
 {% load custom_filters %}
 {% load static i18n %}
 
@@ -17,25 +17,25 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton">
                                     {% if request.user.role == 'lawyer' %}
-                                        <li><a class="dropdown-item" href="{% url 'payments:lawyer-add-payment' folder_id=folder.id %}">
+                                        <li><a class="dropdown-item" href="{% url 'payments:lawyer-add-payment' case_id=case.id %}">
                                             {% trans "Ajouter un paiement" %}
                                         </a></li>
-                                        <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' folder.id %}">
+                                        <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' case.id %}">
                                             {% trans "Gérer juge/avocat" %}
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' folder_id=folder.id %}">
+                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' case_id=case.id %}">
                                             {% trans "Valider les paiements en attente" %}
                                         </a></li>
                                     {% endif %}
                                     {% if request.user.role == 'parent' %}
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="{% url 'payments:parent-add-payment' folder_id=folder.id %}">
+                                        <li><a class="dropdown-item" href="{% url 'payments:parent-add-payment' case_id=case.id %}">
                                             {% trans "Ajouter un paiement" %}
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
                                     {% endif %}
-                                    <li><a class="dropdown-item" href="{% url 'payments:download_pdf' folder_id=folder_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
+                                    <li><a class="dropdown-item" href="{% url 'payments:download_pdf' case_id=case_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
                                         {% trans "Télécharger en PDF" %}
                                     </a></li>
                                 </ul>
@@ -72,7 +72,7 @@
                                                 {% endif %}
                                             </td>
                                             <td>
-                                                <a href="{% url 'payments:category-payments' folder.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
+                                                <a href="{% url 'payments:category-payments' case.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
                                                     {% trans "View Details" %}
                                                 </a>
                                             </td>

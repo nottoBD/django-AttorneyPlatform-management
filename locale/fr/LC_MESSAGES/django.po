@@ -182,7 +182,7 @@ msgid "Amount Balanced"
 msgstr "Montant équilibré"
 
 #: Payments/templates/Payments/submit_payment_document.html:4
-#: templates/fExtra/base.html:118
+#: templates/neok/base.html:118
 #, fuzzy
 #| msgid "Add Parent"
 msgid "Add Payments"
@@ -205,7 +205,7 @@ msgid "This payment is currently pending validation."
 msgstr "Ce paiement est actuellement en attente de validation."
 
 #: Payments/templates/Payments/submit_payment_document.html:44
-#: templates/fExtra/base.html:141
+#: templates/neok/base.html:141
 #, fuzzy
 #| msgid "Address"
 msgid "Add"
@@ -399,7 +399,7 @@ msgid "Are you sure you want to permanently delete this user?"
 msgstr "Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ?"
 
 #: accounts/templates/accounts/user_update.html:36
-#: templates/fExtra/base.html:58
+#: templates/neok/base.html:58
 #, fuzzy
 #| msgid "Profile Image"
 msgid "Profile"
@@ -432,7 +432,7 @@ msgstr "Désassigner"
 #: accounts/templates/registration/login.html:24
 #: accounts/templates/registration/register.html:31
 #: accounts/templates/registration/register_magistrate.html:31
-#: templates/fExtra/base.html:85
+#: templates/neok/base.html:85
 msgid "Login"
 msgstr "Connexion"
 
@@ -482,7 +482,7 @@ msgstr "S'inscrire"
 #: accounts/templates/registration/register.html:12
 #: accounts/templates/registration/register.html:33
 #: accounts/templates/registration/register_magistrate.html:33
-#: templates/fExtra/base.html:90
+#: templates/neok/base.html:90
 msgid "Register"
 msgstr "Inscription"
 
@@ -563,44 +563,44 @@ msgstr "L'utilisateur a été supprimé avec succès."
 msgid "You are not authorized to delete this user."
 msgstr "Vous n'êtes pas autorisé à supprimer cet utilisateur."
 
-#: fExtra/settings.py:155
+#: neok/settings.py:155
 msgid "Cookie settings"
 msgstr "Paramètres des cookies"
 
-#: fExtra/settings.py:156
+#: neok/settings.py:156
 msgid ""
 "We are using cookies on this website. A few are essential, others are not."
 msgstr "Nous utilisons des cookies sur ce site web. Certains sont essentiels, d'autres non."
 
-#: fExtra/settings.py:157
+#: neok/settings.py:157
 msgid "Please accept our cookies"
 msgstr "Veuillez accepter nos cookies"
 
-#: fExtra/settings.py:159
+#: neok/settings.py:159
 msgid "Imprint"
 msgstr "Empreinte"
 
-#: fExtra/settings.py:160
+#: neok/settings.py:160
 msgid "Privacy"
 msgstr "Confidentialité"
 
-#: fExtra/settings.py:165
+#: neok/settings.py:165
 msgid "Essential"
 msgstr "Essentiel"
 
-#: fExtra/settings.py:166
+#: neok/settings.py:166
 msgid "Essential cookies allow this page to work."
 msgstr "Les cookies essentiels permettent à cette page de fonctionner."
 
-#: fExtra/settings.py:170
+#: neok/settings.py:170
 msgid "Meta cookie for the cookies that are set."
 msgstr "Cookie méta pour les cookies qui sont définis."
 
-#: fExtra/settings.py:174
+#: neok/settings.py:174
 msgid "This cookie prevents Cross-Site-Request-Forgery attacks."
 msgstr "Ce cookie prévient les attaques par falsification de requête intersites."
 
-#: fExtra/settings.py:178
+#: neok/settings.py:178
 msgid "This cookie is necessary to allow logging in, for example."
 msgstr "Ce cookie est nécessaire pour permettre la connexion, par exemple."
 
@@ -707,63 +707,63 @@ msgid ""
 msgstr ""
 "Si vous avez des questions ou des préoccupations concernant nos pratiques en matière de confidentialité, n'hésitez pas à nous contacter."
 
-#: templates/fExtra/base.html:14 templates/fExtra/base.html:26
+#: templates/neok/base.html:14 templates/neok/base.html:26
 #, fuzzy
-#| msgid "fExtra Plateform"
+#| msgid "neok Plateform"
 msgid "Neok Platform"
 msgstr "Plateforme Neok"
 
-#: templates/fExtra/base.html:63
+#: templates/neok/base.html:63
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: templates/fExtra/base.html:97
+#: templates/neok/base.html:97
 #, fuzzy
 #| msgid "Home Page"
 msgid "Home"
 msgstr "Accueil"
 
-#: templates/fExtra/base.html:103
+#: templates/neok/base.html:103
 msgid "Payments"
 msgstr "Paiements"
 
-#: templates/fExtra/base.html:108
+#: templates/neok/base.html:108
 msgid "Add folder"
 msgstr "Ajouter un dossier"
 
-#: templates/fExtra/base.html:113
+#: templates/neok/base.html:113
 msgid "Folder list"
 msgstr "Liste des dossiers"
 
-#: templates/fExtra/base.html:121
+#: templates/neok/base.html:121
 msgid "History"
 msgstr "Historique"
 
-#: templates/fExtra/base.html:130
+#: templates/neok/base.html:130
 msgid "Accounts"
 msgstr "Comptes"
 
-#: templates/fExtra/base.html:134
+#: templates/neok/base.html:134
 msgid "List All"
 msgstr "Tout lister"
 
-#: templates/fExtra/base.html:137
+#: templates/neok/base.html:137
 msgid "Add Parent"
 msgstr "Ajouter un parent"
 
-#: templates/fExtra/base.html:152
+#: templates/neok/base.html:152
 msgid "Languages"
 msgstr "Langues"
 
-#: templates/fExtra/home.html:6
+#: templates/neok/home.html:6
 msgid "Home Page"
 msgstr "Page d'accueil"
 
-#: templates/fExtra/home.html:10
+#: templates/neok/home.html:10
 msgid "Welcome,"
 msgstr "Bienvenue,"
 
-#: templates/fExtra/home.html:11
+#: templates/neok/home.html:11
 msgid "You are logged in."
 msgstr "Vous êtes connecté."
 
@@ -1009,8 +1009,8 @@ msgstr "Vous êtes connecté."
 #~ msgid "German"
 #~ msgstr "Allemand"
 
-#~ msgid "Platform fExtra"
-#~ msgstr "Plateforme fExtra"
+#~ msgid "Platform neok"
+#~ msgstr "Plateforme neok"
 
 #~ msgid "Add Magistrat"
 #~ msgstr "Ajouter un magistrat"

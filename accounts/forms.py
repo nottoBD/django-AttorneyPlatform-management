@@ -6,7 +6,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .models import AvocatFolder, JugeFolder
+from payments.models import Case
+from .models import AvocatCase, JugeCase
 from .validations import (
     clean_email, validate_image, sanitize_text, validate_national_number,
     validate_password, validate_telephone
@@ -230,10 +231,10 @@ class JusticeRegistrationForm(UserCreationForm):
             assigned_parents = self.cleaned_data['parents_assigned']
             if user.role == 'lawyer':
                 for parent in assigned_parents:
-                    AvocatFolder.objects.get_or_create(avocat=user, parent=parent)
+                    AvocatCase.objects.get_or_create(avocat=user, parent=parent)
             elif user.role == 'judge':
                 for parent in assigned_parents:
-                    JugeFolder.objects.get_or_create(juge=user, parent=parent)
+                    JugeCase.objects.get_or_create(juge=user, parent=parent)
         return user
 
 

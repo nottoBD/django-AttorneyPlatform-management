@@ -84,7 +84,7 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale/'),
 )
 
-ROOT_URLCONF = 'fExtra.urls'
+ROOT_URLCONF = 'neok.urls'
 
 TEMPLATES = [
     {
@@ -102,7 +102,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'fExtra.wsgi.application'
+WSGI_APPLICATION = 'neok.wsgi.application'
 
 DATABASES = {
     'default': {

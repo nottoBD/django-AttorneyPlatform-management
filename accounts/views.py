@@ -14,8 +14,9 @@ from django.utils.translation import gettext as _
 from django.views.generic import ListView, UpdateView
 from pip._internal.utils import logging
 
+from payments.models import Case
 from .forms import JusticeRegistrationForm, UserRegisterForm, UserUpdateForm, CancelDeletionForm, DeletionRequestForm
-from .models import User, AvocatFolder, JugeFolder
+from .models import User, AvocatCase, JugeCase
 
 User = get_user_model()
 
@@ -211,9 +212,9 @@ def register(request):
             # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
             if request.user.is_authenticated:
                 if request.user.role == 'lawyer':
-                    AvocatFolder.objects.create(avocat=request.user, parent=user)
+                    AvocatCase.objects.create(avocat=request.user, parent=user)
                 elif request.user.role == 'judge':
-                    JugeFolder.objects.create(juge=request.user, parent=user)
+                    JugeCase.objects.create(juge=request.user, parent=user)
 
             messages.success(request, _("The parent account has been successfully created."))
             return redirect('/accounts/list/')
@@ -234,7 +235,7 @@ class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
     subject_template_name = 'registration/password_reset_subject.txt'
     success_message = _("We've emailed you instructions for setting your password, if an account exists with the "
                         "email you entered. You should receive them shortly. If you don't receive an email, "
-                        "please make sure you've entered the address you registered with, and check your spam folder.")
+                        "please make sure you've entered the address you registered with, and check your spam case.")
     success_url = reverse_lazy('home')
 
 
