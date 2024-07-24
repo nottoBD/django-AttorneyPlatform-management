@@ -44,7 +44,7 @@
                                 <form method="post" enctype="multipart/form-data">
                                     {% csrf_token %}
                                     <div>
-                                        {% if request.user == user or not user.is_superuser %}
+                                        {% if not request.user == user or not user.is_superuser %}
                                             <div class="form-check">
                                                 <input class="form-check-input" type="checkbox" id="isActiveCheckbox" name="is_active" {% if user.is_active %}checked{% endif %} {% if not request.user.is_superuser %}disabled{% endif %}>
                                                 <label class="form-check-label" for="isActiveCheckbox">{% trans "Active" %}</label>
