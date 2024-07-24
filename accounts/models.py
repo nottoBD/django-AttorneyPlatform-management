@@ -57,7 +57,7 @@ class User(AbstractUser, PermissionsMixin):
     telephone = models.CharField(max_length=16, null=True, blank=True)
     address = models.CharField(null=True, blank=True, max_length=75)
     national_number = models.CharField(max_length=11, blank=True, null=True, unique=True)
-    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg',
+    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.png',
                                       validators=[validate_image])
 
     USERNAME_FIELD = 'email'
@@ -65,7 +65,7 @@ class User(AbstractUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return f"{self.last_name} {self.first_name} ({self.email})"
+        return f"{self.last_name}"
 
     @property
     def is_administrator(self):

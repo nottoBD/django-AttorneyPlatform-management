@@ -220,7 +220,6 @@ def register(request):
             user.national_number_raw = form.cleaned_data['national_number'].replace('.', '').replace('-', '')
             user.save()
 
-            # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
             if request.user.is_authenticated:
                 if request.user.role == 'lawyer':
                     AvocatCase.objects.create(avocat=request.user, parent=user)
