@@ -51,8 +51,6 @@ class User(AbstractUser, PermissionsMixin):
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     role = models.CharField(max_length=13, choices=ROLE_CHOICES, default='parent')
     is_staff = models.BooleanField(default=False)
-    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('X', 'They')], null=True,
-                              blank=True, default=' ')
     last_name = models.CharField('last name', max_length=35, blank=True)
     first_name = models.CharField('first name', max_length=25, blank=True)
     date_of_birth = models.DateField(default=timezone.now)
@@ -110,7 +108,7 @@ class AvocatCase(models.Model):
         unique_together = (('avocat', 'case'),)
 
     def __str__(self):
-        return f"{self.avocat.email} assigned to folder {self.folder.id}"
+        return f"{self.avocat.email}"
 
 
 class JugeCase(models.Model):
