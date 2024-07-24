@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -5,6 +7,7 @@ from django.utils import timezone
 
 
 class CategoryType(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
@@ -12,6 +15,7 @@ class CategoryType(models.Model):
 
 
 class Category(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     type = models.ForeignKey(CategoryType, on_delete=models.CASCADE, related_name='payment_categories')
@@ -26,7 +30,8 @@ class Document(models.Model):
         ('validated', 'Validated'),  # Validé par l'avocat
         ('rejected', 'Rejected'),  # Rejeté par l'avocat
     )
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     folder = models.ForeignKey('Folder', on_delete=models.CASCADE, related_name='payment_documents', blank=True, null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     date = models.DateField(default=timezone.now)
@@ -45,8 +50,7 @@ class Document(models.Model):
 
 
 class Folder(models.Model):
-    lawyer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='folders_in_charge')
-    judge = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='folders_visible', null=True, blank=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     parent1 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='folders_as_parent1')
     parent2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='folders_as_parent2')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,6 +61,7 @@ class Folder(models.Model):
 
 
 class IndexHistory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     year = models.IntegerField()
     percentage = models.DecimalField(max_digits=5, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)

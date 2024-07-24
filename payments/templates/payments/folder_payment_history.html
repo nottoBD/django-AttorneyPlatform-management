@@ -3,29 +3,44 @@
 {% load static i18n %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container mt-4">
     <div class="row">
-        <div class="col-md-8">
-            <div class="card mb-4">
+        <div class="col-lg-8 col-md-12 mb-4">
+            <div class="card">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
                         <h2 class="card-title mb-0">{% trans "Récapitulatif des paiements" %}</h2>
-                        <a href="{% url 'payments:download_pdf' folder_id=folder_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-success btn-sm">
-                            {% trans "Télécharger en PDF" %}
-                        </a>
-                        {% if request.user.role == 'lawyer' %}
-                        <a href="{% url 'payments:lawyer-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
-                            {% trans "Ajouter un paiement" %}
-                        </a>
-                        <a href="{% url 'payments:pending-payments' folder_id=folder.id %}" class="btn btn-warning btn-sm">
-                            {% trans "Valider les paiements en attente" %}
-                        </a>
-                        {% endif %}
-                        {% if request.user.role == 'parent' %}
-                        <a href="{% url 'payments:parent-add-payment' folder_id=folder.id %}" class="btn btn-primary btn-sm">
-                            {% trans "Ajouter un paiement" %}
-                        </a>
-                        {% endif %}
+                        <div class="d-flex flex-wrap">
+                            <div class="dropdown mb-2 mr-2 m-1">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {% trans "Actions" %}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton">
+                                    {% if request.user.role == 'lawyer' %}
+                                        <li><a class="dropdown-item" href="{% url 'payments:lawyer-add-payment' folder_id=folder.id %}">
+                                            {% trans "Ajouter un paiement" %}
+                                        </a></li>
+                                        <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' folder.id %}">
+                                            {% trans "Gérer juge/avocat" %}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' folder_id=folder.id %}">
+                                            {% trans "Valider les paiements en attente" %}
+                                        </a></li>
+                                    {% endif %}
+                                    {% if request.user.role == 'parent' %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'payments:parent-add-payment' folder_id=folder.id %}">
+                                            {% trans "Ajouter un paiement" %}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item" href="{% url 'payments:download_pdf' folder_id=folder_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
+                                        {% trans "Télécharger en PDF" %}
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- payments comparison table -->
@@ -34,9 +49,10 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th class="col-md-4">{{ type_data.type_name }}</th>
-                                        <th class="col-md-4">{{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
-                                        <th class="col-md-4">{{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                        <th>{{ type_data.type_name }}</th>
+                                        <th>{{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
+                                        <th>{{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                        <th>{% trans "Actions" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="payments-list">
@@ -69,7 +85,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-lg-4 col-md-12 mb-4">
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="card-title mb-4">{% trans "Balance Summary" %}</h2>
@@ -87,10 +103,10 @@
                     </table>
                     <p class="mt-3">
                         {% if difference != 0 %}
-                        {% trans "The difference is" %} {{ difference }} € {% trans "in favor of" %} {{ in_favor_of.get_full_name }}.
+                            {% trans "The difference is" %} {{ difference }} € {% trans "in favor of" %} {{ in_favor_of.get_full_name }}.
                         {% endif %}
                         {% if difference == 0 %}
-                        {% trans "Amount Balanced" %}.
+                            {% trans "Amount Balanced" %}.
                         {% endif %}
                     </p>
                 </div>
@@ -113,17 +129,17 @@
                                 </thead>
                                 <tbody>
                                     {% for y in years %}
-                                    <tr class="filter-item" data-year="{{ y }}">
-                                        <td>{{ y }}</td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="1">{% trans "T1" %}</button>
-                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="2">{% trans "T2" %}</button>
-                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="3">{% trans "T3" %}</button>
-                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="4">{% trans "T4" %}</button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                        <tr class="filter-item" data-year="{{ y }}">
+                                            <td>{{ y }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="1">{% trans "T1" %}</button>
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="2">{% trans "T2" %}</button>
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="3">{% trans "T3" %}</button>
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="4">{% trans "T4" %}</button>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -131,7 +147,6 @@
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>

@@ -1,0 +1,66 @@
+{% extends 'fExtra/base.html' %}
+{% load custom_filters %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 col-md-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                        <h2 class="card-title mb-0">{% trans "Ajouter ou supprimer des juges et avocats au dossier" %}</h2>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
+                            <a class="btn btn-secondary btn-sm mt-1" href="{% url 'payments:payment-history' folder.id %}">
+                                        {% trans "Retourner" %}
+                                    </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">{% trans "Juges liés au dossier" %}</h3>
+                    <ul class="list-group">
+                        {% for juge in existing_judges %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ juge }}
+                            <form method="post" action="{% url 'payments:remove-juge' folder.id juge.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">{% trans "Avocats liés au dossier" %}</h3>
+                    <ul class="list-group">
+                        {% for avocat in existing_lawyers %}
+                            {% if avocat.id != request.user.id %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ avocat }}
+                                    <form method="post" action="{% url 'payments:remove-avocat' folder.id avocat.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
+                                    </form>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

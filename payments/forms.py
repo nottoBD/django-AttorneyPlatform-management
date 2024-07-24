@@ -1,5 +1,6 @@
 from django import forms
 
+from accounts.models import JugeFolder, AvocatFolder
 from accounts.views import User
 from .models import Document, Folder, Category
 
@@ -38,11 +39,10 @@ class PaymentDocumentFormLawyer(forms.ModelForm):
 class FolderForm(forms.ModelForm):
     class Meta:
         model = Folder
-        fields = ['judge', 'parent1', 'parent2']
+        fields = ['parent1', 'parent2']
 
     def __init__(self, *args, **kwargs):
         super(FolderForm, self).__init__(*args, **kwargs)
-        self.fields['judge'].queryset = User.objects.filter(role='judge')
         self.fields['parent1'].queryset = User.objects.filter(role='parent')
         self.fields['parent2'].queryset = User.objects.filter(role='parent')
 
@@ -59,3 +59,27 @@ class ValidatePaymentsForm(forms.Form):
 class IndexPaymentForm(forms.Form):
     percentage = forms.DecimalField(label='Percentage (%)', min_value=0, max_value=100)
     confirm_indexation = forms.CharField(widget=forms.HiddenInput(), required=False, initial='false')
+
+
+class AddJugeAvocatForm(forms.Form):
+    juges = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),  # Initialement vide
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+    avocats = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),  # Initialement vide
+        widget=forms.CheckboxSelectMultiple,
+        required=False
+    )
+    folder = forms.ModelChoiceField(
+        queryset=Folder.objects.all(),
+        widget=forms.HiddenInput(),
+        required=True
+    )
+
+    def set_juges_queryset(self, queryset):
+        self.fields['juges'].queryset = queryset
+
+    def set_avocats_queryset(self, queryset):
+        self.fields['avocats'].queryset = queryset

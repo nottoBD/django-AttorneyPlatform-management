@@ -15,7 +15,7 @@ from django.views.generic import ListView, UpdateView
 from pip._internal.utils import logging
 
 from .forms import JusticeRegistrationForm, UserRegisterForm, UserUpdateForm, CancelDeletionForm, DeletionRequestForm
-from .models import User, AvocatParent, JugeParent
+from .models import User, AvocatFolder, JugeFolder
 
 User = get_user_model()
 
@@ -64,9 +64,9 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         if self.request.user.is_superuser:
             return True
         if self.request.user.role == 'lawyer':
-            return AvocatParent.objects.filter(avocat=self.request.user, parent=user_to_update).exists()
+            return AvocatFolder.objects.filter(avocat=self.request.user, parent=user_to_update).exists()
         if self.request.user.role == 'judge':
-            return JugeParent.objects.filter(juge=self.request.user, parent=user_to_update).exists()
+            return JugeFolder.objects.filter(juge=self.request.user, parent=user_to_update).exists()
         if self.request.user.is_administrator:
             return True
         return False
@@ -74,11 +74,11 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def deassign_user(self):
         user_to_update = self.get_object()
         if self.request.user.role == 'lawyer':
-            relationship = AvocatParent.objects.filter(avocat=self.request.user, parent=user_to_update)
+            relationship = AvocatFolder.objects.filter(avocat=self.request.user, parent=user_to_update)
         elif self.request.user.role == 'judge':
-            relationship = JugeParent.objects.filter(juge=self.request.user, parent=user_to_update)
+            relationship = JugeFolder.objects.filter(juge=self.request.user, parent=user_to_update)
         elif self.request.user.is_administrator:
-            relationship = AvocatParent.objects.filter(parent=user_to_update) | JugeParent.objects.filter(
+            relationship = AvocatFolder.objects.filter(parent=user_to_update) | JugeFolder.objects.filter(
                 parent=user_to_update)
         else:
             messages.error(self.request, _("You are not authorized to deassign this user."))
@@ -211,9 +211,9 @@ def register(request):
             # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
             if request.user.is_authenticated:
                 if request.user.role == 'lawyer':
-                    AvocatParent.objects.create(avocat=request.user, parent=user)
+                    AvocatFolder.objects.create(avocat=request.user, parent=user)
                 elif request.user.role == 'judge':
-                    JugeParent.objects.create(juge=request.user, parent=user)
+                    JugeFolder.objects.create(juge=request.user, parent=user)
 
             messages.success(request, _("The parent account has been successfully created."))
             return redirect('/accounts/list/')

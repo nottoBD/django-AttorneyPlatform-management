@@ -16,31 +16,54 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from xhtml2pdf import pisa
 
-from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer, IndexPaymentForm
+from accounts.models import JugeFolder, AvocatFolder
+from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer, IndexPaymentForm, AddJugeAvocatForm
 from .models import Document, Folder, Category, CategoryType, IndexHistory
 
 User = get_user_model()
 
 
 # EVERYONE
-#----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 class FolderListView(LoginRequiredMixin, ListView):
     model = Folder
     template_name = 'payments/list_folder.html'
     context_object_name = 'folders'
 
+    def dispatch(self, request, *args, **kwargs):
+        # Appel de la méthode parent pour gérer les permissions de base
+        response = super().dispatch(request, *args, **kwargs)
+
+        # Vérifier si l'utilisateur a accès aux dossiers de la vue
+        folder_id = self.kwargs.get('pk')  # Récupérer l'ID du dossier depuis l'URL si nécessaire
+
+        # Si l'ID du dossier est fourni dans l'URL, vérifier l'accès
+        if folder_id:
+            folder = get_object_or_404(Folder, pk=folder_id)
+            if not self.has_access_to_folder(request.user, folder):
+                return HttpResponseForbidden("You do not have permission to access this folder.")
+
+        return response
+
     def get_queryset(self):
         user = self.request.user
 
-        if user.role == 'parent':
-            # Filter cases by user logged in as a parent
-            return Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
-        elif user.role in ['judge', 'lawyer']:
-            # Filter cases by user logged in as judge or lawyer
-            return Folder.objects.filter(Q(judge=user) | Q(lawyer=user))
-        else:
-            # Default to an empty queryset if user's role is undefined
-            return Folder.objects.none()
+        # Filtrer les dossiers associés à l'utilisateur
+        queryset = Folder.objects.none()
+
+        if AvocatFolder.objects.filter(avocat=user).exists():
+            queryset = Folder.objects.filter(id__in=AvocatFolder.objects.filter(avocat=user).values('folder_id'))
+        elif JugeFolder.objects.filter(juge=user).exists():
+            queryset = Folder.objects.filter(id__in=JugeFolder.objects.filter(juge=user).values('folder_id'))
+
+        return queryset
+
+    def has_access_to_folder(self, user, folder):
+        # Vérifier si l'utilisateur a accès au dossier
+        if AvocatFolder.objects.filter(avocat=user, folder=folder).exists() or \
+                JugeFolder.objects.filter(juge=user, folder=folder).exists():
+            return True
+        return False
 
 
 class PaymentHistoryView(LoginRequiredMixin, ListView):
@@ -406,7 +429,7 @@ def get_quarter_dates(year, quarter):
 
 
 # PARENT
-#----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 @login_required
 @transaction.atomic
 def submit_payment_document(request, folder_id):
@@ -456,7 +479,7 @@ def submit_payment_document(request, folder_id):
 
 
 # MAGISTRATE
-#----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 @login_required
 @transaction.atomic
 def submit_payment_document_lawyer(request, folder_id):
@@ -526,6 +549,13 @@ def create_folder(request):
                 folder = form.save(commit=False)
                 folder.lawyer = request.user
                 folder.save()
+
+                # Create AvocatParent entry
+                AvocatFolder.objects.create(
+                    avocat=request.user,
+                    folder=folder
+                )
+
                 # Redirect to a list of folders or other success page
                 return redirect('payments:list_folder')
     else:
@@ -565,8 +595,81 @@ def pending_payments(request, folder_id):
     return render(request, 'payments/pending_payments.html', context)
 
 
+@login_required
+def add_juge_avocat(request, folder_id):
+    folder = get_object_or_404(Folder, id=folder_id)
+
+    # Obtenez les utilisateurs déjà liés au dossier
+    existing_judges = JugeFolder.objects.filter(folder=folder).select_related('juge')
+    existing_lawyers = AvocatFolder.objects.filter(folder=folder).select_related('avocat')
+
+    # Obtenez les IDs des utilisateurs déjà liés au dossier
+    existing_judge_ids = existing_judges.values_list('juge_id', flat=True)
+    existing_lawyer_ids = existing_lawyers.values_list('avocat_id', flat=True)
+
+    # Exclure les utilisateurs déjà associés et l'utilisateur actuel
+    available_judges = User.objects.filter(role='judge').exclude(
+        id__in=existing_judge_ids
+    ).exclude(id=request.user.id)
+
+    available_lawyers = User.objects.filter(role='lawyer').exclude(
+        id__in=existing_lawyer_ids
+    ).exclude(id=request.user.id)
+
+    if request.method == 'POST':
+        form = AddJugeAvocatForm(request.POST)
+        form.set_juges_queryset(available_judges)
+        form.set_avocats_queryset(available_lawyers)
+        if form.is_valid():
+            juges = form.cleaned_data.get('juges')
+            avocats = form.cleaned_data.get('avocats')
+
+            # Ajouter les juges sélectionnés
+            for juge in juges:
+                JugeFolder.objects.get_or_create(
+                    juge=juge,
+                    folder=folder
+                )
+
+            # Ajouter les avocats sélectionnés
+            for avocat in avocats:
+                AvocatFolder.objects.get_or_create(
+                    avocat=avocat,
+                    folder=folder
+                )
+
+            return redirect('payments:add-juge-avocat', folder_id=folder.id)
+    else:
+        form = AddJugeAvocatForm(initial={'folder': folder.id})
+        form.set_juges_queryset(available_judges)
+        form.set_avocats_queryset(available_lawyers)
+
+    context = {
+        'form': form,
+        'folder': folder,
+        'existing_judges': [j.juge for j in existing_judges],
+        'existing_lawyers': [a.avocat for a in existing_lawyers],
+    }
+
+    return render(request, 'payments/add_juge_avocat.html', context)
+
+
+def remove_juge(request, folder_id, juge_id):
+    folder = get_object_or_404(Folder, id=folder_id)
+    juge = get_object_or_404(User, id=juge_id, role='judge')
+    JugeFolder.objects.filter(folder=folder, juge=juge).delete()
+    return redirect('payments:add-juge-avocat', folder_id=folder.id)
+
+
+def remove_avocat(request, folder_id, avocat_id):
+    folder = get_object_or_404(Folder, id=folder_id)
+    avocat = get_object_or_404(User, id=avocat_id, role='lawyer')
+    AvocatFolder.objects.filter(folder=folder, avocat=avocat).delete()
+    return redirect('payments:add-juge-avocat', folder_id=folder.id)
+
+
 # ADMINISTRATOR
-#----------------------------------------------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------------------------------------------
 @login_required
 def index_payments(request):
     if request.user.role != 'administrator':

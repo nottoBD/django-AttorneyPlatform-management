@@ -6,7 +6,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .models import AvocatParent, JugeParent
+from .models import AvocatFolder, JugeFolder
 from .validations import (
     clean_email, validate_image, sanitize_text, validate_national_number,
     validate_password, validate_telephone
@@ -65,20 +65,20 @@ class UserUpdateForm(forms.ModelForm):
             queryset = User.objects.filter(role__in=['judge', 'lawyer'])
             self.fields['related_users'].queryset = queryset
             assigned_users = User.objects.filter(
-                id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
+                id__in=AvocatFolder.objects.filter(parent=target_user).values_list('avocat', flat=True)
             ) | User.objects.filter(
-                id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
+                id__in=JugeFolder.objects.filter(parent=target_user).values_list('juge', flat=True)
             )
             self.fields['related_users'].initial = assigned_users
         elif target_user.role in ['judge', 'lawyer']:
             queryset = User.objects.filter(role='parent')
             if target_user.role == 'lawyer':
                 assigned_parents = User.objects.filter(
-                    id__in=AvocatParent.objects.filter(avocat=target_user).values_list('parent', flat=True)
+                    id__in=AvocatFolder.objects.filter(avocat=target_user).values_list('parent', flat=True)
                 )
             elif target_user.role == 'judge':
                 assigned_parents = User.objects.filter(
-                    id__in=JugeParent.objects.filter(juge=target_user).values_list('parent', flat=True)
+                    id__in=JugeFolder.objects.filter(juge=target_user).values_list('parent', flat=True)
                 )
             self.fields['related_users'].queryset = queryset
             self.fields['related_users'].initial = assigned_parents
@@ -88,9 +88,9 @@ class UserUpdateForm(forms.ModelForm):
             self.fields.pop('related_users', None)
         elif target_user.role == 'parent':
             assigned_users = User.objects.filter(
-                id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
+                id__in=AvocatFolder.objects.filter(parent=target_user).values_list('avocat', flat=True)
             ) | User.objects.filter(
-                id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
+                id__in=JugeFolder.objects.filter(parent=target_user).values_list('juge', flat=True)
             )
             self.fields['related_users'].queryset = assigned_users
             self.fields['related_users'].initial = assigned_users
@@ -101,9 +101,9 @@ class UserUpdateForm(forms.ModelForm):
     def _setup_parent_form(self, target_user):
         if target_user == self.request_user:
             assigned_users = User.objects.filter(
-                id__in=AvocatParent.objects.filter(parent=target_user).values_list('avocat', flat=True)
+                id__in=AvocatFolder.objects.filter(parent=target_user).values_list('avocat', flat=True)
             ) | User.objects.filter(
-                id__in=JugeParent.objects.filter(parent=target_user).values_list('juge', flat=True)
+                id__in=JugeFolder.objects.filter(parent=target_user).values_list('juge', flat=True)
             )
             self.fields['related_users'].queryset = assigned_users
             self.fields['related_users'].initial = assigned_users
@@ -116,32 +116,32 @@ class UserUpdateForm(forms.ModelForm):
     def _handle_parent_relationships(self, related_users_ids):
         related_users_ids = set(related_users_ids)
 
-        current_lawyer_relations = set(AvocatParent.objects.filter(parent=self.instance).values_list('avocat_id', flat=True))
-        current_judge_relations = set(JugeParent.objects.filter(parent=self.instance).values_list('juge_id', flat=True))
+        current_lawyer_relations = set(AvocatFolder.objects.filter(parent=self.instance).values_list('avocat_id', flat=True))
+        current_judge_relations = set(JugeFolder.objects.filter(parent=self.instance).values_list('juge_id', flat=True))
 
         relationships_to_add = related_users_ids - current_lawyer_relations - current_judge_relations
         relationships_to_remove = (current_lawyer_relations | current_judge_relations) - related_users_ids
 
-        AvocatParent.objects.filter(parent=self.instance, avocat_id__in=relationships_to_remove).delete()
-        JugeParent.objects.filter(parent=self.instance, juge_id__in=relationships_to_remove).delete()
+        AvocatFolder.objects.filter(parent=self.instance, avocat_id__in=relationships_to_remove).delete()
+        JugeFolder.objects.filter(parent=self.instance, juge_id__in=relationships_to_remove).delete()
 
         for user_id in relationships_to_add:
             user_instance = User.objects.get(pk=user_id)
             if user_instance.role == 'lawyer':
-                AvocatParent.objects.get_or_create(parent=self.instance, avocat=user_instance)
+                AvocatFolder.objects.get_or_create(parent=self.instance, avocat=user_instance)
             elif user_instance.role == 'judge':
-                JugeParent.objects.get_or_create(parent=self.instance, juge=user_instance)
+                JugeFolder.objects.get_or_create(parent=self.instance, juge=user_instance)
 
     def _handle_lawyer_judge_relationships(self, related_users_ids):
         related_users_ids = set(related_users_ids)
 
         if self.instance.role == 'lawyer':
-            current_relations = set(AvocatParent.objects.filter(avocat=self.instance).values_list('parent_id', flat=True))
-            relationship_model = AvocatParent
+            current_relations = set(AvocatFolder.objects.filter(avocat=self.instance).values_list('parent_id', flat=True))
+            relationship_model = AvocatFolder
             own_field = 'avocat'
         elif self.instance.role == 'judge':
-            current_relations = set(JugeParent.objects.filter(juge=self.instance).values_list('parent_id', flat=True))
-            relationship_model = JugeParent
+            current_relations = set(AvocatFolder.objects.filter(juge=self.instance).values_list('parent_id', flat=True))
+            relationship_model = JugeFolder
             own_field = 'juge'
 
         relationships_to_add = related_users_ids - current_relations
@@ -230,10 +230,10 @@ class JusticeRegistrationForm(UserCreationForm):
             assigned_parents = self.cleaned_data['parents_assigned']
             if user.role == 'lawyer':
                 for parent in assigned_parents:
-                    AvocatParent.objects.get_or_create(avocat=user, parent=parent)
+                    AvocatFolder.objects.get_or_create(avocat=user, parent=parent)
             elif user.role == 'judge':
                 for parent in assigned_parents:
-                    JugeParent.objects.get_or_create(juge=user, parent=parent)
+                    JugeFolder.objects.get_or_create(juge=user, parent=parent)
         return user
 
 

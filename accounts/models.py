@@ -1,3 +1,6 @@
+import uuid
+
+from django.conf import settings
 from django.contrib.auth.models import BaseUserManager, PermissionsMixin, AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -5,6 +8,12 @@ from guardian.shortcuts import assign_perm
 from datetime import timedelta
 
 from .validations import validate_image
+
+
+# Permet un import différé pour éviter l'import circulaire et générer un message d'erreur
+def get_folder_model():
+    from payments.models import Folder
+    return Folder
 
 
 class CustomUserManager(BaseUserManager):
@@ -35,20 +44,23 @@ class User(AbstractUser, PermissionsMixin):
         ('judge', 'Judge'),
         ('parent', 'Parent'),
     ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=150, unique=False, null=True, blank=True)
     email = models.EmailField(verbose_name='e-mail address', unique=True, max_length=255)
     is_active = models.BooleanField(default=True)
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     role = models.CharField(max_length=13, choices=ROLE_CHOICES, default='parent')
     is_staff = models.BooleanField(default=False)
-    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('X', 'They')], null=True, blank=True, default=' ')
+    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('X', 'They')], null=True,
+                              blank=True, default=' ')
     last_name = models.CharField('last name', max_length=35, blank=True)
     first_name = models.CharField('first name', max_length=25, blank=True)
     date_of_birth = models.DateField(default=timezone.now)
     telephone = models.CharField(max_length=16, null=True, blank=True)
     address = models.CharField(null=True, blank=True, max_length=75)
     national_number = models.CharField(max_length=11, blank=True, null=True, unique=True)
-    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg', validators=[validate_image])
+    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg',
+                                      validators=[validate_image])
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -89,23 +101,25 @@ class User(AbstractUser, PermissionsMixin):
         return nn
 
 
-class AvocatParent(models.Model):
-    avocat = models.ForeignKey(User, related_name='assigned_parents', on_delete=models.CASCADE)
-    parent = models.ForeignKey(User, related_name='avocats_assigned', on_delete=models.CASCADE)
+class AvocatFolder(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    avocat = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents', on_delete=models.CASCADE)
+    folder = models.ForeignKey(get_folder_model(), on_delete=models.CASCADE, related_name='assigned_lawyers')
 
     class Meta:
-        unique_together = (('avocat', 'parent'),)
+        unique_together = (('avocat', 'folder'),)
 
     def __str__(self):
-        return f"{self.avocat.email} assigned to {self.parent.email}"
+        return f"{self.avocat.email} assigned to folder {self.folder.id}"
 
 
-class JugeParent(models.Model):
-    juge = models.ForeignKey(User, related_name='assigned_parents_judge', on_delete=models.CASCADE)
-    parent = models.ForeignKey(User, related_name='juges_assigned', on_delete=models.CASCADE)
+class JugeFolder(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    juge = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents_judge', on_delete=models.CASCADE)
+    folder = models.ForeignKey(get_folder_model(), on_delete=models.CASCADE, related_name='assigned_judges')
 
     class Meta:
-        unique_together = (('juge', 'parent'),)
+        unique_together = (('juge', 'folder'),)
 
     def __str__(self):
-        return f"{self.juge.email} assigned to {self.parent.email}"
+        return f"{self.juge.email} assigned to folder {self.folder.id}"
