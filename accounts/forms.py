@@ -143,8 +143,6 @@ class UserUpdateForm(forms.ModelForm):
                 relationship_model.objects.get_or_create(**{own_field: self.instance, 'case__parent2': parent_instance})
 
 
-
-
 class JusticeRegistrationForm(UserCreationForm):
     ROLE_CHOICES = [
         ('judge', 'Judge'),
@@ -155,21 +153,16 @@ class JusticeRegistrationForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, label=_('First Name'), required=True)
     last_name = forms.CharField(max_length=150, label=_('Last Name'), required=True)
     num_telephone = forms.CharField(max_length=20, initial='+32', label=_('Telephone Number'), required=False)
-    parents_assigned = forms.ModelMultipleChoiceField(queryset=User.objects.filter(role='parent'), required=False,
-                                                      label=_("Assign Parents"))
 
     class Meta:
         model = User
-        fields = ['role', 'last_name', 'first_name', 'email', 'password1', 'password2', 'num_telephone',
-                  'parents_assigned']
+        fields = ['role', 'last_name', 'first_name', 'email', 'password1', 'password2', 'num_telephone']
 
     def __init__(self, *args, **kwargs):
         super(JusticeRegistrationForm, self).__init__(*args, **kwargs)
         self.fields['email'].required = True
         self.fields['password1'].help_text = None
         self.fields['password2'].help_text = None
-        self.fields['parents_assigned'].help_text = _("Press Control or Shift to select several Parents.")
-
 
     def clean_first_name(self):
         first_name = self.cleaned_data['first_name']
@@ -201,13 +194,6 @@ class JusticeRegistrationForm(UserCreationForm):
         if commit:
             user.save()
             self.save_m2m()
-            assigned_parents = self.cleaned_data['parents_assigned']
-            if user.role == 'lawyer':
-                for parent in assigned_parents:
-                    AvocatCase.objects.get_or_create(avocat=user, parent=parent)
-            elif user.role == 'judge':
-                for parent in assigned_parents:
-                    JugeCase.objects.get_or_create(juge=user, parent=parent)
         return user
 
 
@@ -265,7 +251,6 @@ class UserRegisterForm(UserCreationForm):
         if password1 and password2 and password1 != password2:
             raise ValidationError(_('The passwords do not match.'))
         return password2
-
 
 
 class DeletionRequestForm(forms.Form):

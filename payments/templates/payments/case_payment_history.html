@@ -17,14 +17,14 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton">
                                     {% if request.user.role == 'lawyer' %}
-                                        <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' folder.id %}">
+                                        <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' case.id %}">
                                             {% trans "Gérer juge/avocat" %}
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="{% url 'payments:lawyer-add-payment' folder_id=folder.id %}">
+                                        <li><a class="dropdown-item" href="{% url 'payments:lawyer-add-payment' case_id=case.id %}">
                                             {% trans "Ajouter un paiement" %}
                                         </a></li>
-                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' folder_id=folder.id %}">
+                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' case_id=case.id %}">
                                             {% trans "Valider les paiements en attente" %}
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
