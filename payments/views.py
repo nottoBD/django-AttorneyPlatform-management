@@ -541,9 +541,13 @@ def create_folder(request):
         if form.is_valid():
             parent1 = form.cleaned_data['parent1']
             parent2 = form.cleaned_data['parent2']
+
             # Check if a folder with the same parent1 and parent2 already exists
             existing_folder = Folder.objects.filter(parent1=parent1, parent2=parent2).exists() or Folder.objects.filter(parent1=parent2, parent2=parent1).exists()
-            if existing_folder:
+
+            if parent1 == parent2:
+                messages.error(request, "Impossible de créer un dossier avec le même parent.")
+            elif existing_folder:
                 messages.error(request, "Un dossier avec ces deux parents existe déjà.")
             else:
                 folder = form.save(commit=False)
