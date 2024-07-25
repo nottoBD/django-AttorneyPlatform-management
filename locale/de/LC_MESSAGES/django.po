@@ -281,82 +281,82 @@ msgstr "Ihr Konto wurde erstellt! Sie sind jetzt angemeldet."
 msgid "The parent account has been successfully created."
 msgstr "Das Elternkonto wurde erfolgreich erstellt."
 
-#: fExtra/settings.py:87
+#: neok/settings.py:87
 msgid "French"
 msgstr "Französisch"
 
-#: fExtra/settings.py:88
+#: neok/settings.py:88
 msgid "English"
 msgstr "Englisch"
 
-#: fExtra/settings.py:89
+#: neok/settings.py:89
 msgid "Dutch"
 msgstr "Niederländisch"
 
-#: fExtra/settings.py:90
+#: neok/settings.py:90
 msgid "German"
 msgstr "Deutsch"
 
-#: templates/fExtra/base.html:14
-msgid "fExtra Plateform"
-msgstr "fExtra Plattform"
+#: templates/neok/base.html:14
+msgid "neok Plateform"
+msgstr "neok Plattform"
 
-#: templates/fExtra/base.html:26
-msgid "Platform fExtra"
-msgstr "Plattform fExtra"
+#: templates/neok/base.html:26
+msgid "Platform neok"
+msgstr "Plattform neok"
 
-#: templates/fExtra/base.html:31
+#: templates/neok/base.html:31
 #, fuzzy
 #| msgid "Home Page"
 msgid "Home"
 msgstr "Startseite"
 
-#: templates/fExtra/base.html:37
+#: templates/neok/base.html:37
 msgid "Accounts"
 msgstr ""
 
-#: templates/fExtra/base.html:42
+#: templates/neok/base.html:42
 msgid "List All"
 msgstr "Alle auflisten"
 
-#: templates/fExtra/base.html:45
+#: templates/neok/base.html:45
 msgid "Add Parent"
 msgstr "Elternteil hinzufügen"
 
-#: templates/fExtra/base.html:48
+#: templates/neok/base.html:48
 msgid "Add Magistrat"
 msgstr "Magistrat hinzufügen"
 
-#: templates/fExtra/base.html:51
+#: templates/neok/base.html:51
 msgid "Update"
 msgstr "Aktualisieren"
 
-#: templates/fExtra/base.html:78
+#: templates/neok/base.html:78
 msgid "Languages"
 msgstr "Sprachen"
 
-#: templates/fExtra/base.html:111
+#: templates/neok/base.html:111
 msgid "Administrator"
 msgstr "Administrator"
 
-#: templates/fExtra/base.html:113
+#: templates/neok/base.html:113
 msgid "Magistrat"
 msgstr "Magistrat"
 
-#: templates/fExtra/base.html:115
+#: templates/neok/base.html:115
 msgid "Parent"
 msgstr "Elternteil"
 
-#: templates/fExtra/base.html:120
+#: templates/neok/base.html:120
 #, fuzzy
 #| msgid "Profile Image"
 msgid "Profile"
 msgstr "Profilbild"
 
-#: templates/fExtra/base.html:126
+#: templates/neok/base.html:126
 msgid "Logout"
 msgstr "Abmelden"
 
-#: templates/fExtra/home.html:6
+#: templates/neok/home.html:6
 msgid "Home Page"
 msgstr "Startseite"

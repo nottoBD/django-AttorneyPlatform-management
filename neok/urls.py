@@ -3,8 +3,8 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.i18n import set_language
 from django.conf import settings
-from fExtra import views
-from fExtra.views import privacy_view
+from neok import views
+from neok.views import privacy_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),

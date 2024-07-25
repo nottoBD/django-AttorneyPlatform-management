@@ -1,12 +1,11 @@
-import re
-from PIL import Image
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
-from .models import AvocatFolder, JugeFolder
+from payments.models import Case
+from .models import AvocatCase, JugeCase
 from .validations import (
     clean_email, validate_image, sanitize_text, validate_national_number,
     validate_password, validate_telephone
@@ -16,7 +15,13 @@ User = get_user_model()
 
 
 class UserUpdateForm(forms.ModelForm):
-    related_users = forms.ModelMultipleChoiceField(
+    current_cases = forms.ModelMultipleChoiceField(
+        queryset=Case.objects.none(),
+        required=False,
+        label=_("Current Cases")
+    )
+
+    assigned_users = forms.ModelMultipleChoiceField(
         queryset=User.objects.none(),
         required=False,
         label=_("Assigned Users")
@@ -24,21 +29,20 @@ class UserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['last_name', 'first_name', 'email', 'profile_image', 'related_users', 'is_active']
+        fields = ['last_name', 'first_name', 'email', 'profile_image', 'current_cases', 'assigned_users', 'is_active']
 
     def __init__(self, *args, **kwargs):
         self.request_user = kwargs.pop('request_user', None)
         super().__init__(*args, **kwargs)
         target_user = self.instance
 
-        if self.request_user.is_administrator:
-            self._setup_admin_form(target_user)
+        if self.request_user.is_administrator or self.request_user.is_superuser:
+            self._setup_admin_superuser_form(target_user)
         elif self.request_user.is_lawyer() or self.request_user.is_judge():
             self._setup_lawyer_judge_form(target_user)
         elif self.request_user.is_parent:
             self._setup_parent_form(target_user)
 
-    # les méthodes clean_ sont automatiquements appelées par Django
     def clean_email(self):
         return clean_email(self.cleaned_data.get('email'))
 
@@ -59,116 +63,86 @@ class UserUpdateForm(forms.ModelForm):
                 raise forms.ValidationError(_("You are not authorized to change the active status."))
         return is_active if is_active else False
 
-
-    def _setup_admin_form(self, target_user):
+    def _setup_admin_superuser_form(self, target_user):
         if target_user.role == 'parent':
-            queryset = User.objects.filter(role__in=['judge', 'lawyer'])
-            self.fields['related_users'].queryset = queryset
             assigned_users = User.objects.filter(
-                id__in=AvocatFolder.objects.filter(parent=target_user).values_list('avocat', flat=True)
+                id__in=AvocatCase.objects.filter(case__in=Case.objects.filter(parent1=target_user) | Case.objects.filter(parent2=target_user)).values_list('avocat', flat=True)
             ) | User.objects.filter(
-                id__in=JugeFolder.objects.filter(parent=target_user).values_list('juge', flat=True)
+                id__in=JugeCase.objects.filter(case__in=Case.objects.filter(parent1=target_user) | Case.objects.filter(parent2=target_user)).values_list('juge', flat=True)
             )
-            self.fields['related_users'].initial = assigned_users
+            self.fields['assigned_users'].queryset = assigned_users
         elif target_user.role in ['judge', 'lawyer']:
-            queryset = User.objects.filter(role='parent')
             if target_user.role == 'lawyer':
-                assigned_parents = User.objects.filter(
-                    id__in=AvocatFolder.objects.filter(avocat=target_user).values_list('parent', flat=True)
-                )
+                current_cases = Case.objects.filter(assigned_lawyers__avocat=target_user)
             elif target_user.role == 'judge':
-                assigned_parents = User.objects.filter(
-                    id__in=JugeFolder.objects.filter(juge=target_user).values_list('parent', flat=True)
-                )
-            self.fields['related_users'].queryset = queryset
-            self.fields['related_users'].initial = assigned_parents
+                current_cases = Case.objects.filter(assigned_judges__juge=target_user)
+            self.fields['current_cases'].queryset = current_cases
+            self.fields['current_cases'].widget.attrs['onclick'] = "window.location.href='/payments/payment-history/' + this.value"
 
     def _setup_lawyer_judge_form(self, target_user):
         if target_user == self.request_user:
-            self.fields.pop('related_users', None)
-        elif target_user.role == 'parent':
-            assigned_users = User.objects.filter(
-                id__in=AvocatFolder.objects.filter(parent=target_user).values_list('avocat', flat=True)
-            ) | User.objects.filter(
-                id__in=JugeFolder.objects.filter(parent=target_user).values_list('juge', flat=True)
-            )
-            self.fields['related_users'].queryset = assigned_users
-            self.fields['related_users'].initial = assigned_users
-            self.fields['related_users'].widget.attrs['disabled'] = True
+            # List current cases for lawyers and judges
+            if target_user.role == 'lawyer':
+                current_cases = Case.objects.filter(assigned_lawyers__avocat=target_user)
+            elif target_user.role == 'judge':
+                current_cases = Case.objects.filter(assigned_judges__juge=target_user)
+            self.fields['current_cases'].queryset = current_cases
+            self.fields['current_cases'].widget.attrs['onclick'] = "window.location.href='/payments/payment-history/' + this.value"
         else:
-            self.fields.pop('related_users', None)
+            self.fields.pop('current_cases', None)
 
     def _setup_parent_form(self, target_user):
-        if target_user == self.request_user:
-            assigned_users = User.objects.filter(
-                id__in=AvocatFolder.objects.filter(parent=target_user).values_list('avocat', flat=True)
-            ) | User.objects.filter(
-                id__in=JugeFolder.objects.filter(parent=target_user).values_list('juge', flat=True)
-            )
-            self.fields['related_users'].queryset = assigned_users
-            self.fields['related_users'].initial = assigned_users
-            self.fields['related_users'].widget.attrs['disabled'] = True
-        else:
-            self.fields.pop('related_users', None)
-
-
+        assigned_users = User.objects.filter(
+            id__in=AvocatCase.objects.filter(case__in=Case.objects.filter(parent1=target_user) | Case.objects.filter(parent2=target_user)).values_list('avocat', flat=True)
+        ) | User.objects.filter(
+            id__in=JugeCase.objects.filter(case__in=Case.objects.filter(parent1=target_user) | Case.objects.filter(parent2=target_user)).values_list('juge', flat=True)
+        )
+        self.fields['assigned_users'].queryset = assigned_users
 
     def _handle_parent_relationships(self, related_users_ids):
         related_users_ids = set(related_users_ids)
 
-        current_lawyer_relations = set(AvocatFolder.objects.filter(parent=self.instance).values_list('avocat_id', flat=True))
-        current_judge_relations = set(JugeFolder.objects.filter(parent=self.instance).values_list('juge_id', flat=True))
+        current_lawyer_relations = set(AvocatCase.objects.filter(case__in=Case.objects.filter(parent1=self.instance) | Case.objects.filter(parent2=self.instance)).values_list('avocat_id', flat=True))
+        current_judge_relations = set(JugeCase.objects.filter(case__in=Case.objects.filter(parent1=self.instance) | Case.objects.filter(parent2=self.instance)).values_list('juge_id', flat=True))
 
         relationships_to_add = related_users_ids - current_lawyer_relations - current_judge_relations
         relationships_to_remove = (current_lawyer_relations | current_judge_relations) - related_users_ids
 
-        AvocatFolder.objects.filter(parent=self.instance, avocat_id__in=relationships_to_remove).delete()
-        JugeFolder.objects.filter(parent=self.instance, juge_id__in=relationships_to_remove).delete()
+        AvocatCase.objects.filter(case__in=Case.objects.filter(parent1=self.instance) | Case.objects.filter(parent2=self.instance), avocat_id__in=relationships_to_remove).delete()
+        JugeCase.objects.filter(case__in=Case.objects.filter(parent1=self.instance) | Case.objects.filter(parent2=self.instance), juge_id__in=relationships_to_remove).delete()
 
         for user_id in relationships_to_add:
             user_instance = User.objects.get(pk=user_id)
             if user_instance.role == 'lawyer':
-                AvocatFolder.objects.get_or_create(parent=self.instance, avocat=user_instance)
+                AvocatCase.objects.get_or_create(case__in=Case.objects.filter(parent1=self.instance) | Case.objects.filter(parent2=self.instance), avocat=user_instance)
             elif user_instance.role == 'judge':
-                JugeFolder.objects.get_or_create(parent=self.instance, juge=user_instance)
+                JugeCase.objects.get_or_create(case__in=Case.objects.filter(parent1=self.instance) | Case.objects.filter(parent2=self.instance), juge=user_instance)
 
     def _handle_lawyer_judge_relationships(self, related_users_ids):
         related_users_ids = set(related_users_ids)
 
         if self.instance.role == 'lawyer':
-            current_relations = set(AvocatFolder.objects.filter(avocat=self.instance).values_list('parent_id', flat=True))
-            relationship_model = AvocatFolder
+            current_relations = set(AvocatCase.objects.filter(avocat=self.instance).values_list('case__parent1_id', flat=True)) | set(AvocatCase.objects.filter(avocat=self.instance).values_list('case__parent2_id', flat=True))
+            relationship_model = AvocatCase
             own_field = 'avocat'
         elif self.instance.role == 'judge':
-            current_relations = set(AvocatFolder.objects.filter(juge=self.instance).values_list('parent_id', flat=True))
-            relationship_model = JugeFolder
+            current_relations = set(JugeCase.objects.filter(juge=self.instance).values_list('case__parent1_id', flat=True)) | set(JugeCase.objects.filter(juge=self.instance).values_list('case__parent2_id', flat=True))
+            relationship_model = JugeCase
             own_field = 'juge'
 
         relationships_to_add = related_users_ids - current_relations
         relationships_to_remove = current_relations - related_users_ids
 
-        relationship_model.objects.filter(**{own_field: self.instance, 'parent_id__in': relationships_to_remove}).delete()
+        relationship_model.objects.filter(**{own_field: self.instance, 'case__parent1_id__in': relationships_to_remove}).delete()
+        relationship_model.objects.filter(**{own_field: self.instance, 'case__parent2_id__in': relationships_to_remove}).delete()
 
         for user_id in relationships_to_add:
             parent_instance = User.objects.get(pk=user_id)
-            relationship_model.objects.get_or_create(**{own_field: self.instance, 'parent': parent_instance})
+            if parent_instance.role == 'parent':
+                relationship_model.objects.get_or_create(**{own_field: self.instance, 'case__parent1': parent_instance})
+                relationship_model.objects.get_or_create(**{own_field: self.instance, 'case__parent2': parent_instance})
 
-    # def form_valid(self, form):
-    #     if not self.request_user.is_superuser and 'role' in form.changed_data:
-    #         form.add_error('role', _("You are not authorized to change the role."))
-    #         return super().form_invalid(form)
-    #
-    #     response = super().form_valid(form)
-    #
-    #     if 'related_users' in form.cleaned_data:
-    #         related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
-    #         related_users_ids = set(related_users_ids)
-    #         if self.instance.role == 'parent':
-    #             self._handle_parent_relationships(related_users_ids)
-    #         elif self.instance.role in ['lawyer', 'judge']:
-    #             self._handle_lawyer_judge_relationships(related_users_ids)
-    #
-    #     return response
+
 
 
 class JusticeRegistrationForm(UserCreationForm):
@@ -230,10 +204,10 @@ class JusticeRegistrationForm(UserCreationForm):
             assigned_parents = self.cleaned_data['parents_assigned']
             if user.role == 'lawyer':
                 for parent in assigned_parents:
-                    AvocatFolder.objects.get_or_create(avocat=user, parent=parent)
+                    AvocatCase.objects.get_or_create(avocat=user, parent=parent)
             elif user.role == 'judge':
                 for parent in assigned_parents:
-                    JugeFolder.objects.get_or_create(juge=user, parent=parent)
+                    JugeCase.objects.get_or_create(juge=user, parent=parent)
         return user
 
 
@@ -286,7 +260,6 @@ class UserRegisterForm(UserCreationForm):
         return validate_password(password1)
 
     def clean_password2(self):
-        # Ensure this password matches the first one entered
         password1 = self.cleaned_data.get('password1')
         password2 = self.cleaned_data.get('password2')
         if password1 and password2 and password1 != password2:

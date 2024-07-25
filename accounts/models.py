@@ -11,9 +11,9 @@ from .validations import validate_image
 
 
 # Permet un import différé pour éviter l'import circulaire et générer un message d'erreur
-def get_folder_model():
-    from payments.models import Folder
-    return Folder
+def get_case_model():
+    from payments.models import Case
+    return Case
 
 
 class CustomUserManager(BaseUserManager):
@@ -51,15 +51,13 @@ class User(AbstractUser, PermissionsMixin):
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     role = models.CharField(max_length=13, choices=ROLE_CHOICES, default='parent')
     is_staff = models.BooleanField(default=False)
-    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('X', 'They')], null=True,
-                              blank=True, default=' ')
     last_name = models.CharField('last name', max_length=35, blank=True)
     first_name = models.CharField('first name', max_length=25, blank=True)
     date_of_birth = models.DateField(default=timezone.now)
     telephone = models.CharField(max_length=16, null=True, blank=True)
     address = models.CharField(null=True, blank=True, max_length=75)
     national_number = models.CharField(max_length=11, blank=True, null=True, unique=True)
-    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.jpg',
+    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.png',
                                       validators=[validate_image])
 
     USERNAME_FIELD = 'email'
@@ -67,7 +65,7 @@ class User(AbstractUser, PermissionsMixin):
     objects = CustomUserManager()
 
     def __str__(self):
-        return f"{self.last_name} {self.first_name} ({self.email})"
+        return f"{self.last_name}"
 
     @property
     def is_administrator(self):
@@ -101,25 +99,25 @@ class User(AbstractUser, PermissionsMixin):
         return nn
 
 
-class AvocatFolder(models.Model):
+class AvocatCase(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     avocat = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents', on_delete=models.CASCADE)
-    folder = models.ForeignKey(get_folder_model(), on_delete=models.CASCADE, related_name='assigned_lawyers')
+    case = models.ForeignKey(get_case_model(), on_delete=models.CASCADE, related_name='assigned_lawyers')
 
     class Meta:
-        unique_together = (('avocat', 'folder'),)
+        unique_together = (('avocat', 'case'),)
 
     def __str__(self):
-        return f"{self.avocat.email} assigned to folder {self.folder.id}"
+        return f"{self.avocat.email}"
 
 
-class JugeFolder(models.Model):
+class JugeCase(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     juge = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents_judge', on_delete=models.CASCADE)
-    folder = models.ForeignKey(get_folder_model(), on_delete=models.CASCADE, related_name='assigned_judges')
+    case = models.ForeignKey(get_case_model(), on_delete=models.CASCADE, related_name='assigned_judges')
 
     class Meta:
-        unique_together = (('juge', 'folder'),)
+        unique_together = (('juge', 'case'),)
 
     def __str__(self):
-        return f"{self.juge.email} assigned to folder {self.folder.id}"
+        return f"{self.juge.email} assigned to case {self.case.id}"

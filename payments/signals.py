@@ -1,8 +1,7 @@
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
-from django.apps import apps
-from .models import Category, CategoryType
 
+from .models import Category, CategoryType
 
 TYPE_MAPPING = {
     1: "Médicale",

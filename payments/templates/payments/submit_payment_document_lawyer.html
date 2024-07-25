@@ -1,5 +1,5 @@
 <!-- add_payment_document.html -->
-{% extends 'fExtra/base.html' %}
+{% extends 'neok/base.html' %}
 {% load static i18n crispy_forms_tags %}
 
 {% block content %}
@@ -36,7 +36,7 @@
                         {{ form.date|as_crispy_field }}
                         {{ form.document|as_crispy_field }}
                         <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Submit" %}</button>
-                        <a href="{% url 'payments:payment-history' folder.id %}" class="btn btn-secondary btn-sm mt-3">
+                        <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-secondary btn-sm mt-3">
                         {% trans "Back to Payment History" %}
                         </a>
                     </form>

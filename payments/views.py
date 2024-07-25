@@ -16,32 +16,32 @@ from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from xhtml2pdf import pisa
 
-from accounts.models import JugeFolder, AvocatFolder
-from .forms import PaymentDocumentForm, FolderForm, PaymentDocumentFormLawyer, IndexPaymentForm, AddJugeAvocatForm
-from .models import Document, Folder, Category, CategoryType, IndexHistory
+from accounts.models import JugeCase, AvocatCase
+from .forms import PaymentDocumentForm, CaseForm, PaymentDocumentFormLawyer, IndexPaymentForm, AddJugeAvocatForm
+from .models import Document, Case, Category, CategoryType, IndexHistory
 
 User = get_user_model()
 
 
 # EVERYONE
 # ----------------------------------------------------------------------------------------------------------------------
-class FolderListView(LoginRequiredMixin, ListView):
-    model = Folder
-    template_name = 'payments/list_folder.html'
-    context_object_name = 'folders'
+class CaseListView(LoginRequiredMixin, ListView):
+    model = Case
+    template_name = 'payments/list_case.html'
+    context_object_name = 'cases'
 
     def dispatch(self, request, *args, **kwargs):
         # Appel de la méthode parent pour gérer les permissions de base
         response = super().dispatch(request, *args, **kwargs)
 
         # Vérifier si l'utilisateur a accès aux dossiers de la vue
-        folder_id = self.kwargs.get('pk')  # Récupérer l'ID du dossier depuis l'URL si nécessaire
+        case_id = self.kwargs.get('pk')  # Récupérer l'ID du dossier depuis l'URL si nécessaire
 
         # Si l'ID du dossier est fourni dans l'URL, vérifier l'accès
-        if folder_id:
-            folder = get_object_or_404(Folder, pk=folder_id)
-            if not self.has_access_to_folder(request.user, folder):
-                return HttpResponseForbidden("You do not have permission to access this folder.")
+        if case_id:
+            case = get_object_or_404(Case, pk=case_id)
+            if not self.has_access_to_case(request.user, case):
+                return HttpResponseForbidden("You do not have permission to access this case.")
 
         return response
 
@@ -49,59 +49,59 @@ class FolderListView(LoginRequiredMixin, ListView):
         user = self.request.user
 
         # Filtrer les dossiers associés à l'utilisateur
-        queryset = Folder.objects.none()
+        queryset = Case.objects.none()
 
-        if AvocatFolder.objects.filter(avocat=user).exists():
-            queryset = Folder.objects.filter(id__in=AvocatFolder.objects.filter(avocat=user).values('folder_id'))
-        elif JugeFolder.objects.filter(juge=user).exists():
-            queryset = Folder.objects.filter(id__in=JugeFolder.objects.filter(juge=user).values('folder_id'))
+        if AvocatCase.objects.filter(avocat=user).exists():
+            queryset = Case.objects.filter(id__in=AvocatCase.objects.filter(avocat=user).values('case_id'))
+        elif JugeCase.objects.filter(juge=user).exists():
+            queryset = Case.objects.filter(id__in=JugeCase.objects.filter(juge=user).values('case_id'))
 
         return queryset
 
-    def has_access_to_folder(self, user, folder):
+    def has_access_to_case(self, user, case):
         # Vérifier si l'utilisateur a accès au dossier
-        if AvocatFolder.objects.filter(avocat=user, folder=folder).exists() or \
-                JugeFolder.objects.filter(juge=user, folder=folder).exists():
+        if AvocatCase.objects.filter(avocat=user, case=case).exists() or \
+                JugeCase.objects.filter(juge=user, case=case).exists():
             return True
         return False
 
 
 class PaymentHistoryView(LoginRequiredMixin, ListView):
     model = Document
-    template_name = 'payments/folder_payment_history.html'
+    template_name = 'payments/case_payment_history.html'
     context_object_name = 'payments'
 
     def dispatch(self, request, *args, **kwargs):
-        folder_id = kwargs.get('folder_id')
+        case_id = kwargs.get('case_id')
 
-        if folder_id:
+        if case_id:
             # Vérifiez que le dossier avec cet ID existe
-            self.folder = get_object_or_404(Folder, pk=folder_id)
+            self.case = get_object_or_404(Case, pk=case_id)
         else:
-            # Si folder_id est requis mais non fourni, gérer le cas ici
-            return self.handle_no_folder_id()
+            # Si case_id est requis mais non fourni, gérer le cas ici
+            return self.handle_no_case_id()
 
         # Assurez-vous que l'utilisateur a accès au dossier
-        if not self.user_has_access_to_folder(request.user, self.folder):
+        if not self.user_has_access_to_case(request.user, self.case):
             return self.handle_no_access()
 
         # Appeler la méthode dispatch parent pour continuer le traitement
         return super().dispatch(request, *args, **kwargs)
 
-    def handle_no_folder_id(self):
-        # Gérer le cas où folder_id est requis mais non fourni
-        return HttpResponseNotFound("Folder ID is required but was not provided.")
+    def handle_no_case_id(self):
+        # Gérer le cas où case_id est requis mais non fourni
+        return HttpResponseNotFound("Case ID is required but was not provided.")
 
     def handle_no_access(self):
         # Gérer le cas où l'utilisateur n'a pas accès au dossier
-        return HttpResponseForbidden("You do not have permission to access this folder.")
+        return HttpResponseForbidden("You do not have permission to access this case.")
 
-    def user_has_access_to_folder(self, user, folder):
+    def user_has_access_to_case(self, user, case):
         # Exemple de vérification des permissions, à ajuster selon vos besoins
-        return folder.parent1 == user or folder.parent2 == user or user.role == "lawyer" or user.role == "judge"
+        return case.parent1 == user or case.parent2 == user or user.role == "lawyer" or user.role == "judge"
 
     def get_queryset(self):
-        queryset = Document.objects.filter(folder=self.folder)
+        queryset = Document.objects.filter(case=self.case)
         selected_year = self.request.GET.get('year')
         selected_quarter = self.request.GET.get('quarter')
 
@@ -118,16 +118,16 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
                 queryset = queryset.filter(date__gte=start_date, date__lt=end_date)
             except (TypeError, ValueError):
-                queryset = Document.objects.filter(folder=self.folder)
+                queryset = Document.objects.filter(case=self.case)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['folder_id'] = self.folder.id
+        context['case_id'] = self.case.id
         context['categories'] = Category.objects.all()
-        folder = self.folder
-        parent1 = folder.parent1
-        parent2 = folder.parent2
+        case = self.case
+        parent1 = case.parent1
+        parent2 = case.parent2
         user = self.request.user
 
         selected_year = self.request.GET.get('year')
@@ -136,20 +136,20 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         if selected_year and selected_quarter:
             try:
                 parent1_valid_payments = Document.objects.filter(
-                    folder=folder, user=parent1, category__type__isnull=False, status='validated', date__year=selected_year,
+                    case=case, user=parent1, category__type__isnull=False, status='validated', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
                 parent2_valid_payments = Document.objects.filter(
-                    folder=folder, user=parent2, category__type__isnull=False, status='validated', date__year=selected_year,
+                    case=case, user=parent2, category__type__isnull=False, status='validated', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
                 parent1_pending_payments = Document.objects.filter(
-                    folder=folder, user=parent1, category__type__isnull=False, status='pending', date__year=selected_year,
+                    case=case, user=parent1, category__type__isnull=False, status='pending', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
                 parent2_pending_payments = Document.objects.filter(
-                    folder=folder, user=parent2, category__type__isnull=False, status='pending', date__year=selected_year,
+                    case=case, user=parent2, category__type__isnull=False, status='pending', date__year=selected_year,
                     date__quarter=selected_quarter
                 ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
             except (TypeError, ValueError):
@@ -159,17 +159,17 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
                 parent2_pending_payments = []
         else:
             parent1_valid_payments = Document.objects.filter(
-                folder=folder, user=parent1, category__type__isnull=False, status='validated'
+                case=case, user=parent1, category__type__isnull=False, status='validated'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
             parent2_valid_payments = Document.objects.filter(
-                folder=folder, user=parent2, category__type__isnull=False, status='validated'
+                case=case, user=parent2, category__type__isnull=False, status='validated'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
             parent1_pending_payments = Document.objects.filter(
-                folder=folder, user=parent1, category__type__isnull=False, status='pending'
+                case=case, user=parent1, category__type__isnull=False, status='pending'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
             parent2_pending_payments = Document.objects.filter(
-                folder=folder, user=parent2, category__type__isnull=False, status='pending'
+                case=case, user=parent2, category__type__isnull=False, status='pending'
             ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
 
         parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
@@ -216,11 +216,11 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         difference = abs(parent1_total - parent2_total)
         in_favor_of = parent1 if parent1_total > parent2_total else parent2
 
-        payment_years = Document.objects.filter(folder=self.folder).dates('date', 'year')
+        payment_years = Document.objects.filter(case=self.case).dates('date', 'year')
         years = [year.year for year in payment_years]
 
         context.update({
-            'folder': folder,
+            'case': case,
             'parent1_user': parent1,
             'parent2_user': parent2,
             'categories_by_type': categories_by_type,
@@ -248,25 +248,25 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
 class CategoryPaymentsView(LoginRequiredMixin, ListView):
     model = Document
-    template_name = 'payments/folder_category_history.html'
+    template_name = 'payments/case_category_history.html'
     context_object_name = 'payments'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         category_id = self.kwargs.get('category_id')
-        folder_id = self.kwargs.get('folder_id')
+        case_id = self.kwargs.get('case_id')
 
         # Vérifier et récupérer la catégorie
         category = get_object_or_404(Category, id=category_id)
         context['category'] = category
 
-        # Obtenir le dossier basé sur le folder_id et les droits d'accès
-        folder = get_object_or_404(Folder, id=folder_id)
-        context['folder'] = folder
+        # Obtenir le dossier basé sur le case_id et les droits d'accès
+        case = get_object_or_404(Case, id=case_id)
+        context['case'] = case
 
         # Récupérer les paiements pour les parents
-        parent1_payments = Document.objects.filter(folder=folder, category_id=category_id, user=folder.parent1)
-        parent2_payments = Document.objects.filter(folder=folder, category_id=category_id, user=folder.parent2)
+        parent1_payments = Document.objects.filter(case=case, category_id=category_id, user=case.parent1)
+        parent2_payments = Document.objects.filter(case=case, category_id=category_id, user=case.parent2)
 
         # Appliquer les filtres pour l'année et le trimestre
         year = self.request.GET.get('year')
@@ -281,8 +281,8 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
 
         context['parent1_payments'] = parent1_payments
         context['parent2_payments'] = parent2_payments
-        context['parent1_name'] = folder.parent1.get_full_name()
-        context['parent2_name'] = folder.parent2.get_full_name()
+        context['parent1_name'] = case.parent1.get_full_name()
+        context['parent2_name'] = case.parent2.get_full_name()
 
         # Ajouter les paramètres année et trimestre au contexte
         context['selected_year'] = year
@@ -305,14 +305,14 @@ class CategoryPaymentsView(LoginRequiredMixin, ListView):
 
 
 class PaymentHistoryPDFView(LoginRequiredMixin, View):
-    def get(self, request, folder_id=None, *args, **kwargs):
+    def get(self, request, case_id=None, *args, **kwargs):
         user = self.request.user
 
-        # Vérifier si folder_id est fourni
-        if folder_id is None:
-            return HttpResponse("No folder_id provided.", status=400)
+        # Vérifier si case_id est fourni
+        if case_id is None:
+            return HttpResponse("No case_id provided.", status=400)
 
-        folder = get_object_or_404(Folder, id=folder_id)
+        case = get_object_or_404(Case, id=case_id)
 
         # Obtenir les paramètres de la requête GET ou les définir à None si non présents
         selected_year = request.GET.get('year')
@@ -330,10 +330,10 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
 
         payment_history_view = PaymentHistoryView()
         payment_history_view.request = request
-        payment_history_view.kwargs = {'folder_id': folder_id}  # Passer folder_id comme kwargs
+        payment_history_view.kwargs = {'case_id': case_id}  # Passer case_id comme kwargs
 
-        # Définir self.folder pour payment_history_view avant d'appeler get_queryset
-        payment_history_view.folder = folder
+        # Définir self.case pour payment_history_view avant d'appeler get_queryset
+        payment_history_view.case = case
 
         # Appeler dispatch pour initialiser la vue correctement
         payment_history_view.dispatch(request, *args, **kwargs)
@@ -432,12 +432,12 @@ def get_quarter_dates(year, quarter):
 # ----------------------------------------------------------------------------------------------------------------------
 @login_required
 @transaction.atomic
-def submit_payment_document(request, folder_id):
+def submit_payment_document(request, case_id):
     user = request.user
-    folder = Folder.objects.filter(Q(parent1=user) | Q(parent2=user))
+    case = Case.objects.filter(Q(parent1=user) | Q(parent2=user))
 
     # Vérifiez si le dossier demandé existe
-    folder = get_object_or_404(folder, id=folder_id)
+    case = get_object_or_404(case, id=case_id)
 
     categories = Category.objects.order_by('type_id', 'name')
     grouped_categories = {}
@@ -453,7 +453,7 @@ def submit_payment_document(request, folder_id):
         if form.is_valid():
             payment_document = form.save(commit=False)
             payment_document.user = user
-            payment_document.folder = folder
+            payment_document.case = case
             payment_document.status = 'pending'
 
             if new_category_name:
@@ -465,14 +465,14 @@ def submit_payment_document(request, folder_id):
                 payment_document.category = new_category
 
             payment_document.save()
-            return redirect('payments:payment-history', folder_id=folder_id)
+            return redirect('payments:payment-history', case_id=case_id)
     else:
         form = PaymentDocumentForm()
 
     context = {
         'form': form,
         'grouped_categories': grouped_categories,
-        'folder': folder,
+        'case': case,
     }
 
     return render(request, 'payments/submit_payment_document.html', context)
@@ -482,8 +482,8 @@ def submit_payment_document(request, folder_id):
 # ----------------------------------------------------------------------------------------------------------------------
 @login_required
 @transaction.atomic
-def submit_payment_document_lawyer(request, folder_id):
-    folder = get_object_or_404(Folder, pk=folder_id)
+def submit_payment_document_lawyer(request, case_id):
+    case = get_object_or_404(Case, pk=case_id)
     categories = Category.objects.order_by('type_id', 'name')
 
     grouped_categories = {}
@@ -493,30 +493,30 @@ def submit_payment_document_lawyer(request, folder_id):
         grouped_categories[category.type].append(category)
 
     if request.method == 'POST':
-        form = PaymentDocumentFormLawyer(request.POST, request.FILES, parent_choices=get_parent_choices(folder))
+        form = PaymentDocumentFormLawyer(request.POST, request.FILES, parent_choices=get_parent_choices(case))
 
         if form.is_valid():
             payment_document = form.save(commit=False)
-            payment_document.folder = folder
+            payment_document.case = case
             parent_user_id = form.cleaned_data['parent']
             payment_document.status = 'validated'  # Assurez-vous de définir le bon statut ici
             payment_document.user = get_user_model().objects.get(id=parent_user_id)
             payment_document.save()
-            return redirect(reverse('payments:payment-history', kwargs={'folder_id': folder_id}))
+            return redirect(reverse('payments:payment-history', kwargs={'case_id': case_id}))
     else:
-        form = PaymentDocumentFormLawyer(parent_choices=get_parent_choices(folder))
+        form = PaymentDocumentFormLawyer(parent_choices=get_parent_choices(case))
 
     return render(request, 'payments/submit_payment_document_lawyer.html', {
         'form': form,
-        'folder': folder,
+        'case': case,
         'grouped_categories': grouped_categories,
     })
 
 
-def get_parent_choices(folder):
-    # Retrieve parent IDs from the folder in question
-    parent1_id = folder.parent1_id
-    parent2_id = folder.parent2_id
+def get_parent_choices(case):
+    # Retrieve parent IDs from the case in question
+    parent1_id = case.parent1_id
+    parent2_id = case.parent2_id
 
     # Retrieve parents' full names using IDs
     parent1 = get_user_model().objects.get(id=parent1_id)
@@ -531,49 +531,48 @@ def get_parent_choices(folder):
 
 
 @login_required
-def create_folder(request):
+def create_case(request):
     if not request.user.is_authenticated or request.user.role != 'lawyer':
         # Redirect to login page if user is not a logged in lawyer
         return redirect('login')
 
     if request.method == 'POST':
-        form = FolderForm(request.POST)
+        form = CaseForm(request.POST)
         if form.is_valid():
             parent1 = form.cleaned_data['parent1']
             parent2 = form.cleaned_data['parent2']
-
-            # Check if a folder with the same parent1 and parent2 already exists
-            existing_folder = Folder.objects.filter(parent1=parent1, parent2=parent2).exists() or Folder.objects.filter(parent1=parent2, parent2=parent1).exists()
+            # Check if a case with the same parent1 and parent2 already exists
+            existing_case = Case.objects.filter(parent1=parent1, parent2=parent2).exists() or Case.objects.filter(parent1=parent2, parent2=parent1).exists()
 
             if parent1 == parent2:
                 messages.error(request, "Impossible de créer un dossier avec le même parent.")
-            elif existing_folder:
+            elif existing_case:
                 messages.error(request, "Un dossier avec ces deux parents existe déjà.")
             else:
-                folder = form.save(commit=False)
-                folder.lawyer = request.user
-                folder.save()
+                case = form.save(commit=False)
+                case.lawyer = request.user
+                case.save()
 
                 # Create AvocatParent entry
-                AvocatFolder.objects.create(
+                AvocatCase.objects.create(
                     avocat=request.user,
-                    folder=folder
+                    case=case
                 )
 
-                # Redirect to a list of folders or other success page
-                return redirect('payments:list_folder')
+                # Redirect to a list of cases or other success page
+                return redirect('payments:list_case')
     else:
-        form = FolderForm(initial={'parent1': request.user})  # Initialiser avec l'utilisateur connecté par défaut
+        form = CaseForm(initial={'parent1': request.user})  # Initialiser avec l'utilisateur connecté par défaut
         form.fields['parent1'].queryset = form.fields['parent1'].queryset
         form.fields['parent2'].queryset = form.fields['parent2'].queryset
 
-    return render(request, 'payments/create_folder.html', {'form': form})
+    return render(request, 'payments/create_case.html', {'form': form})
 
 
 @login_required
-def pending_payments(request, folder_id):
-    folder = get_object_or_404(Folder, id=folder_id)
-    payments = Document.objects.filter(folder=folder, status='pending')
+def pending_payments(request, case_id):
+    case = get_object_or_404(Case, id=case_id)
+    payments = Document.objects.filter(case=case, status='pending')
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -590,22 +589,22 @@ def pending_payments(request, folder_id):
                     payment.status = 'rejected'
                 payment.save()
 
-        return redirect('payments:pending-payments', folder_id=folder_id)
+        return redirect('payments:pending-payments', case_id=case_id)
 
     context = {
-        'folder': folder,
+        'case': case,
         'payments': payments,
     }
     return render(request, 'payments/pending_payments.html', context)
 
 
 @login_required
-def add_juge_avocat(request, folder_id):
-    folder = get_object_or_404(Folder, id=folder_id)
+def add_juge_avocat(request, case_id):
+    case = get_object_or_404(Case, id=case_id)
 
     # Obtenez les utilisateurs déjà liés au dossier
-    existing_judges = JugeFolder.objects.filter(folder=folder).select_related('juge')
-    existing_lawyers = AvocatFolder.objects.filter(folder=folder).select_related('avocat')
+    existing_judges = JugeCase.objects.filter(case=case).select_related('juge')
+    existing_lawyers = AvocatCase.objects.filter(case=case).select_related('avocat')
 
     # Obtenez les IDs des utilisateurs déjà liés au dossier
     existing_judge_ids = existing_judges.values_list('juge_id', flat=True)
@@ -630,27 +629,27 @@ def add_juge_avocat(request, folder_id):
 
             # Ajouter les juges sélectionnés
             for juge in juges:
-                JugeFolder.objects.get_or_create(
+                JugeCase.objects.get_or_create(
                     juge=juge,
-                    folder=folder
+                    case=case
                 )
 
             # Ajouter les avocats sélectionnés
             for avocat in avocats:
-                AvocatFolder.objects.get_or_create(
+                AvocatCase.objects.get_or_create(
                     avocat=avocat,
-                    folder=folder
+                    case=case
                 )
 
-            return redirect('payments:add-juge-avocat', folder_id=folder.id)
+            return redirect('payments:add-juge-avocat', case_id=case.id)
     else:
-        form = AddJugeAvocatForm(initial={'folder': folder.id})
+        form = AddJugeAvocatForm(initial={'case': case.id})
         form.set_juges_queryset(available_judges)
         form.set_avocats_queryset(available_lawyers)
 
     context = {
         'form': form,
-        'folder': folder,
+        'case': case,
         'existing_judges': [j.juge for j in existing_judges],
         'existing_lawyers': [a.avocat for a in existing_lawyers],
     }
@@ -658,18 +657,18 @@ def add_juge_avocat(request, folder_id):
     return render(request, 'payments/add_juge_avocat.html', context)
 
 
-def remove_juge(request, folder_id, juge_id):
-    folder = get_object_or_404(Folder, id=folder_id)
+def remove_juge(request, case_id, juge_id):
+    case = get_object_or_404(Case, id=case_id)
     juge = get_object_or_404(User, id=juge_id, role='judge')
-    JugeFolder.objects.filter(folder=folder, juge=juge).delete()
-    return redirect('payments:add-juge-avocat', folder_id=folder.id)
+    JugeCase.objects.filter(case=case, juge=juge).delete()
+    return redirect('payments:add-juge-avocat', case_id=case.id)
 
 
-def remove_avocat(request, folder_id, avocat_id):
-    folder = get_object_or_404(Folder, id=folder_id)
+def remove_avocat(request, case_id, avocat_id):
+    case = get_object_or_404(Case, id=case_id)
     avocat = get_object_or_404(User, id=avocat_id, role='lawyer')
-    AvocatFolder.objects.filter(folder=folder, avocat=avocat).delete()
-    return redirect('payments:add-juge-avocat', folder_id=folder.id)
+    AvocatCase.objects.filter(case=case, avocat=avocat).delete()
+    return redirect('payments:add-juge-avocat', case_id=case.id)
 
 
 # ADMINISTRATOR

@@ -1,4 +1,4 @@
-{% extends 'fExtra/base.html' %}
+{% extends 'neok/base.html' %}
 {% load custom_filters %}
 {% load static i18n %}
 
@@ -17,7 +17,7 @@
                         {{ form.as_p }}
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
-                            <a class="btn btn-secondary btn-sm mt-1" href="{% url 'payments:payment-history' folder.id %}">
+                            <a class="btn btn-secondary btn-sm mt-1" href="{% url 'payments:payment-history' case.id %}">
                                         {% trans "Retourner" %}
                                     </a>
                         </div>
@@ -33,7 +33,7 @@
                         {% for juge in existing_judges %}
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             {{ juge }}
-                            <form method="post" action="{% url 'payments:remove-juge' folder.id juge.id %}" class="d-inline">
+                            <form method="post" action="{% url 'payments:remove-juge' case.id juge.id %}" class="d-inline">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
                             </form>
@@ -50,7 +50,7 @@
                             {% if avocat.id != request.user.id %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
                                     {{ avocat }}
-                                    <form method="post" action="{% url 'payments:remove-avocat' folder.id avocat.id %}" class="d-inline">
+                                    <form method="post" action="{% url 'payments:remove-avocat' case.id avocat.id %}" class="d-inline">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
                                     </form>

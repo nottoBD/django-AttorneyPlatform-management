@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import login, get_user_model
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.models import User
@@ -14,8 +14,9 @@ from django.utils.translation import gettext as _
 from django.views.generic import ListView, UpdateView
 from pip._internal.utils import logging
 
+from payments.models import Case
 from .forms import JusticeRegistrationForm, UserRegisterForm, UserUpdateForm, CancelDeletionForm, DeletionRequestForm
-from .models import User, AvocatFolder, JugeFolder
+from .models import User, AvocatCase, JugeCase
 
 User = get_user_model()
 
@@ -39,7 +40,7 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
         if 'related_users' in form.cleaned_data:
             related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
-            related_users_ids = set(related_users_ids)  # integers
+            related_users_ids = set(related_users_ids)
             if self.object.role == 'parent':
                 form._handle_parent_relationships(related_users_ids)
             elif self.object.role in ['lawyer', 'judge']:
@@ -64,32 +65,43 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         if self.request.user.is_superuser:
             return True
         if self.request.user.role == 'lawyer':
-            return AvocatFolder.objects.filter(avocat=self.request.user, parent=user_to_update).exists()
+            return AvocatCase.objects.filter(avocat=self.request.user, case__parent1=user_to_update).exists() or \
+                AvocatCase.objects.filter(avocat=self.request.user, case__parent2=user_to_update).exists()
         if self.request.user.role == 'judge':
-            return JugeFolder.objects.filter(juge=self.request.user, parent=user_to_update).exists()
+            return JugeCase.objects.filter(juge=self.request.user, case__parent1=user_to_update).exists() or \
+                JugeCase.objects.filter(juge=self.request.user, case__parent2=user_to_update).exists()
         if self.request.user.is_administrator:
             return True
         return False
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.role == 'parent':
+            parent_cases = Case.objects.filter(parent1=self.request.user) | Case.objects.filter(parent2=self.request.user)
+            lawyer_ids = AvocatCase.objects.filter(case__in=parent_cases).values_list('avocat_id', flat=True)
+            judge_ids = JugeCase.objects.filter(case__in=parent_cases).values_list('juge_id', flat=True)
+            context['assigned_users'] = User.objects.filter(id__in=set(lawyer_ids).union(set(judge_ids)))
+        return context
+
     def deassign_user(self):
         user_to_update = self.get_object()
         if self.request.user.role == 'lawyer':
-            relationship = AvocatFolder.objects.filter(avocat=self.request.user, parent=user_to_update)
+            relationships = AvocatCase.objects.filter(avocat=self.request.user, case__parent1=user_to_update) | AvocatCase.objects.filter(avocat=self.request.user, case__parent2=user_to_update)
         elif self.request.user.role == 'judge':
-            relationship = JugeFolder.objects.filter(juge=self.request.user, parent=user_to_update)
+            relationships = JugeCase.objects.filter(juge=self.request.user, case__parent1=user_to_update) | JugeCase.objects.filter(juge=self.request.user, case__parent2=user_to_update)
         elif self.request.user.is_administrator:
-            relationship = AvocatFolder.objects.filter(parent=user_to_update) | JugeFolder.objects.filter(
-                parent=user_to_update)
+            relationships = AvocatCase.objects.filter(case__parent1=user_to_update) | AvocatCase.objects.filter(case__parent2=user_to_update) | \
+                            JugeCase.objects.filter(case__parent1=user_to_update) | JugeCase.objects.filter(case__parent2=user_to_update)
         else:
             messages.error(self.request, _("You are not authorized to deassign this user."))
             return redirect('accounts:user_update', pk=user_to_update.pk)
 
-        if relationship.exists():
-            relationship.delete()
-            messages.success(self.request, _("You have been deassigned from this parent."))
+        if relationships.exists():
+            relationships.delete()
+            messages.success(self.request, _("You have been deassigned from this case."))
             return redirect('accounts:user_list')
         else:
-            messages.error(self.request, _("You are not assigned to this parent."))
+            messages.error(self.request, _("You are not assigned to this case."))
             return redirect('accounts:user_update', pk=user_to_update.pk)
 
 
@@ -208,12 +220,11 @@ def register(request):
             user.national_number_raw = form.cleaned_data['national_number'].replace('.', '').replace('-', '')
             user.save()
 
-            # assigne  parent au lawyer ou judge qui l'inscrit (liste user ne leur montre que les parents dont ils ont le dossier en charge)
             if request.user.is_authenticated:
                 if request.user.role == 'lawyer':
-                    AvocatFolder.objects.create(avocat=request.user, parent=user)
+                    AvocatCase.objects.create(avocat=request.user, parent=user)
                 elif request.user.role == 'judge':
-                    JugeFolder.objects.create(juge=request.user, parent=user)
+                    JugeCase.objects.create(juge=request.user, parent=user)
 
             messages.success(request, _("The parent account has been successfully created."))
             return redirect('/accounts/list/')
@@ -234,7 +245,7 @@ class ResetPasswordView(SuccessMessageMixin, PasswordResetView):
     subject_template_name = 'registration/password_reset_subject.txt'
     success_message = _("We've emailed you instructions for setting your password, if an account exists with the "
                         "email you entered. You should receive them shortly. If you don't receive an email, "
-                        "please make sure you've entered the address you registered with, and check your spam folder.")
+                        "please make sure you've entered the address you registered with, and check your spam case.")
     success_url = reverse_lazy('home')
 
 
