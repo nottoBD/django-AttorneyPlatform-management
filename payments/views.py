@@ -56,12 +56,18 @@ class CaseListView(LoginRequiredMixin, ListView):
         elif JugeCase.objects.filter(juge=user).exists():
             queryset = Case.objects.filter(id__in=JugeCase.objects.filter(juge=user).values('case_id'))
 
-        return queryset
+        # Ajouter les dossiers où l'utilisateur est parent1 ou parent2
+        parent_cases = Case.objects.filter(parent1=user) | Case.objects.filter(parent2=user)
+        queryset = queryset | parent_cases
+
+        return queryset.distinct()
 
     def has_access_to_case(self, user, case):
         # Vérifier si l'utilisateur a accès au dossier
         if AvocatCase.objects.filter(avocat=user, case=case).exists() or \
-                JugeCase.objects.filter(juge=user, case=case).exists():
+                JugeCase.objects.filter(juge=user, case=case).exists() or \
+                case.parent1 == user or \
+                case.parent2 == user:
             return True
         return False
 
