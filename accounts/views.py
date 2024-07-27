@@ -123,6 +123,15 @@ class UserListView(LoginRequiredMixin, ListView):
     def render_to_response(self, context, **response_kwargs):
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             try:
+                administrators_list = [{
+                    'id': admin.id,
+                    'profile_image_url': self.get_image_url(admin),
+                    'first_name': admin.first_name,
+                    'last_name': admin.last_name,
+                    'email': admin.email,
+                    'role': admin.role,
+                } for admin in context['administrators']]
+
                 magistrates_list = [{
                     'id': mag.id,
                     'profile_image_url': self.get_image_url(mag),
@@ -130,7 +139,7 @@ class UserListView(LoginRequiredMixin, ListView):
                     'last_name': mag.last_name,
                     'email': mag.email,
                     'role': mag.role,
-                    'parents_count': mag.assigned_parents.count() + mag.assigned_parents_judge.count()
+                    'cases_count': mag.cases_count
                 } for mag in context['magistrates']]
 
                 parents_list = [{
@@ -140,16 +149,14 @@ class UserListView(LoginRequiredMixin, ListView):
                     'last_name': parent.last_name,
                     'email': parent.email,
                     'avocats_assigned': [
-                        avocat.avocat.last_name for avocat in parent.avocats_assigned.all()
-                        if avocat.avocat.is_active or not parent.is_active
+                        avocat.avocat.last_name for avocat in AvocatCase.objects.filter(case__in=list(parent.cases_as_parent1.all()) + list(parent.cases_as_parent2.all())).select_related('avocat')
                     ],
                     'juges_assigned': [
-                        juge.juge.last_name for juge in parent.juges_assigned.all()
-                        if juge.juge.is_active or not parent.is_active
+                        juge.juge.last_name for juge in JugeCase.objects.filter(case__in=list(parent.cases_as_parent1.all()) + list(parent.cases_as_parent2.all())).select_related('juge')
                     ]
                 } for parent in context['parents_filtered']]
 
-                return JsonResponse({'magistrates': magistrates_list, 'parents': parents_list})
+                return JsonResponse({'administrators': administrators_list, 'magistrates': magistrates_list, 'parents': parents_list})
             except Exception as e:
                 logger.error(f"Error in AJAX response: {e}")
                 return JsonResponse({'error': str(e)}, status=500)
@@ -161,29 +168,45 @@ class UserListView(LoginRequiredMixin, ListView):
         is_active = self.get_active_status_filter()
 
         try:
-            magistrates_query = User.objects.filter(
-                Q(is_staff=True) | Q(is_superuser=True) | Q(role='administrator') | Q(role='lawyer') | Q(role='judge')
+            # Query for administrators
+            administrators_query = User.objects.filter(
+                Q(is_superuser=True) | Q(role='administrator')
             )
-            parents_query = User.objects.filter(role='parent').prefetch_related('avocats_assigned__avocat',
-                                                                                'juges_assigned__juge')
+
+            # Query for magistrates excluding administrators
+            magistrates_query = User.objects.filter(
+                (Q(role='lawyer') | Q(role='judge')) & ~Q(id__in=administrators_query.values_list('id', flat=True))
+            ).annotate(
+                cases_count=Count('assigned_parents') + Count('assigned_parents_judge')
+            )
+
+            # Query for parents
+            parents_query = User.objects.filter(role='parent').prefetch_related('cases_as_parent1', 'cases_as_parent2')
 
             if is_active is not None:
+                administrators_query = administrators_query.filter(is_active=is_active)
                 magistrates_query = magistrates_query.filter(is_active=is_active)
                 parents_query = parents_query.filter(is_active=is_active)
 
-            context['magistrates'] = magistrates_query.annotate(
-                parents_count=Count('assigned_parents') + Count('assigned_parents_judge'))
+            context['administrators'] = list(administrators_query)
+            context['magistrates'] = list(magistrates_query)
 
             if self.request.user.role == 'lawyer':
-                context['parents_filtered'] = parents_query.filter(
-                    avocats_assigned__avocat=self.request.user).distinct()
+                context['parents_filtered'] = list(parents_query.filter(
+                    Q(cases_as_parent1__assigned_lawyers__avocat=self.request.user) |
+                    Q(cases_as_parent2__assigned_lawyers__avocat=self.request.user)
+                ).distinct())
             elif self.request.user.role == 'judge':
-                context['parents_filtered'] = parents_query.filter(juges_assigned__juge=self.request.user).distinct()
+                context['parents_filtered'] = list(parents_query.filter(
+                    Q(cases_as_parent1__assigned_judges__juge=self.request.user) |
+                    Q(cases_as_parent2__assigned_judges__juge=self.request.user)
+                ).distinct())
             else:
-                context['parents_filtered'] = parents_query
+                context['parents_filtered'] = list(parents_query)
 
         except Exception as e:
             logger.error(f"Error in context data: {e}")
+            context['administrators'] = []
             context['magistrates'] = []
             context['parents_filtered'] = []
 
@@ -194,7 +217,6 @@ class UserListView(LoginRequiredMixin, ListView):
             return self.request.build_absolute_uri(user.profile_image.url)
         else:
             return self.request.build_absolute_uri(settings.MEDIA_URL + 'profile_images/default.jpg')
-
 
 @login_required
 @permission_required('accounts.add_user', raise_exception=True)
