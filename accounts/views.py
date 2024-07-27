@@ -38,20 +38,10 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         user.is_active = form.cleaned_data.get('is_active', False)
         user.save()
 
-        if 'related_users' in form.cleaned_data:
-            related_users_ids = form.cleaned_data['related_users'].values_list('id', flat=True)
-            related_users_ids = set(related_users_ids)
-            if self.object.role == 'parent':
-                form._handle_parent_relationships(related_users_ids)
-            elif self.object.role in ['lawyer', 'judge']:
-                form._handle_lawyer_judge_relationships(related_users_ids)
+        if 'assigned_users' in form.cleaned_data:
+            self._handle_related_users(form.cleaned_data['assigned_users'])
 
         return super().form_valid(form)
-
-    def post(self, request, *args, **kwargs):
-        if 'deassign' in request.POST:
-            return self.deassign_user()
-        return super().post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -62,36 +52,77 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         user_to_update = self.get_object()
         if self.request.user == user_to_update:
             return True
-        if self.request.user.is_superuser:
+        if self.request.user.is_superuser or self.request.user.is_administrator:
             return True
-        if self.request.user.role == 'lawyer':
-            return AvocatCase.objects.filter(avocat=self.request.user, case__parent1=user_to_update).exists() or \
-                AvocatCase.objects.filter(avocat=self.request.user, case__parent2=user_to_update).exists()
-        if self.request.user.role == 'judge':
-            return JugeCase.objects.filter(juge=self.request.user, case__parent1=user_to_update).exists() or \
-                JugeCase.objects.filter(juge=self.request.user, case__parent2=user_to_update).exists()
-        if self.request.user.is_administrator:
-            return True
+        if self.request.user.role in ['lawyer', 'judge']:
+            return self._user_assigned_to_case(user_to_update)
         return False
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.role == 'parent':
-            parent_cases = Case.objects.filter(parent1=self.request.user) | Case.objects.filter(parent2=self.request.user)
-            lawyer_ids = AvocatCase.objects.filter(case__in=parent_cases).values_list('avocat_id', flat=True)
-            judge_ids = JugeCase.objects.filter(case__in=parent_cases).values_list('juge_id', flat=True)
-            context['assigned_users'] = User.objects.filter(id__in=set(lawyer_ids).union(set(judge_ids)))
-        return context
+    def _user_assigned_to_case(self, user):
+        if self.request.user.role == 'lawyer':
+            return AvocatCase.objects.filter(avocat=self.request.user, case__in=self._parent_cases(user)).exists()
+        elif self.request.user.role == 'judge':
+            return JugeCase.objects.filter(juge=self.request.user, case__in=self._parent_cases(user)).exists()
+        return False
+
+    def _parent_cases(self, user):
+        return Case.objects.filter(parent1=user) | Case.objects.filter(parent2=user)
+
+    def _handle_related_users(self, related_users):
+        related_users_ids = set(related_users.values_list('id', flat=True))
+
+        if self.object.role == 'parent':
+            self._handle_parent_relationships(related_users_ids)
+        elif self.object.role in ['lawyer', 'judge']:
+            self._handle_lawyer_judge_relationships(related_users_ids)
+
+    def _handle_parent_relationships(self, related_users_ids):
+        current_lawyer_relations = set(AvocatCase.objects.filter(case__in=self._parent_cases(self.object)).values_list('avocat_id', flat=True))
+        current_judge_relations = set(JugeCase.objects.filter(case__in=self._parent_cases(self.object)).values_list('juge_id', flat=True))
+
+        self._update_relationships(related_users_ids, current_lawyer_relations, AvocatCase, 'avocat')
+        self._update_relationships(related_users_ids, current_judge_relations, JugeCase, 'juge')
+
+    def _handle_lawyer_judge_relationships(self, related_users_ids):
+        if self.object.role == 'lawyer':
+            current_relations = set(AvocatCase.objects.filter(avocat=self.object).values_list('case__parent1_id', flat=True)) | \
+                                set(AvocatCase.objects.filter(avocat=self.object).values_list('case__parent2_id', flat=True))
+            relationship_model = AvocatCase
+            own_field = 'avocat'
+        elif self.object.role == 'judge':
+            current_relations = set(JugeCase.objects.filter(juge=self.object).values_list('case__parent1_id', flat=True)) | \
+                                set(JugeCase.objects.filter(juge=self.object).values_list('case__parent2_id', flat=True))
+            relationship_model = JugeCase
+            own_field = 'juge'
+
+        self._update_relationships(related_users_ids, current_relations, relationship_model, own_field)
+
+    def _update_relationships(self, related_users_ids, current_relations, relationship_model, own_field):
+        relationships_to_add = related_users_ids - current_relations
+        relationships_to_remove = current_relations - related_users_ids
+
+        relationship_model.objects.filter(**{own_field: self.object, 'case__parent1_id__in': relationships_to_remove}).delete()
+        relationship_model.objects.filter(**{own_field: self.object, 'case__parent2_id__in': relationships_to_remove}).delete()
+
+        for user_id in relationships_to_add:
+            parent_instance = User.objects.get(pk=user_id)
+            if parent_instance.role == 'parent':
+                relationship_model.objects.get_or_create(**{own_field: self.object, 'case__parent1': parent_instance})
+                relationship_model.objects.get_or_create(**{own_field: self.object, 'case__parent2': parent_instance})
+
+    def post(self, request, *args, **kwargs):
+        if 'deassign' in request.POST:
+            return self.deassign_user()
+        return super().post(request, *args, **kwargs)
 
     def deassign_user(self):
         user_to_update = self.get_object()
         if self.request.user.role == 'lawyer':
-            relationships = AvocatCase.objects.filter(avocat=self.request.user, case__parent1=user_to_update) | AvocatCase.objects.filter(avocat=self.request.user, case__parent2=user_to_update)
+            relationships = AvocatCase.objects.filter(avocat=self.request.user, case__parent1=user_to_update) | \
+                            AvocatCase.objects.filter(avocat=self.request.user, case__parent2=user_to_update)
         elif self.request.user.role == 'judge':
-            relationships = JugeCase.objects.filter(juge=self.request.user, case__parent1=user_to_update) | JugeCase.objects.filter(juge=self.request.user, case__parent2=user_to_update)
-        elif self.request.user.is_administrator:
-            relationships = AvocatCase.objects.filter(case__parent1=user_to_update) | AvocatCase.objects.filter(case__parent2=user_to_update) | \
-                            JugeCase.objects.filter(case__parent1=user_to_update) | JugeCase.objects.filter(case__parent2=user_to_update)
+            relationships = JugeCase.objects.filter(juge=self.request.user, case__parent1=user_to_update) | \
+                            JugeCase.objects.filter(juge=self.request.user, case__parent2=user_to_update)
         else:
             messages.error(self.request, _("You are not authorized to deassign this user."))
             return redirect('accounts:user_update', pk=user_to_update.pk)
@@ -103,8 +134,6 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         else:
             messages.error(self.request, _("You are not assigned to this case."))
             return redirect('accounts:user_update', pk=user_to_update.pk)
-
-
 class UserListView(LoginRequiredMixin, ListView):
     model = User
     template_name = 'accounts/user_list.html'
