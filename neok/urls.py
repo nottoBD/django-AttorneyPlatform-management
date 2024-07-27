@@ -14,4 +14,8 @@ urlpatterns = [
     path('privacy/', privacy_view, name='privacy'),
     re_path(r'^i18n/setlang/$', set_language, name='set_language'),
     path('', views.home, name='home'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+

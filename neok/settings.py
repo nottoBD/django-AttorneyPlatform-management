@@ -1,20 +1,27 @@
 import os
 from pathlib import Path
-from environ import environ
 from django.utils.translation import gettext_lazy as _
+import environ
 
+DEBUG = False
+
+ALLOWED_HOSTS = ['38.180.87.128', 'jurinet.net', 'neok-budget.eu', 'app.neok-budget.eu', 'neok-budget.be']
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECURE_SSL_REDIRECT = True
+
+SESSION_COOKIE_SECURE = True
+
+CSRF_COOKIE_SECURE = True
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 env = environ.Env()
 
 environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 
-SECRET_KEY = env('SECRET_KEY')
-
-DEBUG = True
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+SECRET_KEY = env("SECRET_KEY")
 
 EMAIL_BACKEND = env('EMAIL_BACKEND')
 
@@ -33,15 +40,15 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 SITE_ID = 1
 
 INSTALLED_APPS = [
-    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'accounts.apps.AccountsConfig',
-    'payments.apps.PaymentsConfig',
+    'Payments.apps.PaymentsConfig',
     'crispy_forms',
     'crispy_bootstrap5',
     'guardian',
@@ -72,10 +79,10 @@ MIDDLEWARE = [
 ]
 
 LANGUAGES = [
-    ('fr', 'French'),
-    ('en', 'English'),
-    ('nl-BE', 'Flemish'),
-    ('de', 'German'),
+    ('en', _('English')),
+    ('fr', _('French')),
+    ('nl-BE', _('Flemish')),
+    ('de', _('German')),
 ]
 
 LANGUAGE_CODE = 'fr'
@@ -107,9 +114,10 @@ WSGI_APPLICATION = 'neok.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dbtest',
-        'USER': 'usertest',
-        'PASSWORD': 'usertest',
+        'NAME': env('DB_NAME'),
+        'USER': env('DB_USER'),
+        'PASSWORD': env('DB_PASSWORD'),
+        'HOST': 'localhost',
         'PORT': '5432'
     }
 }
@@ -137,7 +145,11 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -184,4 +196,23 @@ COOKIEBANNER = {
             ],
         },
     ],
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': '/opt/neok-budget/debug.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }
