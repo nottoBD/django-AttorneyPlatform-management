@@ -5,7 +5,7 @@ import environ
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['38.180.87.128', 'jurinet.net', 'neok-budget.eu', 'app.neok-budget.eu', 'neok-budget.be']
+ALLOWED_HOSTS = ['38.180.87.128', 'jurinet.net', 'neok-budget.be', 'app.neok-budget.be']
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -91,7 +91,7 @@ LOCALE_PATHS = (
     os.path.join(BASE_DIR, 'locale/'),
 )
 
-ROOT_URLCONF = 'neok.urls'
+ROOT_URLCONF = 'fExtra.urls'
 
 TEMPLATES = [
     {
@@ -109,7 +109,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'neok.wsgi.application'
+WSGI_APPLICATION = 'fExtra.wsgi.application'
 
 DATABASES = {
     'default': {
