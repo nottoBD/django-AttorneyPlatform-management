@@ -106,7 +106,7 @@
                                 <li><a class="dropdown-item" href="/accounts/list">{% trans "List All" %}</a></li>
                                 <li><a class="dropdown-item" href="/accounts/register">{% trans "Add Parent" %}</a></li>
                                 {% if request.user.role == 'administrator' %}
-                                    <li><a class="dropdown-item" href="/accounts/register-magistrate">{% trans "Add" %} judge / lawyer</a></li>
+                                    <li><a class="dropdown-item" href="/accounts/register-jurist">{% trans "Add Jurist" %}</a></li>
                                 {% endif %}
                             </ul>
                         </li>
@@ -198,7 +198,7 @@
                                     </li>
                                     {% if request.user.role == 'administrator' %}
                                         <li>
-                                            <a href="/accounts/register-magistrate" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add" %} judge / lawyer</a>
+                                            <a href="/accounts/register-jurist" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add Jurist" %}</a>
                                         </li>
                                     {% endif %}
                                 </ul>

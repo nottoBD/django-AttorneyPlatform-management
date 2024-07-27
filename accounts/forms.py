@@ -178,6 +178,8 @@ class JusticeRegistrationForm(UserCreationForm):
 
     def clean_num_telephone(self):
         telephone = self.cleaned_data.get('num_telephone', '')
+        if telephone == '+32':
+            return ''
         return validate_telephone(telephone)
 
     def clean_password1(self):
@@ -196,7 +198,6 @@ class JusticeRegistrationForm(UserCreationForm):
             self.save_m2m()
         return user
 
-
 class UserRegisterForm(UserCreationForm):
     class Meta:
         model = User
@@ -209,7 +210,7 @@ class UserRegisterForm(UserCreationForm):
     national_number = forms.CharField(max_length=15, required=False, label=_("National Number"))
     last_name = forms.CharField(max_length=35, required=True, label=_("Last Name"))
     first_name = forms.CharField(max_length=25, required=True, label=_("First Name"))
-    telephone = forms.CharField(max_length=13, required=False, label=_("Telephone"))
+    telephone = forms.CharField(max_length=13, required=False, label=_("Telephone"), initial='+32')
     address = forms.CharField(widget=forms.TextInput, required=False, label=_("Address"), max_length=70)
 
     def __init__(self, *args, **kwargs):
@@ -223,7 +224,6 @@ class UserRegisterForm(UserCreationForm):
         national_number = self.cleaned_data.get('national_number', '')
         unformatted_number = ''.join(filter(str.isdigit, national_number))
         return validate_national_number(unformatted_number)
-
 
     def clean_first_name(self):
         first_name = self.cleaned_data.get('first_name', '')
@@ -239,6 +239,8 @@ class UserRegisterForm(UserCreationForm):
 
     def clean_telephone(self):
         telephone = self.cleaned_data.get('telephone', '')
+        if telephone == '+32':
+            return ''
         return validate_telephone(telephone)
 
     def clean_password1(self):

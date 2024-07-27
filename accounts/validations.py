@@ -136,8 +136,8 @@ def validate_telephone(telephone):
     Raises:
     ValidationError: Si le format du numéro de téléphone est invalide.
     """
-    if not telephone:
-        return telephone
+    if not telephone or telephone == '+32':
+        return ''
 
     phone_regex = RegexValidator(regex=r'^\+?1?\d{7,13}$', message='Phone number must be entered in the format: "+999999999". Up to 13 digits allowed.')
     try:

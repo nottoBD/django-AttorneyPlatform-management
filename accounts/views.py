@@ -217,21 +217,19 @@ class UserListView(LoginRequiredMixin, ListView):
             return self.request.build_absolute_uri(user.profile_image.url)
         else:
             return self.request.build_absolute_uri(settings.MEDIA_URL + 'profile_images/default.jpg')
-
 @login_required
 @permission_required('accounts.add_user', raise_exception=True)
 @user_passes_test(lambda u: u.is_superuser, login_url='/login/')
-def register_magistrate(request):
+def register_jurist(request):
     if request.method == 'POST':
         form = JusticeRegistrationForm(request.POST)
         if form.is_valid():
             magistrate = form.save()
-            messages.success(request, _('Attorney registered successfully.' % magistrate.email))
+            messages.success(request, _('Attorney registered successfully.').format(magistrate.email))
             return redirect(reverse('accounts:user_list'))
     else:
         form = JusticeRegistrationForm()
-    return render(request, 'registration/register_magistrate.html', {'form': form})
-
+    return render(request, 'registration/register_jurist.html', {'form': form})
 
 def register(request):
     if request.method == 'POST':
