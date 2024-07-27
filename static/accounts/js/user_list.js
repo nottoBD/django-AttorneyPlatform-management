@@ -27,37 +27,89 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(data => {
-                const magistratesTab = document.querySelector('.magistrates-list');
-                const parentsTab = document.querySelector('.parents-list');
-
-                if (!magistratesTab || !parentsTab) {
-                    console.error('One or more table bodies not found!');
-                    return;
-                }
-
-                magistratesTab.innerHTML = '';
-                parentsTab.innerHTML = '';
-
-                data.magistrates.forEach(magistrate => {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-user-id', magistrate.id);
-                    tr.classList.add('magistrate-item');
-                    tr.innerHTML = `<td><img src="${magistrate.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td><td>${magistrate.last_name}</td><td>${magistrate.first_name}</td><td>${magistrate.email}</td><td>${magistrate.role}</td><td>${magistrate.parents_count}</td>`;
-                    magistratesTab.appendChild(tr);
-                });
-
-                data.parents.forEach(parent => {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-user-id', parent.id);
-                    tr.classList.add('parent-item');
-                    tr.innerHTML = `<td><img src="${parent.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td><td>${parent.last_name}</td><td>${parent.first_name}</td><td>${parent.email}</td><td>${parent.avocats_assigned.join('<br>')}<br>${parent.juges_assigned.join('<br>')}</td>`;
-                    parentsTab.appendChild(tr);
-                });
-
+                renderAdministrators(data.administrators);
+                renderMagistrates(data.magistrates);
+                renderParents(data.parents);
                 attachRowEventListeners();
                 reapplyHighlight();
             })
             .catch(error => console.error('Fetch error:', error));
+    }
+
+    function renderAdministrators(administrators) {
+        const administratorsTab = document.querySelector('.administrators-list');
+
+        if (!administratorsTab) {
+            console.error('Administrators table body not found!');
+            return;
+        }
+
+        administratorsTab.innerHTML = '';
+
+        administrators.forEach(admin => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-user-id', admin.id);
+            tr.classList.add('administrator-item');
+            tr.innerHTML = `
+                <td><img src="${admin.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td>
+                <td>${admin.last_name}</td>
+                <td>${admin.first_name}</td>
+                <td>${admin.email}</td>
+                <td>${admin.role}</td>
+            `;
+            administratorsTab.appendChild(tr);
+        });
+    }
+
+    function renderMagistrates(magistrates) {
+        const magistratesTab = document.querySelector('.magistrates-list');
+
+        if (!magistratesTab) {
+            console.error('Magistrates table body not found!');
+            return;
+        }
+
+        magistratesTab.innerHTML = '';
+
+        magistrates.forEach(magistrate => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-user-id', magistrate.id);
+            tr.classList.add('magistrate-item');
+            tr.innerHTML = `
+                <td><img src="${magistrate.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td>
+                <td>${magistrate.last_name}</td>
+                <td>${magistrate.first_name}</td>
+                <td>${magistrate.email}</td>
+                <td>${magistrate.role}</td>
+                <td>${magistrate.cases_count}</td>
+            `;
+            magistratesTab.appendChild(tr);
+        });
+    }
+
+    function renderParents(parents) {
+        const parentsTab = document.querySelector('.parents-list');
+
+        if (!parentsTab) {
+            console.error('Parents table body not found!');
+            return;
+        }
+
+        parentsTab.innerHTML = '';
+
+        parents.forEach(parent => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-user-id', parent.id);
+            tr.classList.add('parent-item');
+            tr.innerHTML = `
+                <td><img src="${parent.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td>
+                <td>${parent.last_name}</td>
+                <td>${parent.first_name}</td>
+                <td>${parent.email}</td>
+                <td>${parent.avocats_assigned.join('<br>')}<br>${parent.juges_assigned.join('<br>')}</td>
+            `;
+            parentsTab.appendChild(tr);
+        });
     }
 
     function attachRowEventListeners() {

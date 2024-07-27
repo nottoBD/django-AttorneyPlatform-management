@@ -4,14 +4,14 @@ from django.urls import path, reverse_lazy
 from django.conf import settings
 
 from . import views
-from .views import register_magistrate, ResetPasswordView, PasswordResetConfirmationView, delete_user
+from .views import register_jurist, ResetPasswordView, PasswordResetConfirmationView, delete_user
 
 app_name = 'accounts'
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(next_page=reverse_lazy('accounts:login')), name='logout'),
     path('register/', views.register, name='register'),
-    path('register-magistrate/', register_magistrate, name='register_magistrate'),
+    path('register-jurist/', views.register_jurist, name='register_jurist'),
     path('update/<uuid:pk>/', views.UserUpdateView.as_view(), name='user_update'),
     path('list/', views.UserListView.as_view(), name='user_list'),
     path('password-reset/', ResetPasswordView.as_view(), name='password_reset'),
