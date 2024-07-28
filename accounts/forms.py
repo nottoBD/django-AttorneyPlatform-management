@@ -57,17 +57,19 @@ class UserUpdateForm(forms.ModelForm):
         return validate_image(profile_image) if profile_image else None
 
     def clean_is_active(self):
-        is_active = self.cleaned_data.get('is_active')
+        is_active = self.cleaned_data.get('is_active', self.instance.is_active)
         if 'is_active' in self.changed_data:
             if not self.request_user.is_superuser and not self.request_user.is_administrator:
                 raise forms.ValidationError(_("You are not authorized to change the active status."))
-        return is_active if is_active else False
+        return is_active
+
 
     def _setup_admin_superuser_form(self, target_user):
         # Admin viewing their own profile
         if self.request_user == target_user:
             self.fields.pop('current_cases', None)
             self.fields.pop('assigned_users', None)
+            self.fields.pop('is_active', None)
         # Admin viewing a parent profile
         elif target_user.role == 'parent':
             assigned_users = User.objects.filter(

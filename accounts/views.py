@@ -35,7 +35,7 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return self.form_invalid(form)
 
         user = form.save(commit=False)
-        user.is_active = form.cleaned_data.get('is_active', False)
+        user.is_active = form.cleaned_data.get('is_active', user.is_active)
         user.save()
 
         if 'assigned_users' in form.cleaned_data:
