@@ -44,7 +44,25 @@ class CaseForm(forms.ModelForm):
         super(CaseForm, self).__init__(*args, **kwargs)
         self.fields['parent1'].queryset = User.objects.filter(role='parent')
         self.fields['parent2'].queryset = User.objects.filter(role='parent')
+        if self.instance and self.instance.draft:
+            self.fields['parent2'].required = False
 
+class ConvertDraftCaseForm(forms.ModelForm):
+    parent2 = forms.ModelChoiceField(
+        queryset=User.objects.filter(role='parent'),
+        label="Select Second Parent"
+    )
+
+    class Meta:
+        model = Case
+        fields = ['parent2']
+
+    def __init__(self, *args, **kwargs):
+        super(ConvertDraftCaseForm, self).__init__(*args, **kwargs)
+        case = kwargs.get('instance')
+        if case:
+            self.fields['parent2'].queryset = User.objects.filter(role='parent').exclude(id=case.parent1.id)
+            self.fields['parent2'].label_from_instance = lambda obj: f"{obj.first_name} {obj.last_name}"
 
 class ValidatePaymentsForm(forms.Form):
     PAYMENTS_CHOICES = (

@@ -52,11 +52,14 @@ class Document(models.Model):
 class Case(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     parent1 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cases_as_parent1')
-    parent2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cases_as_parent2')
+    parent2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cases_as_parent2', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    draft = models.BooleanField(default=False)
 
     def __str__(self):
+        if self.draft:
+            return f"Draft Case: {self.parent1}"
         return f"Case: {self.parent1} and {self.parent2}"
 
 

@@ -5,7 +5,8 @@ from django.conf import settings
 from .views import (PaymentHistoryView, CaseListView,
                     submit_payment_document_lawyer, CategoryPaymentsView, add_category,
                     PaymentHistoryPDFView, index_payments, delete_indexation, submit_payment_document, create_case,
-                    pending_payments, add_juge_avocat, remove_juge, remove_avocat)
+                    pending_payments, add_juge_avocat, remove_juge, remove_avocat, create_draft_case, DraftCaseListView,
+                    convert_draft_case)
 
 app_name = 'payments'
 urlpatterns = [
@@ -14,6 +15,9 @@ urlpatterns = [
     path('payment-history/<uuid:case_id>/<uuid:category_id>/', CategoryPaymentsView.as_view(), name='category-payments'),
     path('create_case/', create_case, name='create_case'),
     path('list_case/', CaseListView.as_view(), name='list_case'),
+    path('cases/draft/', create_draft_case, name='create_draft_case'),
+    path('list_draft/', DraftCaseListView.as_view(), name='list_draft_cases'),
+    path('cases/convert_draft/<uuid:case_id>/', convert_draft_case, name='convert-draft-case'),
     path('download_pdf/<uuid:case_id>/', PaymentHistoryPDFView.as_view(), name='download_pdf'),
     path('pending-payments/<uuid:case_id>/', pending_payments, name='pending-payments'),
     path('parent-add-payment/<uuid:case_id>/', submit_payment_document, name='parent-add-payment'),

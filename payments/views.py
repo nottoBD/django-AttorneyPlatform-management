@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.text import capfirst
 from django.views import View
 from django.views.decorators.http import require_POST
@@ -17,7 +18,8 @@ from django.views.generic import ListView
 from xhtml2pdf import pisa
 
 from accounts.models import JugeCase, AvocatCase
-from .forms import PaymentDocumentForm, CaseForm, PaymentDocumentFormLawyer, IndexPaymentForm, AddJugeAvocatForm
+from .forms import PaymentDocumentForm, CaseForm, PaymentDocumentFormLawyer, IndexPaymentForm, AddJugeAvocatForm, \
+    ConvertDraftCaseForm
 from .models import Document, Case, Category, CategoryType, IndexHistory
 
 User = get_user_model()
@@ -57,19 +59,23 @@ class CaseListView(LoginRequiredMixin, ListView):
             queryset = Case.objects.filter(id__in=JugeCase.objects.filter(juge=user).values('case_id'))
 
         # Ajouter les dossiers où l'utilisateur est parent1 ou parent2
-        parent_cases = Case.objects.filter(parent1=user) | Case.objects.filter(parent2=user)
+        parent_cases = Case.objects.filter(Q(parent1=user) | Q(parent2=user))
         queryset = queryset | parent_cases
 
         return queryset.distinct()
 
     def has_access_to_case(self, user, case):
         # Vérifier si l'utilisateur a accès au dossier
-        if AvocatCase.objects.filter(avocat=user, case=case).exists() or \
-                JugeCase.objects.filter(juge=user, case=case).exists() or \
-                case.parent1 == user or \
-                case.parent2 == user:
-            return True
-        return False
+        return AvocatCase.objects.filter(avocat=user, case=case).exists() or \
+            JugeCase.objects.filter(juge=user, case=case).exists() or \
+            case.parent1 == user or \
+            case.parent2 == user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['can_create_draft'] = not Case.objects.filter(Q(parent1=user) | Q(parent2=user), draft=False).exists()
+        return context
 
 
 class PaymentHistoryView(LoginRequiredMixin, ListView):
@@ -104,7 +110,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
     def user_has_access_to_case(self, user, case):
         # Exemple de vérification des permissions, à ajuster selon vos besoins
-        return case.parent1 == user or case.parent2 == user or user.role == "lawyer" or user.role == "judge"
+        return case.parent1 == user or case.parent2 == user or user.role == "lawyer" or user.role == "judge" or user.role == "administrator" or (case.draft and case.parent1 == user)
 
     def get_queryset(self):
         queryset = Document.objects.filter(case=self.case)
@@ -436,6 +442,17 @@ def get_quarter_dates(year, quarter):
 
 # PARENT
 # ----------------------------------------------------------------------------------------------------------------------
+
+@login_required
+def create_draft_case(request):
+    if request.user.role != 'parent':
+        return redirect('login')
+
+    draft_case = Case.objects.create(parent1=request.user, draft=True)
+
+    return redirect('payments:payment-history', case_id=draft_case.id)
+
+
 @login_required
 @transaction.atomic
 def submit_payment_document(request, case_id):
@@ -675,6 +692,45 @@ def remove_avocat(request, case_id, avocat_id):
     avocat = get_object_or_404(User, id=avocat_id, role='lawyer')
     AvocatCase.objects.filter(case=case, avocat=avocat).delete()
     return redirect('payments:add-juge-avocat', case_id=case.id)
+
+@method_decorator(login_required, name='dispatch')
+class DraftCaseListView(ListView):
+    model = Case
+    template_name = 'payments/list_draft_case.html'
+    context_object_name = 'draft_cases'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role in ['administrator', 'lawyer']:
+            return Case.objects.filter(draft=True).order_by('parent1__username')
+        else:
+            return Case.objects.none()
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['administrator', 'lawyer']:
+            return HttpResponseForbidden("You do not have permission to access this view.")
+        return super().dispatch(request, *args, **kwargs)
+
+
+@login_required
+def convert_draft_case(request, case_id):
+    case = get_object_or_404(Case, pk=case_id)
+
+    if request.user.role not in ['administrator', 'lawyer']:
+        return HttpResponseForbidden("You do not have permission to access this case.")
+
+    if request.method == 'POST':
+        form = ConvertDraftCaseForm(request.POST, instance=case)
+        if form.is_valid():
+            case = form.save(commit=False)
+            case.draft = False
+            case.save()
+            messages.success(request, "Draft case has been converted to a regular case.")
+            return redirect('payments:payment-history', case_id=case.id)
+    else:
+        form = ConvertDraftCaseForm(instance=case)
+
+    return render(request, 'payments/convert_draft_case.html', {'form': form, 'case': case})
 
 
 # ADMINISTRATOR

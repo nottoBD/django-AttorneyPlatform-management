@@ -182,6 +182,11 @@
                                         <a href="/payments/index_payments" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Indexation" %}</a>
                                     </li>
                                 {% endif %}
+                                {% if request.user.role == 'lawyer' or request.user.role == 'administrator' or request.user.is_superuser %}
+                                    <li>
+                                        <a href="/payments/list_draft" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "View Drafts" %}</a>
+                                    </li>
+                                {% endif %}
                             </ul>
                         </li>
                         {% if request.user.is_staff %}

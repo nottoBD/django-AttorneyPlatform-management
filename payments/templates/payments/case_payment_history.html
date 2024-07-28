@@ -16,7 +16,7 @@
                                     {% trans "Actions" %}
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton">
-                                    {% if request.user.role == 'lawyer' %}
+                                    {% if request.user.role == 'lawyer' or request.user.role == 'administrator' %}
                                         <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' case.id %}">
                                             {% trans "Gérer juge/avocat" %}
                                         </a></li>
@@ -28,7 +28,13 @@
                                             {% trans "Valider les paiements en attente" %}
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
-                                    {% endif %}
+                                    {% if case.draft %}
+                                        <li><a class="dropdown-item" href="{% url 'payments:convert-draft-case' case.id %}">
+                                            {% trans "Convert Draft Case" %}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}{% endif %}
+
                                     {% if request.user.role == 'parent' %}
                                         <li><hr class="dropdown-divider"></li>
                                         <li><a class="dropdown-item" href="{% url 'payments:parent-add-payment' case_id=case.id %}">
