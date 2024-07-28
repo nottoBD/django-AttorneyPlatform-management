@@ -83,7 +83,10 @@ class UserUpdateForm(forms.ModelForm):
         elif target_user.role in ['judge', 'lawyer']:
             self.fields['current_cases'].queryset = self._get_current_cases(target_user)
             self.fields.pop('assigned_users', None)
-
+        else:
+            self.fields.pop('current_cases', None)
+            self.fields.pop('assigned_users', None)
+    
     def _setup_lawyer_judge_form(self, target_user):
         # Lawyer or Judge viewing their own profile
         if self.request_user == target_user:
