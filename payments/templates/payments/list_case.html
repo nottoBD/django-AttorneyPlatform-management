@@ -6,7 +6,7 @@
 {% block content %}
     <div class="mt-4">
         <h2>{% trans "My Cases" %}</h2>
-        {% if can_create_draft %}
+        {% if can_create_draft and request.user.role == 'parent' %}
             <a href="{% url 'payments:create_draft_case' %}" class="btn btn-primary">{% trans "Start a draft case" %}</a>
         {% endif %}
         {% if cases %}
