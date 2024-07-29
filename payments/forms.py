@@ -36,16 +36,24 @@ class PaymentDocumentFormLawyer(forms.ModelForm):
 
 
 class CaseForm(forms.ModelForm):
+    lawyer = forms.ModelChoiceField(queryset=User.objects.filter(role='lawyer'), required=False)
+
     class Meta:
         model = Case
         fields = ['parent1', 'parent2']
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
         super(CaseForm, self).__init__(*args, **kwargs)
         self.fields['parent1'].queryset = User.objects.filter(role='parent')
         self.fields['parent2'].queryset = User.objects.filter(role='parent')
         if self.instance and self.instance.draft:
             self.fields['parent2'].required = False
+        if self.user and self.user.role == 'administrator':
+            self.fields['lawyer'].required = True
+        else:
+            self.fields.pop('lawyer')
+
 
 class ConvertDraftCaseForm(forms.ModelForm):
     parent2 = forms.ModelChoiceField(

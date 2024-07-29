@@ -86,7 +86,7 @@
                             {% trans "Payments" %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="paymentsDropdown">
-                            {% if request.user.role == 'lawyer' %}
+                            {% if request.user.role == 'lawyer' or request.user.role == 'administrator' %}
                                 <li><a class="dropdown-item" href="/payments/create_case">{% trans "Add case" %}</a></li>
                             {% endif %}
                             {% if request.user.role != 'administrator' %}
@@ -167,7 +167,7 @@
                                 <i class="fs-4 bi-currency-dollar"></i> <span class="ms-1 d-none d-sm-inline">{% trans "Payments" %}</span>
                             </a>
                             <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
-                                {% if request.user.role == 'lawyer' %}
+                                {% if request.user.role == 'lawyer' or request.user.role == 'administrator' %}
                                     <li class="w-100">
                                         <a href="/payments/create_case" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add case" %}</a>
                                     </li>

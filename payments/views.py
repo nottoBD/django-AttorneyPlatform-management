@@ -449,7 +449,7 @@ def get_quarter_dates(year, quarter):
 @login_required
 def create_draft_case(request):
     if request.user.role != 'parent':
-        return redirect('login')
+        return redirect('accounts:login')
 
     existing_drafts_count = Case.objects.filter(parent1=request.user, draft=True).count()
     if existing_drafts_count >= 3:
@@ -526,7 +526,7 @@ def submit_payment_document(request, case_id):
             payment_document = form.save(commit=False)
             payment_document.user = user
             payment_document.case = case
-            payment_document.status = 'pending'
+            payment_document.status = 'validated'
 
             if new_category_name:
                 other_type, created = CategoryType.objects.get_or_create(name='Autre')
@@ -571,7 +571,7 @@ def submit_payment_document_lawyer(request, case_id):
             payment_document = form.save(commit=False)
             payment_document.case = case
             parent_user_id = form.cleaned_data['parent']
-            payment_document.status = 'validated'  # Assurez-vous de définir le bon statut ici
+            payment_document.status = 'validated'
             payment_document.user = get_user_model().objects.get(id=parent_user_id)
             payment_document.save()
             return redirect(reverse('payments:payment-history', kwargs={'case_id': case_id}))
@@ -590,26 +590,30 @@ def get_parent_choices(case):
     parent1_id = case.parent1_id
     parent2_id = case.parent2_id
 
-    # Retrieve parents' full names using IDs
-    parent1 = get_user_model().objects.get(id=parent1_id)
-    parent2 = get_user_model().objects.get(id=parent2_id)
+    # Initialize an empty list for choices
+    choices = []
 
-    # Create a wish list using parents' full names
-    choices = [
-        (parent1.id, f"{parent1.first_name} {parent1.last_name}"),
-        (parent2.id, f"{parent2.first_name} {parent2.last_name}")
-    ]
+    # Retrieve parent1's full name using ID
+    if parent1_id:
+        parent1 = get_user_model().objects.get(id=parent1_id)
+        choices.append((parent1.id, f"{parent1.first_name} {parent1.last_name}"))
+
+    # Check if parent2 exists, then retrieve parent2's full name using ID
+    if parent2_id:
+        parent2 = get_user_model().objects.get(id=parent2_id)
+        choices.append((parent2.id, f"{parent2.first_name} {parent2.last_name}"))
+
     return choices
 
 
 @login_required
 def create_case(request):
-    if not request.user.is_authenticated or request.user.role != 'lawyer':
-        # Redirect to login page if user is not a logged in lawyer
-        return redirect('login')
+    if not request.user.is_authenticated or (request.user.role != 'lawyer' and request.user.role != 'administrator'):
+        # Redirect to login page if user is not logged in or is not a lawyer or administrator
+        return redirect('accounts:login')
 
     if request.method == 'POST':
-        form = CaseForm(request.POST)
+        form = CaseForm(request.POST, user=request.user)
         if form.is_valid():
             parent1 = form.cleaned_data['parent1']
             parent2 = form.cleaned_data['parent2']
@@ -622,19 +626,22 @@ def create_case(request):
                 messages.error(request, "Un dossier avec ces deux parents existe déjà.")
             else:
                 case = form.save(commit=False)
-                case.lawyer = request.user
+                if request.user.role == 'administrator':
+                    case.lawyer = form.cleaned_data['lawyer']
+                else:
+                    case.lawyer = request.user
                 case.save()
 
-                # Create AvocatParent entry
+                # Create AvocatCase entry
                 AvocatCase.objects.create(
-                    avocat=request.user,
+                    avocat=case.lawyer,
                     case=case
                 )
 
                 # Redirect to a list of cases or other success page
                 return redirect('payments:list_case')
     else:
-        form = CaseForm(initial={'parent1': request.user})  # Initialiser avec l'utilisateur connecté par défaut
+        form = CaseForm(initial={'parent1': request.user}, user=request.user)  # Initialiser avec l'utilisateur connecté par défaut
         form.fields['parent1'].queryset = form.fields['parent1'].queryset
         form.fields['parent2'].queryset = form.fields['parent2'].queryset
 
@@ -741,6 +748,7 @@ def remove_avocat(request, case_id, avocat_id):
     avocat = get_object_or_404(User, id=avocat_id, role='lawyer')
     AvocatCase.objects.filter(case=case, avocat=avocat).delete()
     return redirect('payments:add-juge-avocat', case_id=case.id)
+
 
 @method_decorator(login_required, name='dispatch')
 class DraftCaseListView(ListView):
