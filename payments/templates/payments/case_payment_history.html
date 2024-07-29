@@ -24,9 +24,9 @@
                                         <li><a class="dropdown-item" href="{% url 'payments:lawyer-add-payment' case_id=case.id %}">
                                             {% trans "Ajouter un paiement" %}
                                         </a></li>
-                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' case_id=case.id %}">
-                                            {% trans "Valider les paiements en attente" %}
-                                        </a></li>
+<!--                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' case_id=case.id %}">-->
+<!--                                            {% trans "Valider les paiements en attente" %}-->
+<!--                                        </a></li>-->
                                         <li><hr class="dropdown-divider"></li>
                                     {% if case.draft %}
                                         <li><a class="dropdown-item" href="{% url 'payments:convert-draft-case' case.id %}">

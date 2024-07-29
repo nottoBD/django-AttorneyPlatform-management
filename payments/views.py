@@ -477,7 +477,7 @@ def submit_payment_document(request, case_id):
             payment_document = form.save(commit=False)
             payment_document.user = user
             payment_document.case = case
-            payment_document.status = 'pending'
+            payment_document.status = 'validated'
 
             if new_category_name:
                 other_type, created = CategoryType.objects.get_or_create(name='Autre')
@@ -522,7 +522,7 @@ def submit_payment_document_lawyer(request, case_id):
             payment_document = form.save(commit=False)
             payment_document.case = case
             parent_user_id = form.cleaned_data['parent']
-            payment_document.status = 'validated'  # Assurez-vous de définir le bon statut ici
+            payment_document.status = 'validated'
             payment_document.user = get_user_model().objects.get(id=parent_user_id)
             payment_document.save()
             return redirect(reverse('payments:payment-history', kwargs={'case_id': case_id}))

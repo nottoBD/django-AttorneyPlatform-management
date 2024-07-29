@@ -37,12 +37,6 @@
                         </div>
                         {{ form.date|as_crispy_field }}
                         {{ form.document|as_crispy_field }}
-                        <!-- Affichage de l'état du paiement -->
-                        {% if form.instance.status == 'pending' %}
-                            <div class="alert alert-warning" role="alert">
-                                {% trans "This payment is currently pending validation." %}
-                            </div>
-                        {% endif %}
                         <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Add" %}</button>
                         <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-secondary btn-sm mt-3">
                             {% trans "Back to Payment History" %}
