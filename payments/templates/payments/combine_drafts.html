@@ -5,18 +5,22 @@
 
 {% block content %}
     <div class="container mt-4">
-        <h2>{% trans "Combine Drafts" %}</h2>
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-3">
-                <label for="draft1" class="form-label">{% trans "Select First Draft" %}</label>
-                {{ form.draft1 }}
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h2>{% trans "Combine Drafts" %}</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="id_draft1">{% trans "Select First Draft" %}</label>
+                        {{ form.draft1 }}
+                    </div>
+                    <div class="form-group mt-3">
+                        <label for="id_draft2">{% trans "Select Second Draft" %}</label>
+                        {{ form.draft2 }}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4">{% trans "Combine Drafts" %}</button>
+                </form>
             </div>
-            <div class="mb-3">
-                <label for="draft2" class="form-label">{% trans "Select Second Draft" %}</label>
-                {{ form.draft2 }}
-            </div>
-            <button type="submit" class="btn btn-primary">{% trans "Combine Drafts" %}</button>
-        </form>
+        </div>
     </div>
 {% endblock %}

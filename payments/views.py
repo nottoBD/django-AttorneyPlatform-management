@@ -247,6 +247,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'selected_year': selected_year,
             'selected_quarter': selected_quarter,
             'category_ids': category_ids,
+            'is_draft': case.draft,
         })
 
         payments_with_permissions = [
@@ -460,7 +461,6 @@ def create_draft_case(request):
     return redirect('payments:payment-history', case_id=draft_case.id)
 
 
-
 @login_required
 def combine_drafts(request):
     if request.user.role not in ['administrator', 'lawyer']:
@@ -472,7 +472,7 @@ def combine_drafts(request):
         draft1 = get_object_or_404(Case, id=draft1_id, draft=True)
 
     if request.method == 'POST':
-        form = CombineDraftsForm(request.POST, user=request.user)
+        form = CombineDraftsForm(request.POST, user=request.user, initial_draft1=draft1)
         if form.is_valid():
             draft1 = form.cleaned_data['draft1']
             draft2 = form.cleaned_data['draft2']
@@ -494,7 +494,9 @@ def combine_drafts(request):
             messages.success(request, "Drafts have been combined successfully.")
             return redirect('payments:payment-history', case_id=draft1.id)
     else:
-        form = CombineDraftsForm(user=request.user, initial={'draft1': draft1})
+        form = CombineDraftsForm(user=request.user, initial_draft1=draft1)
+        form.fields['draft1'].initial = draft1
+        form.fields['draft1'].queryset = Case.objects.filter(id=draft1.id)
 
     return render(request, 'payments/combine_drafts.html', {'form': form})
 

@@ -70,26 +70,26 @@ class CombineDraftsForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
+        initial_draft1 = kwargs.pop('initial_draft1', None)
         super(CombineDraftsForm, self).__init__(*args, **kwargs)
         if user:
-            self.fields['draft1'].queryset = Case.objects.filter(draft=True).exclude(parent1=user)
+            self.fields['draft1'].queryset = Case.objects.filter(draft=True, parent1=user)
             self.fields['draft2'].queryset = Case.objects.filter(draft=True).exclude(parent1=user)
 
             self.fields['draft1'].label_from_instance = self.label_from_instance
             self.fields['draft2'].label_from_instance = self.label_from_instance
 
-            if 'draft1' in self.data:
-                try:
-                    draft1_id = int(self.data.get('draft1'))
-                    draft1 = Case.objects.get(id=draft1_id)
-                    self.fields['draft2'].queryset = self.fields['draft2'].queryset.exclude(parent1=draft1.parent1)
-                except (ValueError, TypeError, Case.DoesNotExist):
-                    pass
+            if initial_draft1:
+                self.fields['draft1'].initial = initial_draft1
+                self.fields['draft1'].queryset = Case.objects.filter(id=initial_draft1.id)
+                self.fields['draft2'].queryset = self.fields['draft2'].queryset.exclude(parent1=initial_draft1.parent1)
 
     def label_from_instance(self, obj):
         parent = obj.parent1
-        birth_year = parent.date_of_birth.year if parent.date_of_birth else "N/A"
-        return f"{parent.last_name} {parent.first_name[0]}. {birth_year}"
+        created_at = obj.created_at.strftime("%Y-%m-%d %H:%M")
+        updated_at = obj.updated_at.strftime("%Y-%m-%d %H:%M")
+        return f"{parent.last_name} {parent.first_name[0]}. | Created: {created_at} | Updated: {updated_at}"
+
 
 class ValidatePaymentsForm(forms.Form):
     PAYMENTS_CHOICES = (
