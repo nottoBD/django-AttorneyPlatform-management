@@ -25,6 +25,11 @@
                                 <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-info btn-sm">
                                     {% trans "View Payment History" %}
                                 </a>
+                                {% if request.user.role == 'administrator' or request.user.role == 'lawyer' %}
+                                    <a href="{% url 'payments:combine_drafts' %}?draft1={{ case.id }}" class="btn btn-warning btn-sm">
+                                        {% trans "Combine Drafts" %}
+                                    </a>
+                                {% endif %}
                             </td>
                         </tr>
                     {% endfor %}

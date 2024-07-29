@@ -64,6 +64,33 @@ class ConvertDraftCaseForm(forms.ModelForm):
             self.fields['parent2'].queryset = User.objects.filter(role='parent').exclude(id=case.parent1.id)
             self.fields['parent2'].label_from_instance = lambda obj: f"{obj.first_name} {obj.last_name}"
 
+class CombineDraftsForm(forms.Form):
+    draft1 = forms.ModelChoiceField(queryset=Case.objects.filter(draft=True), label="Select First Draft")
+    draft2 = forms.ModelChoiceField(queryset=Case.objects.filter(draft=True), label="Select Second Draft")
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super(CombineDraftsForm, self).__init__(*args, **kwargs)
+        if user:
+            self.fields['draft1'].queryset = Case.objects.filter(draft=True).exclude(parent1=user)
+            self.fields['draft2'].queryset = Case.objects.filter(draft=True).exclude(parent1=user)
+
+            self.fields['draft1'].label_from_instance = self.label_from_instance
+            self.fields['draft2'].label_from_instance = self.label_from_instance
+
+            if 'draft1' in self.data:
+                try:
+                    draft1_id = int(self.data.get('draft1'))
+                    draft1 = Case.objects.get(id=draft1_id)
+                    self.fields['draft2'].queryset = self.fields['draft2'].queryset.exclude(parent1=draft1.parent1)
+                except (ValueError, TypeError, Case.DoesNotExist):
+                    pass
+
+    def label_from_instance(self, obj):
+        parent = obj.parent1
+        birth_year = parent.date_of_birth.year if parent.date_of_birth else "N/A"
+        return f"{parent.last_name} {parent.first_name[0]}. {birth_year}"
+
 class ValidatePaymentsForm(forms.Form):
     PAYMENTS_CHOICES = (
         ('validate', 'Validate'),

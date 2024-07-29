@@ -1,0 +1,22 @@
+{% extends 'neok/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Combine Drafts" %}{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>{% trans "Combine Drafts" %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="draft1" class="form-label">{% trans "Select First Draft" %}</label>
+                {{ form.draft1 }}
+            </div>
+            <div class="mb-3">
+                <label for="draft2" class="form-label">{% trans "Select Second Draft" %}</label>
+                {{ form.draft2 }}
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Combine Drafts" %}</button>
+        </form>
+    </div>
+{% endblock %}
