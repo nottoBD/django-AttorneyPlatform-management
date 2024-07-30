@@ -14,3 +14,18 @@
     background-color: #f0f0f0;
 }
 
+@media (max-width: 768px) {
+    .table thead th {
+        font-size: 12px;
+    }
+    .table tbody td {
+        font-size: 12px;
+    }
+    .card-title {
+        font-size: 16px;
+    }
+    img.rounded-circle {
+        width: 20px;
+        height: 20px;
+    }
+}
