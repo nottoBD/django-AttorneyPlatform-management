@@ -1,4 +1,6 @@
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -21,7 +23,7 @@ from django.utils.translation import gettext_lazy as _
 
 from accounts.models import JugeCase, AvocatCase
 from .forms import PaymentDocumentForm, CaseForm, IndexPaymentForm, AddJugeAvocatForm, \
-    ConvertDraftCaseForm
+    ConvertDraftCaseForm, CombineDraftsForm
 from .models import Document, Case, Category, CategoryType, IndexHistory
 
 User = get_user_model()
