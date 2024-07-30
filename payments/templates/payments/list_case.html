@@ -28,7 +28,9 @@
                                 {% if case.parent2 %}
                                     {{ case.parent2.first_name }} {{ case.parent2.last_name }}
                                 {% else %}
-                                    {% trans "Draft" %}
+                                        <div class="alert alert-danger" role="alert">
+                                            <strong>{% trans "DRAFT" %}</strong>
+                                        </div>
                                 {% endif %}
                             </td>
                             <td>{{ case.created_at }}</td>

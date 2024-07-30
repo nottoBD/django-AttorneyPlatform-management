@@ -1,6 +1,4 @@
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
-
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -18,6 +16,8 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from xhtml2pdf import pisa
+from django.utils.translation import gettext_lazy as _
+
 
 from accounts.models import JugeCase, AvocatCase
 from .forms import PaymentDocumentForm, CaseForm, IndexPaymentForm, AddJugeAvocatForm, \
@@ -247,6 +247,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'selected_year': selected_year,
             'selected_quarter': selected_quarter,
             'category_ids': category_ids,
+            'is_draft': case.draft,
         })
 
         payments_with_permissions = [
@@ -450,9 +451,55 @@ def create_draft_case(request):
     if request.user.role != 'parent':
         return redirect('accounts:login')
 
+    existing_drafts_count = Case.objects.filter(parent1=request.user, draft=True).count()
+    if existing_drafts_count >= 3:
+        messages.error(request, "You can only have up to 3 draft cases.")
+        return redirect('payments:list_case')
+
     draft_case = Case.objects.create(parent1=request.user, draft=True)
 
     return redirect('payments:payment-history', case_id=draft_case.id)
+
+
+@login_required
+def combine_drafts(request):
+    if request.user.role not in ['administrator', 'lawyer']:
+        return redirect('login')
+
+    draft1_id = request.GET.get('draft1')
+    draft1 = None
+    if draft1_id:
+        draft1 = get_object_or_404(Case, id=draft1_id, draft=True)
+
+    if request.method == 'POST':
+        form = CombineDraftsForm(request.POST, user=request.user, initial_draft1=draft1)
+        if form.is_valid():
+            draft1 = form.cleaned_data['draft1']
+            draft2 = form.cleaned_data['draft2']
+
+            if draft1.parent1 == draft2.parent1:
+                messages.error(request, "Cannot combine drafts of the same parent.")
+                return redirect('combine_drafts')
+
+            draft1.parent2 = draft2.parent1
+            draft1.draft = False
+            draft1.save()
+
+            for document in draft2.payment_documents.all():
+                document.case = draft1
+                document.save()
+
+            draft2.delete()
+
+            messages.success(request, "Drafts have been combined successfully.")
+            return redirect('payments:payment-history', case_id=draft1.id)
+    else:
+        form = CombineDraftsForm(user=request.user, initial_draft1=draft1)
+        form.fields['draft1'].initial = draft1
+        form.fields['draft1'].queryset = Case.objects.filter(id=draft1.id)
+
+    return render(request, 'payments/combine_drafts.html', {'form': form})
+
 
 
 @login_required
@@ -727,7 +774,7 @@ def convert_draft_case(request, case_id):
 @login_required
 def index_payments(request):
     if request.user.role != 'administrator':
-        return redirect('home')  # Redirige si l'utilisateur n'est pas administrateur
+        return redirect('home')  # Redirect to an appropriate page if the user is not an administrator
 
     current_year = timezone.now().year
     indexations = IndexHistory.objects.all()

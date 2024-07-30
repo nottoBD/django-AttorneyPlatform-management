@@ -64,6 +64,32 @@ class ConvertDraftCaseForm(forms.ModelForm):
             self.fields['parent2'].queryset = User.objects.filter(role='parent').exclude(id=case.parent1.id)
             self.fields['parent2'].label_from_instance = lambda obj: f"{obj.first_name} {obj.last_name}"
 
+class CombineDraftsForm(forms.Form):
+    draft1 = forms.ModelChoiceField(queryset=Case.objects.filter(draft=True), label="Select First Draft")
+    draft2 = forms.ModelChoiceField(queryset=Case.objects.filter(draft=True), label="Select Second Draft")
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        initial_draft1 = kwargs.pop('initial_draft1', None)
+        super(CombineDraftsForm, self).__init__(*args, **kwargs)
+        if user:
+            self.fields['draft1'].queryset = Case.objects.filter(draft=True, parent1=user)
+            self.fields['draft2'].queryset = Case.objects.filter(draft=True).exclude(parent1=user)
+
+            self.fields['draft1'].label_from_instance = self.label_from_instance
+            self.fields['draft2'].label_from_instance = self.label_from_instance
+
+            if initial_draft1:
+                self.fields['draft1'].initial = initial_draft1
+                self.fields['draft1'].queryset = Case.objects.filter(id=initial_draft1.id)
+                self.fields['draft2'].queryset = self.fields['draft2'].queryset.exclude(parent1=initial_draft1.parent1)
+
+    def label_from_instance(self, obj):
+        parent = obj.parent1
+        created_at = obj.created_at.strftime("%Y-%m-%d %H:%M")
+        updated_at = obj.updated_at.strftime("%Y-%m-%d %H:%M")
+        return f"{parent.last_name} {parent.first_name[0]}. | Created: {created_at} | Updated: {updated_at}"
+
 
 class ValidatePaymentsForm(forms.Form):
     PAYMENTS_CHOICES = (
