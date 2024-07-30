@@ -114,9 +114,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function attachRowEventListeners() {
         document.querySelectorAll('tr[data-user-id]').forEach(row => {
+            let touchStartTime = 0;
+            let touchTimeout;
+            let clickTimeout;
+
             row.addEventListener('click', function(event) {
                 clearTimeout(clickTimeout);
-                clickTimeout = setTimeout(function() {
+                clickTimeout = setTimeout(() => {
                     if (!event.ctrlKey) {
                         document.querySelectorAll('tr[data-user-id]').forEach(r => {
                             r.classList.remove('highlight');
@@ -132,7 +136,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 let userId = row.getAttribute('data-user-id');
                 window.location.href = `/accounts/update/${userId}/`;
             });
+
+            row.addEventListener('touchstart', function(event) {
+                touchStartTime = new Date().getTime();
+                if (touchTimeout) {
+                    clearTimeout(touchTimeout);
+                }
+                touchTimeout = setTimeout(() => {
+                    handleRowClick(event);
+                }, 200);
+            });
+
+            row.addEventListener('touchend', function(event) {
+                let touchDuration = new Date().getTime() - touchStartTime;
+                if (touchDuration < 200) {
+                    clearTimeout(touchTimeout);
+                    handleRowDoubleClick(event);
+                }
+            });
         });
+    }
+
+    function handleRowClick(event) {
+        if (!event.ctrlKey) {
+            document.querySelectorAll('tr[data-user-id]').forEach(r => {
+                r.classList.remove('highlight');
+            });
+        }
+        event.currentTarget.classList.toggle('highlight');
+        highlightedRowId = event.currentTarget.classList.contains('highlight') ? event.currentTarget.getAttribute('data-user-id') : null;
+    }
+
+    function handleRowDoubleClick(event) {
+        let userId = event.currentTarget.getAttribute('data-user-id');
+        window.location.href = `/accounts/update/${userId}/`;
     }
 
     function reapplyHighlight() {
@@ -152,8 +189,6 @@ document.addEventListener('DOMContentLoaded', function () {
             highlightedRowId = null;
         }
     });
-
-    let clickTimeout;
 
     fetchUsers();
     isActiveCheckbox.addEventListener('change', fetchUsers);
