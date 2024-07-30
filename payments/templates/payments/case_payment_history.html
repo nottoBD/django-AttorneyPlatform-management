@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <div class="col-lg-8 col-md-12 mb-4">
+        <div class="col-lg-8 col-md-15 mb-4">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
@@ -21,12 +21,9 @@
                                             {% trans "Gérer juge/avocat" %}
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="{% url 'payments:lawyer-add-payment' case_id=case.id %}">
+                                        <li><a class="dropdown-item" href="{% url 'payments:add-payment' case_id=case.id %}">
                                             {% trans "Ajouter un paiement" %}
                                         </a></li>
-<!--                                        <li> <a class="dropdown-item" href="{% url 'payments:pending-payments' case_id=case.id %}">-->
-<!--                                            {% trans "Valider les paiements en attente" %}-->
-<!--                                        </a></li>-->
                                         <li><hr class="dropdown-divider"></li>
                                     {% if case.draft %}
                                         <li><a class="dropdown-item" href="{% url 'payments:convert-draft-case' case.id %}">
@@ -37,7 +34,7 @@
 
                                     {% if request.user.role == 'parent' %}
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="{% url 'payments:parent-add-payment' case_id=case.id %}">
+                                        <li><a class="dropdown-item" href="{% url 'payments:add-payment' case_id=case.id %}">
                                             {% trans "Ajouter un paiement" %}
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
@@ -53,32 +50,32 @@
                     <!-- payments comparison table -->
                     {% for type_id, type_data in categories_by_type.items %}
                         <div class="table-responsive">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered table-custom">
                                 <thead>
                                     <tr>
-                                        <th>{{ type_data.type_name }}</th>
-                                        <th>{{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
-                                        <th>{{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
-                                        <th>{% trans "Actions" %}</th>
+                                        <th class="col-custom">{{ type_data.type_name }}</th>
+                                        <th class="col-custom">{{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
+                                        <th class="col-custom">{{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                        <th class="col-custom">{% trans "Actions" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="payments-list">
                                     {% for category_entry in type_data.categories %}
                                         <tr class="payment-item">
-                                            <td>{{ category_entry.category_name }}</td>
-                                            <td>
+                                            <td class="col-custom">{{ category_entry.category_name }}</td>
+                                            <td class="col-custom">
                                                 {{ category_entry.parent1_amount }} €
                                                 {% if category_entry.parent1_pending_amount > 0 %}
                                                     ({{ category_entry.parent1_pending_amount }} € en attente)
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td class="col-custom">
                                                 {{ category_entry.parent2_amount }} €
                                                 {% if category_entry.parent2_pending_amount > 0 %}
                                                     ({{ category_entry.parent2_pending_amount }} € en attente)
                                                 {% endif %}
                                             </td>
-                                            <td>
+                                            <td style="text-align: center;" class="col-custom">
                                                 <a href="{% url 'payments:category-payments' case.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
                                                     {% trans "View Details" %}
                                                 </a>
@@ -96,15 +93,15 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="card-title mb-4">{% trans "Balance Summary" %}</h2>
-                    <table class="table table-bordered">
+                    <table class="table table-bordered table-custom">
                         <thead>
                             <tr>
-                                <th>{% trans "Total for" %} {{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
-                                <th>{{ parent1_total }} €</th>
+                                <th class="col-custom">{% trans "Total for" %} {{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
+                                <th class="col-custom">{{ parent1_total }} €</th>
                             </tr>
                             <tr>
-                                <th>{% trans "Total for" %} {{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
-                                <th>{{ parent2_total }} €</th>
+                                <th class="col-custom">{% trans "Total for" %} {{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                <th class="col-custom">{{ parent2_total }} €</th>
                             </tr>
                         </thead>
                     </table>
@@ -159,6 +156,27 @@
 </div>
 
 <style>
+    .table-custom {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .table-custom th, .table-custom td {
+        word-wrap: break-word; /* Empêche le débordement du contenu */
+        vertical-align: middle;
+    }
+    .table-custom th:nth-child(1), .table-custom td:nth-child(1) {
+        width: 35%;
+    }
+    .table-custom th:nth-child(2), .table-custom td:nth-child(2),
+    .table-custom th:nth-child(3), .table-custom td:nth-child(3) {
+        width: 25%;
+    }
+    .table-custom th:nth-child(4), .table-custom td:nth-child(4) {
+        width: 16%;
+    }
+    .table-custom th, .table-custom td, .col-custom {
+        font-size: 0.9rem; /* Ajustez la taille de la police si nécessaire */
+    }
     .scrollable-table-container {
         max-height: 200px; /* Ajustez cette valeur en fonction de vos besoins */
         overflow-y: auto;

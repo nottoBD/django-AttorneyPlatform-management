@@ -1,15 +1,124 @@
-
 {% extends 'neok/base.html' %}
 
 {% load i18n %}
+{% load static %}
 
 {% block title %}{% trans "Home Page" %}{% endblock %}
 
 {% block content %}
+<div class="container-fluid p-0">
+    <!-- Image Section -->
+    <div class="img-ribbon-wrapper">
+        <img src="{% static 'images/jurinet.jpg' %}" class="img-ribbon" alt="{% trans 'Jurinet' %}">
+    </div>
 
-<h2>{% trans "Welcome," %} {{ user.first_name }} !</h2>
-<p>{% trans "You are logged in." %}</p>
+    <!-- Welcome Section -->
+    <div class="container mt-5">
+        <div class="row mb-4 text-center ribbon-text">
+            <div class="col-12">
+                <h2 class="text-secondary">{% trans "Welcome," %} {{ user.first_name }}!</h2>
+                <p class="lead text-primary">{% trans "You are logged in." %}</p>
+            </div>
+        </div>
 
+        <!-- Introduction to the Site -->
+        <div class="row mb-5 about">
+            <div class="col-md-6">
+                <h3>{% trans "About This Site" %}</h3>
+                <p>
+                    {% trans "This platform is designed to help parents going through a divorce manage extraordinary expenses. It provides a clear overview of payments, balances, and allows for easy tracking and management of financial responsibilities related to child support and other related costs." %}
+                </p>
+                <p>
+                    {% trans "Our goal is to simplify the process, ensuring transparency and helping both parents to efficiently handle and share these financial responsibilities." %}
+                </p>
+            </div>
+        </div>
 
+        <!-- Features Section -->
+        <div class="row mb-5">
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="{% static 'images/managepayments.png' %}" class="card-img-top center-img" alt="{% trans 'Feature 1' %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Manage Payments" %}</h5>
+                        <p class="card-text">
+                            {% trans "Easily add, track, and manage extraordinary expenses with our user-friendly interface. Keep everything organized in one place." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="{% static 'images/balance.jpg' %}" class="card-img-top center-img" style="max-width:46%;" alt="{% trans 'Feature 2' %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Track Balances" %}</h5>
+                        <p class="card-text">
+                            {% trans "Get a clear overview of balances and payments, ensuring transparency and easy tracking of financial responsibilities." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <img src="{% static 'images/download.png' %}" class="card-img-top center-img" alt="{% trans 'Feature 3' %}">
+                    <div class="card-body">
+                        <h5 class="card-title">{% trans "Download Reports" %}</h5>
+                        <p class="card-text">
+                            {% trans "Generate and download detailed reports in PDF format for your records or for sharing with your legal advisor." %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Contact or Support Section -->
+        <div class="row">
+            <div class="col-12 text-center">
+                <h3>{% trans "Need Help?" %}</h3>
+                <p>
+                    {% trans "If you have any questions or need assistance, feel free to contact our support team." %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .img-ribbon-wrapper {
+        position: relative;
+        margin-left: -12px;
+        margin-right: -12px;
+        height: 250px; /* Ajustez la hauteur en fonction de vos besoins */
+        overflow: hidden;
+    }
+
+    .img-ribbon {
+        width: 100%;
+        height: auto;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    .container {
+        position: relative;
+        z-index: 1; /* Assure que le contenu de la section Welcome soit au-dessus de l'image */
+    }
+
+    .center-img {
+        display: block;
+        max-width: 30%; /* Ajuste la taille de l'image pour qu'elle ne dépasse pas le conteneur */
+        height: auto; /* Conserve les proportions de l'image */
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .ribbon-text {
+        margin-top: -200px;
+    }
+
+    .about {
+        margin-top: 100px;
+    }
+</style>
 {% endblock %}

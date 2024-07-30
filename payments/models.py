@@ -66,8 +66,9 @@ class Case(models.Model):
 class IndexHistory(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     year = models.IntegerField()
-    percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    indices = models.DecimalField(max_digits=5, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=6, decimal_places=2)
 
     def __str__(self):
-        return f"Indexation {self.percentage}% for {self.year}"
+        return f"Indexation {self.indices}% for {self.year}"

@@ -5,21 +5,7 @@ from .models import Document, Case, Category
 
 
 class PaymentDocumentForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['category'].queryset = Category.objects.order_by('type', 'name')
-        self.fields['category'].required = True
-
-    class Meta:
-        model = Document
-        fields = ['amount', 'category', 'date', 'document']
-        widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'})
-        }
-
-
-class PaymentDocumentFormLawyer(forms.ModelForm):
-    parent = forms.ChoiceField(choices=())
+    parent = forms.ChoiceField(choices=(), required=False)
 
     class Meta:
         model = Document
@@ -31,8 +17,14 @@ class PaymentDocumentFormLawyer(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         parent_choices = kwargs.pop('parent_choices', None)
         super().__init__(*args, **kwargs)
+
+        self.fields['category'].queryset = Category.objects.order_by('type', 'name')
+        self.fields['category'].required = True
+
         if parent_choices:
             self.fields['parent'].choices = parent_choices
+        else:
+            self.fields['parent'].widget = forms.HiddenInput()
 
 
 class CaseForm(forms.ModelForm):
@@ -83,7 +75,7 @@ class ValidatePaymentsForm(forms.Form):
 
 
 class IndexPaymentForm(forms.Form):
-    percentage = forms.DecimalField(label='Percentage (%)', min_value=0, max_value=100)
+    indices = forms.DecimalField(label='Indice')
     confirm_indexation = forms.CharField(widget=forms.HiddenInput(), required=False, initial='false')
 
 

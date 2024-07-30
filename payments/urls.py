@@ -2,8 +2,7 @@ from django.conf.urls.static import static
 from django.urls import path
 from django.conf import settings
 
-from .views import (PaymentHistoryView, CaseListView,
-                    submit_payment_document_lawyer, CategoryPaymentsView, add_category,
+from .views import (PaymentHistoryView, CaseListView, CategoryPaymentsView, add_category,
                     PaymentHistoryPDFView, index_payments, delete_indexation, submit_payment_document, create_case,
                     pending_payments, add_juge_avocat, remove_juge, remove_avocat, create_draft_case, DraftCaseListView,
                     convert_draft_case)
@@ -20,11 +19,10 @@ urlpatterns = [
     path('cases/convert_draft/<uuid:case_id>/', convert_draft_case, name='convert-draft-case'),
     path('download_pdf/<uuid:case_id>/', PaymentHistoryPDFView.as_view(), name='download_pdf'),
     path('pending-payments/<uuid:case_id>/', pending_payments, name='pending-payments'),
-    path('parent-add-payment/<uuid:case_id>/', submit_payment_document, name='parent-add-payment'),
-    path('lawyer-add-payment/<uuid:case_id>/', submit_payment_document_lawyer, name='lawyer-add-payment'),
+    path('add-payment/<uuid:case_id>/', submit_payment_document, name='add-payment'),
     path('index_payments/', index_payments, name='index_payments'),
     path('delete-indexation/<uuid:index_id>/', delete_indexation, name='delete_indexation'),
     path('add-judge-parent/<uuid:case_id>/', add_juge_avocat, name='add-juge-avocat'),
-path('remove-juge/<uuid:case_id>/<uuid:juge_id>/', remove_juge, name='remove-juge'),
+    path('remove-juge/<uuid:case_id>/<uuid:juge_id>/', remove_juge, name='remove-juge'),
     path('remove-avocat/<uuid:case_id>/<uuid:avocat_id>/', remove_avocat, name='remove-avocat'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

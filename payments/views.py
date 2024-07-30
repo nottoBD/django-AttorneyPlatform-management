@@ -1,4 +1,6 @@
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -18,7 +20,7 @@ from django.views.generic import ListView
 from xhtml2pdf import pisa
 
 from accounts.models import JugeCase, AvocatCase
-from .forms import PaymentDocumentForm, CaseForm, PaymentDocumentFormLawyer, IndexPaymentForm, AddJugeAvocatForm, \
+from .forms import PaymentDocumentForm, CaseForm, IndexPaymentForm, AddJugeAvocatForm, \
     ConvertDraftCaseForm
 from .models import Document, Case, Category, CategoryType, IndexHistory
 
@@ -457,10 +459,10 @@ def create_draft_case(request):
 @transaction.atomic
 def submit_payment_document(request, case_id):
     user = request.user
-    case = Case.objects.filter(Q(parent1=user) | Q(parent2=user))
+    case = get_object_or_404(Case, id=case_id)
 
-    # Vérifiez si le dossier demandé existe
-    case = get_object_or_404(case, id=case_id)
+    # Determine if the user is a parent or a lawyer
+    is_parent = Case.objects.filter(Q(parent1=user) | Q(parent2=user), id=case_id).exists()
 
     categories = Category.objects.order_by('type_id', 'name')
     grouped_categories = {}
@@ -470,14 +472,23 @@ def submit_payment_document(request, case_id):
         grouped_categories[category.type].append(category)
 
     if request.method == 'POST':
-        form = PaymentDocumentForm(request.POST, request.FILES)
+        if is_parent:
+            form = PaymentDocumentForm(request.POST, request.FILES)
+        else:
+            form = PaymentDocumentForm(request.POST, request.FILES, parent_choices=get_parent_choices(case))
+
         new_category_name = request.POST.get('new_category', '').strip()
 
         if form.is_valid():
             payment_document = form.save(commit=False)
-            payment_document.user = user
             payment_document.case = case
             payment_document.status = 'validated'
+
+            if is_parent:
+                payment_document.user = user
+            else:
+                parent_user_id = form.cleaned_data['parent']
+                payment_document.user = get_user_model().objects.get(id=parent_user_id)
 
             if new_category_name:
                 other_type, created = CategoryType.objects.get_or_create(name='Autre')
@@ -490,7 +501,10 @@ def submit_payment_document(request, case_id):
             payment_document.save()
             return redirect('payments:payment-history', case_id=case_id)
     else:
-        form = PaymentDocumentForm()
+        if is_parent:
+            form = PaymentDocumentForm()
+        else:
+            form = PaymentDocumentForm(parent_choices=get_parent_choices(case))
 
     context = {
         'form': form,
@@ -503,39 +517,6 @@ def submit_payment_document(request, case_id):
 
 # MAGISTRATE
 # ----------------------------------------------------------------------------------------------------------------------
-@login_required
-@transaction.atomic
-def submit_payment_document_lawyer(request, case_id):
-    case = get_object_or_404(Case, pk=case_id)
-    categories = Category.objects.order_by('type_id', 'name')
-
-    grouped_categories = {}
-    for category in categories:
-        if category.type not in grouped_categories:
-            grouped_categories[category.type] = []
-        grouped_categories[category.type].append(category)
-
-    if request.method == 'POST':
-        form = PaymentDocumentFormLawyer(request.POST, request.FILES, parent_choices=get_parent_choices(case))
-
-        if form.is_valid():
-            payment_document = form.save(commit=False)
-            payment_document.case = case
-            parent_user_id = form.cleaned_data['parent']
-            payment_document.status = 'validated'
-            payment_document.user = get_user_model().objects.get(id=parent_user_id)
-            payment_document.save()
-            return redirect(reverse('payments:payment-history', kwargs={'case_id': case_id}))
-    else:
-        form = PaymentDocumentFormLawyer(parent_choices=get_parent_choices(case))
-
-    return render(request, 'payments/submit_payment_document_lawyer.html', {
-        'form': form,
-        'case': case,
-        'grouped_categories': grouped_categories,
-    })
-
-
 def get_parent_choices(case):
     # Retrieve parent IDs from the case in question
     parent1_id = case.parent1_id
@@ -746,7 +727,7 @@ def convert_draft_case(request, case_id):
 @login_required
 def index_payments(request):
     if request.user.role != 'administrator':
-        return redirect('home')  # Redirect to an appropriate page if the user is not an administrator
+        return redirect('home')  # Redirige si l'utilisateur n'est pas administrateur
 
     current_year = timezone.now().year
     indexations = IndexHistory.objects.all()
@@ -754,7 +735,7 @@ def index_payments(request):
     if request.method == 'POST':
         form = IndexPaymentForm(request.POST)
         if form.is_valid():
-            percentage = form.cleaned_data['percentage']
+            indices = form.cleaned_data['indices']
             confirm_indexation_list = request.POST.getlist('confirm_indexation')
             confirm_indexation = confirm_indexation_list[0] == 'true' if confirm_indexation_list else False
 
@@ -767,21 +748,32 @@ def index_payments(request):
                     'confirm_required': True
                 })
             else:
-                multiplier = 1 + (percentage / 100)
-                Document.objects.all().update(amount=F('amount') * multiplier)
+                # Récupère le dernier montant et indice de l'entrée la plus récente
+                last_index = IndexHistory.objects.order_by('-created_at').first()
 
-                # Create a new entry in IndexHistory for the current year
-                IndexHistory.objects.create(year=current_year, percentage=percentage)
+                if last_index:
+                    previous_indice = Decimal(last_index.indices)
+                    previous_amount = Decimal(last_index.amount)
+                    multiplier = Decimal(indices) / previous_indice
+                    new_amount = (previous_amount * multiplier).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                else:
+                    new_amount = Decimal('0.00')
 
-                messages.success(request, f"All payments have been indexed by {percentage}%.")
+                # Crée une nouvelle entrée dans IndexHistory pour l'année en cours
+                IndexHistory.objects.create(year=current_year, indices=indices, amount=new_amount)
+
+                messages.success(request, f"Les contributions alimentaires ont été indexées par {indices}%.")
                 return redirect('payments:index_payments')
     else:
         form = IndexPaymentForm()
 
     confirm_required = IndexHistory.objects.filter(year=current_year).exists()
 
-    return render(request, 'payments/index_payments.html',
-                  {'form': form, 'indexations': indexations, 'confirm_required': confirm_required})
+    return render(request, 'payments/index_payments.html', {
+        'form': form,
+        'indexations': indexations,
+        'confirm_required': confirm_required
+    })
 
 
 @login_required
