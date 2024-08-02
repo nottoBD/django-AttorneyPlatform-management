@@ -5,7 +5,7 @@ from django.conf import settings
 from .views import (PaymentHistoryView, CaseListView, CategoryPaymentsView, add_category,
                     PaymentHistoryPDFView, index_payments, delete_indexation, submit_payment_document, create_case,
                     pending_payments, add_juge_avocat, remove_juge, remove_avocat, create_draft_case, DraftCaseListView,
-                    convert_draft_case, combine_drafts)
+                    convert_draft_case, combine_drafts, add_child, delete_child, update_percentages)
 
 app_name = 'payments'
 urlpatterns = [
@@ -26,4 +26,7 @@ urlpatterns = [
     path('add-judge-parent/<uuid:case_id>/', add_juge_avocat, name='add-juge-avocat'),
     path('remove-juge/<uuid:case_id>/<uuid:juge_id>/', remove_juge, name='remove-juge'),
     path('remove-avocat/<uuid:case_id>/<uuid:avocat_id>/', remove_avocat, name='remove-avocat'),
+    path('cases/<uuid:case_id>/child/', add_child, name='child'),
+    path('cases/<uuid:case_id>/delete_child/<uuid:child_id>/', delete_child, name='delete_child'),
+    path('case/<uuid:case_id>/update_percentages/', update_percentages, name='update_percentages'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

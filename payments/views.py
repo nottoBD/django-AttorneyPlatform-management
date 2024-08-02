@@ -7,10 +7,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Sum, Q, F
+from django.db.models.functions import ExtractQuarter, ExtractYear
 from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.text import capfirst
@@ -18,13 +18,12 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from xhtml2pdf import pisa
-from django.utils.translation import gettext_lazy as _
 
 
 from accounts.models import JugeCase, AvocatCase
 from .forms import PaymentDocumentForm, CaseForm, IndexPaymentForm, AddJugeAvocatForm, \
-    ConvertDraftCaseForm, CombineDraftsForm
-from .models import Document, Case, Category, CategoryType, IndexHistory
+    ConvertDraftCaseForm, CombineDraftsForm, ChildForm
+from .models import Document, Case, Category, CategoryType, IndexHistory, Child
 
 User = get_user_model()
 
@@ -149,6 +148,12 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         selected_year = self.request.GET.get('year')
         selected_quarter = self.request.GET.get('quarter')
 
+        # Récupérer le dernier montant d'indexation
+        latest_index_history = case.latest_index_history
+        contribution_amount = 0
+        if latest_index_history:
+            contribution_amount = latest_index_history.amount * case.number_of_children
+
         if selected_year and selected_quarter:
             try:
                 parent1_valid_payments = Document.objects.filter(
@@ -235,6 +240,18 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         payment_years = Document.objects.filter(case=self.case).dates('date', 'year')
         years = [year.year for year in payment_years]
 
+        # Obtenir les trimestres avec des paiements pour les années disponibles
+        active_quarters = Document.objects.annotate(
+            quarter=ExtractQuarter('date'),
+            year=ExtractYear('date')
+        ).filter(case=self.case).values_list('year', 'quarter').distinct()
+
+        active_quarters_per_year = {year: set() for year in years}
+        for year, quarter in active_quarters:
+            active_quarters_per_year[year].add(quarter)
+
+        print("quarter : " + str(active_quarters_per_year))
+
         context.update({
             'case': case,
             'parent1_user': parent1,
@@ -250,6 +267,10 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'selected_quarter': selected_quarter,
             'category_ids': category_ids,
             'is_draft': case.draft,
+            'contribution_amount': contribution_amount,
+            'parent1_percentage': case.parent1_percentage,
+            'parent2_percentage': case.parent2_percentage,
+            'active_quarters_per_year': active_quarters_per_year,
         })
 
         payments_with_permissions = [
@@ -445,6 +466,30 @@ def get_quarter_dates(year, quarter):
     return start_date, end_date
 
 
+@login_required
+def add_child(request, case_id):
+    case = get_object_or_404(Case, id=case_id)
+
+    if request.method == 'POST':
+        form = ChildForm(request.POST)
+        if form.is_valid():
+            child = form.save(commit=False)
+            child.case = case
+            child.save()
+            return redirect('payments:child', case_id=case.id)
+    else:
+        form = ChildForm()
+
+    children = case.children.all()
+
+    return render(request, 'payments/child.html', {'form': form, 'case': case, 'children': children})
+
+
+@login_required
+def delete_child(request, case_id, child_id):
+    child = get_object_or_404(Child, id=child_id, case_id=case_id)
+    child.delete()
+    return redirect('payments:child', case_id=case_id)
 # PARENT
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -769,6 +814,16 @@ def convert_draft_case(request, case_id):
         form = ConvertDraftCaseForm(instance=case)
 
     return render(request, 'payments/convert_draft_case.html', {'form': form, 'case': case})
+
+
+@require_POST
+def update_percentages(request, case_id):
+    case = get_object_or_404(Case, pk=case_id)
+    if case.parent1 == request.user or case.parent2 == request.user:
+        case.parent1_percentage = float(request.POST['parent1_percentage'])
+        case.parent2_percentage = float(request.POST['parent2_percentage'])
+        case.save()
+    return redirect('payments:payment-history', case_id=case_id)
 
 
 # ADMINISTRATOR

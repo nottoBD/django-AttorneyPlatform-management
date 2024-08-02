@@ -1,7 +1,7 @@
 from django import forms
 
 from accounts.views import User
-from .models import Document, Case, Category
+from .models import Document, Case, Category, Child
 
 
 class PaymentDocumentForm(forms.ModelForm):
@@ -63,6 +63,7 @@ class ConvertDraftCaseForm(forms.ModelForm):
         if case:
             self.fields['parent2'].queryset = User.objects.filter(role='parent').exclude(id=case.parent1.id)
             self.fields['parent2'].label_from_instance = lambda obj: f"{obj.first_name} {obj.last_name}"
+
 
 class CombineDraftsForm(forms.Form):
     draft1 = forms.ModelChoiceField(queryset=Case.objects.filter(draft=True), label="Select First Draft")
@@ -127,3 +128,12 @@ class AddJugeAvocatForm(forms.Form):
 
     def set_avocats_queryset(self, queryset):
         self.fields['avocats'].queryset = queryset
+
+
+class ChildForm(forms.ModelForm):
+    class Meta:
+        model = Child
+        fields = ['first_name', 'last_name', 'birth_date']
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'})
+        }

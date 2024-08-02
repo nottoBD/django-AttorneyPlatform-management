@@ -14,12 +14,12 @@
                         <p><strong>{% trans "Selected Period:" %}</strong> {{ selected_year }} - T{{ selected_quarter }}</p>
                     {% endif %}
 
-                    {% if parent1_payments or parent2_payments %}
-                        <div class="mb-3">
-                            <span class="bg-success p-1 rounded">{% trans "Validated" %}</span>
-                            <span class="bg-warning p-1 rounded">{% trans "Pending" %}</span>
-                            <span class="bg-danger p-1 rounded">{% trans "Rejected" %}</span>
-                        </div>
+<!--                    {% if parent1_payments or parent2_payments %}-->
+<!--                        <div class="mb-3">-->
+<!--                            <span class="bg-success p-1 rounded">{% trans "Validated" %}</span>-->
+<!--                            <span class="bg-warning p-1 rounded">{% trans "Pending" %}</span>-->
+<!--                            <span class="bg-danger p-1 rounded">{% trans "Rejected" %}</span>-->
+<!--                        </div>-->
 
                         {% if parent1_payments %}
                             <h3>{% trans "Payments by" %} {{ parent1_name }}</h3>
