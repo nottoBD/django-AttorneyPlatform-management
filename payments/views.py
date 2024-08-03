@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Sum, Q, F
 from django.db.models.functions import ExtractQuarter, ExtractYear
-from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseForbidden, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -46,7 +46,7 @@ class CaseListView(LoginRequiredMixin, ListView):
         if case_id:
             case = get_object_or_404(Case, pk=case_id)
             if not self.has_access_to_case(request.user, case):
-                return HttpResponseForbidden("You do not have permission to access this case.")
+                return Http404("You do not have permission to access this case.")
 
         return response
 
@@ -490,63 +490,6 @@ def delete_child(request, case_id, child_id):
     child = get_object_or_404(Child, id=child_id, case_id=case_id)
     child.delete()
     return redirect('payments:child', case_id=case_id)
-# PARENT
-# ----------------------------------------------------------------------------------------------------------------------
-
-@login_required
-def create_draft_case(request):
-    if request.user.role != 'parent':
-        return redirect('accounts:login')
-
-    existing_drafts_count = Case.objects.filter(parent1=request.user, draft=True).count()
-    if existing_drafts_count >= 3:
-        messages.error(request, "You can only have up to 3 draft cases.")
-        return redirect('payments:list_case')
-
-    draft_case = Case.objects.create(parent1=request.user, draft=True)
-
-    return redirect('payments:payment-history', case_id=draft_case.id)
-
-
-@login_required
-def combine_drafts(request):
-    if request.user.role not in ['administrator', 'lawyer']:
-        return redirect('login')
-
-    draft1_id = request.GET.get('draft1')
-    draft1 = None
-    if draft1_id:
-        draft1 = get_object_or_404(Case, id=draft1_id, draft=True)
-
-    if request.method == 'POST':
-        form = CombineDraftsForm(request.POST, user=request.user, initial_draft1=draft1)
-        if form.is_valid():
-            draft1 = form.cleaned_data['draft1']
-            draft2 = form.cleaned_data['draft2']
-
-            if draft1.parent1 == draft2.parent1:
-                messages.error(request, "Cannot combine drafts of the same parent.")
-                return redirect('combine_drafts')
-
-            draft1.parent2 = draft2.parent1
-            draft1.draft = False
-            draft1.save()
-
-            for document in draft2.payment_documents.all():
-                document.case = draft1
-                document.save()
-
-            draft2.delete()
-
-            messages.success(request, "Drafts have been combined successfully.")
-            return redirect('payments:payment-history', case_id=draft1.id)
-    else:
-        form = CombineDraftsForm(user=request.user, initial_draft1=draft1)
-        form.fields['draft1'].initial = draft1
-        form.fields['draft1'].queryset = Case.objects.filter(id=draft1.id)
-
-    return render(request, 'payments/combine_drafts.html', {'form': form})
-
 
 
 @login_required
@@ -607,6 +550,64 @@ def submit_payment_document(request, case_id):
     }
 
     return render(request, 'payments/submit_payment_document.html', context)
+
+
+# PARENT
+# ----------------------------------------------------------------------------------------------------------------------
+
+@login_required
+def create_draft_case(request):
+    if request.user.role != 'parent':
+        return redirect('accounts:login')
+
+    existing_drafts_count = Case.objects.filter(parent1=request.user, draft=True).count()
+    if existing_drafts_count >= 3:
+        messages.error(request, "You can only have up to 3 draft cases.")
+        return redirect('payments:list_case')
+
+    draft_case = Case.objects.create(parent1=request.user, draft=True)
+
+    return redirect('payments:payment-history', case_id=draft_case.id)
+
+
+@login_required
+def combine_drafts(request):
+    if request.user.role not in ['administrator', 'lawyer']:
+        return redirect('login')
+
+    draft1_id = request.GET.get('draft1')
+    draft1 = None
+    if draft1_id:
+        draft1 = get_object_or_404(Case, id=draft1_id, draft=True)
+
+    if request.method == 'POST':
+        form = CombineDraftsForm(request.POST, user=request.user, initial_draft1=draft1)
+        if form.is_valid():
+            draft1 = form.cleaned_data['draft1']
+            draft2 = form.cleaned_data['draft2']
+
+            if draft1.parent1 == draft2.parent1:
+                messages.error(request, "Cannot combine drafts of the same parent.")
+                return redirect('combine_drafts')
+
+            draft1.parent2 = draft2.parent1
+            draft1.draft = False
+            draft1.save()
+
+            for document in draft2.payment_documents.all():
+                document.case = draft1
+                document.save()
+
+            draft2.delete()
+
+            messages.success(request, "Drafts have been combined successfully.")
+            return redirect('payments:payment-history', case_id=draft1.id)
+    else:
+        form = CombineDraftsForm(user=request.user, initial_draft1=draft1)
+        form.fields['draft1'].initial = draft1
+        form.fields['draft1'].queryset = Case.objects.filter(id=draft1.id)
+
+    return render(request, 'payments/combine_drafts.html', {'form': form})
 
 
 # MAGISTRATE
@@ -819,10 +820,9 @@ def convert_draft_case(request, case_id):
 @require_POST
 def update_percentages(request, case_id):
     case = get_object_or_404(Case, pk=case_id)
-    if case.parent1 == request.user or case.parent2 == request.user:
-        case.parent1_percentage = float(request.POST['parent1_percentage'])
-        case.parent2_percentage = float(request.POST['parent2_percentage'])
-        case.save()
+    case.parent1_percentage = float(request.POST['parent1_percentage'])
+    case.parent2_percentage = float(request.POST['parent2_percentage'])
+    case.save()
     return redirect('payments:payment-history', case_id=case_id)
 
 
