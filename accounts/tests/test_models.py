@@ -19,13 +19,13 @@ class UserModelTestCase(TestCase):
             email='testuser@example.com',
             first_name='Test',
             last_name='User',
-            password='password123'
+            password='ComplexPassword1!'
         )
 
     def test_create_user(self):
         user = User.objects.get(email='testuser@example.com')
         self.assertEqual(user.email, 'testuser@example.com')
-        self.assertTrue(user.check_password('password123'))
+        self.assertTrue(user.check_password('ComplexPassword1!'))
 
     def test_is_administrator_property(self):
         self.assertFalse(self.user.is_administrator)
@@ -128,7 +128,7 @@ class AvocatCaseModelTestCase(TestCase):
             email='lawyer@example.com',
             first_name='Lawyer',
             last_name='One',
-            password='password123',
+            password='ComplexPassword1!',
             role='lawyer'
         )
         self.case = Case.objects.create(
@@ -148,7 +148,7 @@ class JugeCaseModelTestCase(TestCase):
             email='judge@example.com',
             first_name='Judge',
             last_name='One',
-            password='password123',
+            password='ComplexPassword1!',
             role='judge'
         )
         self.case = Case.objects.create(
