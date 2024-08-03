@@ -17,17 +17,29 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
+from django.db import migrations
 
-from django.core.exceptions import ValidationError
-import magic
+def update_site(apps, schema_editor):
+    Site = apps.get_model('sites', 'Site')
+    site, created = Site.objects.get_or_create(
+        id=1,
+        defaults={
+            'domain': 'app.neok-budget.eu',
+            'name': 'app.neok-budget.eu',
+        }
+    )
+    if not created:
+        site.domain = 'app.neok-budget.eu'
+        site.name = 'app.neok-budget.eu'
+        site.save()
 
+class Migration(migrations.Migration):
 
-# validations.py
-def validate_image(file):
-    valid_mime_types = ['image/jpeg', 'image/png', 'image/gif']
-    file_mime_type = magic.from_buffer(file.read(2048), mime=True)
-    if file_mime_type not in valid_mime_types:
-        raise ValidationError('Unsupported file type.')
+    dependencies = [
+        ('sites', '0002_alter_domain_unique'),
+        ('accounts', '0002_add_foreign_keys'),
+    ]
 
-    file.seek(0)  # Reset file pointer
-
+    operations = [
+        migrations.RunPython(update_site),
+    ]

@@ -1,40 +1,74 @@
-# Installation locale
-## Pré-requis
-- Invite de commande windows en Administrateur
-- Python installé (3.11.8)
-- Git installé
-- postgresql configuré et **lancé**
-- copier le lien du repo: **https://github.com/nottoBD/projetTFE.git**
-- n'importe quel dossier dans lequel placer le repository
-  
-## PostgreSQL
-Option 1: remplacer dans fExtra/settings.py les coordonnées postgresql par les votres (NAME, USER, PASSWORD) 
+# <u>[BEL] Neok Budget</u>
 
+<a>Authors: Arnaud Mahieu, David Botton </a>
 
-**Option 2:** respecter les coordonnées par défaut (configurer ton postgresql selon l'image suivante)
+#### Nos enfants ~ Onze kinderen
+<i>Neok-Budget is a Django-based web application developed for budgeting purposes. This project was developed for the belgian law firm Jurinet and its branch Neok-Budget.</i>
 
-![318116503-c8f9592d-bd67-4c6a-a732-dc1d587f1ff3](https://github.com/nottoBD/projetTFE/assets/94763728/0d526b67-3377-4f8c-abda-466990ca8a86)
+<div style="font-size: 10px;">
+<b>
+<a href="https://jurinet.net">https://jurinet.net</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://neok-budget.be/">https://neok-budget.be/</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://app.neok-budget.eu/">https://app.neok-budget.eu/</a>
+</b>
+</div>
 
-## Video d'installation (Linux)
+---
 
-https://github.com/nottoBD/projetTFE/assets/94763728/5c32c0d4-c302-4f28-b5c0-8451c0da0eb1
+## Table of Contents
 
+- [Preamble](#preamble)
+- [Features](#features)
+- [License](#license)
+- [Contact](#contact)
+---
+## Preamble
 
-## Commandes (Windows)
+<div style="text-align: justify;">
+This project is the final thesis of our IT Bachelor's degree. It was commissioned by Esq. Soetaert, a family law attorney and Director of the Jurinet Law firm in Brussels, responsible for its family law branch, Neok.
 
-``` 
-git clone -b David https://github.com/nottoBD/projetTFE.git
-cd projetTFE\fExtra
-python -m venv ..\env
-..\env\Scripts\activate
-pip install --upgrade pip
-pip install -r ..\requirements.txt
-python manage.py makemigrations accounts
-python manage.py makemigrations
-python manage.py migrate
-python manage.py loaddata testdata.json 
-python manage.py createsuperuser
+We have built a complete platform for parents, lawyers, and judges based on the real-life experiences and work processes of our client. The platform uses Python, Django, Bootstrap, a little bit of JavaScript, and PostgreSQL.
 
-python manage.py runserver
+The entire life cycle of the project has been handled: we developed, secured, put it into production, managed the infrastructure, and ensured compliance with GDPR and the laws in Belgium.
 
-``` 
+The project is fully open-source and does not use any analytics or collect any data beyond what is necessary f
+</div>
+
+## Features (ongoing)
+
+- User authentication and management
+- Budget tracking and analysis
+- Payment processing
+- Multi-language support (German, French, Dutch)
+- Responsive design for mobile and desktop
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE.md](LICENSE.md) file for more details.
+
+## Contact
+
+### Authors
+
+**David Botton**
+- Email: david.botton@mail.com
+- LinkedIn: [David Botton](https://www.linkedin.com/in/davidljbotton)
+
+**Arnaud Mahieu**
+- Email: arnaud.mahieu@hainaut-promsoc.be
+
+### Client
+
+**Jurinet & Neok-Budget**
+- Email: info@jurinet.net
+- Phone: + 32 2 482 33 11
+- Address: 84, Avenue de Selliers de Moranville, 1082, Brussels
+- Website: [Jurinet](https://www.jurinet.com)
+
+### School
+
+**IETC-ps**
+- Phone: (+32) 071/531.756
+- Address: Square Hiernaux n°2, 6000, Charleroi
+- Website: [IETC-ps](https://www.etudierenhainaut.be/ietcps-charleroi.html)
+---
+
+For any further questions or support, please contact us through the provided contact details.

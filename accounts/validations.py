@@ -1,3 +1,23 @@
+"""
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import re
 from PIL import Image
 from django.core.exceptions import ValidationError
@@ -32,11 +52,11 @@ def validate_image(file, max_size=5242880, max_width=4000, max_height=4000):
         if image_format not in valid_formats:
             raise ValidationError(_('Unsupported file type. Please upload a JPEG, PNG, or GIF image.'))
         if file.size > max_size:
-            raise ValidationError(_('Image file too large (>{0} MB).').format(max_size / 1048576))
+            raise ValidationError(_('Image file too large.').format(max_size / 1048576))
         if image.width > max_width or image.height > max_height:
-            raise ValidationError(_('Image dimensions exceed the maximum allowed: {0}x{1} pixels.').format(max_width, max_height))
+            raise ValidationError(_('Image dimensions exceed the maximum allowed.').format(max_width, max_height))
     except Exception as e:
-        raise ValidationError(_('Invalid image file. Error: {0}').format(e))
+        raise ValidationError(_('Invalid image file.').format(e))
     file.seek(0)
 
 def clean_email(email):

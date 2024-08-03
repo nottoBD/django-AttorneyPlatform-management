@@ -1,17 +1,44 @@
+"""
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
+from datetime import date
+
 from django import forms
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from accounts.views import User
-from .models import Document, Case, Category
+from .models import Document, Case, Category, Child
 
 
 class PaymentDocumentForm(forms.ModelForm):
     parent = forms.ChoiceField(choices=(), required=False)
+    amount = forms.DecimalField(max_digits=10, decimal_places=2, validators=[
+        RegexValidator(regex=r'^\d+(\.\d{1,2})?$', message='Veuillez entrer un montant valide avec jusqu\'à deux décimales.')
+    ])
 
     class Meta:
         model = Document
         fields = ['amount', 'category', 'date', 'document', 'parent']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'})
+            'date': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -25,6 +52,15 @@ class PaymentDocumentForm(forms.ModelForm):
             self.fields['parent'].choices = parent_choices
         else:
             self.fields['parent'].widget = forms.HiddenInput()
+
+    def clean_document(self):
+        document = self.cleaned_data.get('document')
+        if document:
+            valid_mime_types = ['image/jpeg', 'image/png']
+            valid_extensions = ['jpg', 'jpeg', 'png']
+            if document.content_type not in valid_mime_types or not document.name.split('.')[-1].lower() in valid_extensions:
+                raise ValidationError('Le fichier doit être une image de type JPEG ou PNG.')
+        return document
 
 
 class CaseForm(forms.ModelForm):
@@ -63,6 +99,7 @@ class ConvertDraftCaseForm(forms.ModelForm):
         if case:
             self.fields['parent2'].queryset = User.objects.filter(role='parent').exclude(id=case.parent1.id)
             self.fields['parent2'].label_from_instance = lambda obj: f"{obj.first_name} {obj.last_name}"
+
 
 class CombineDraftsForm(forms.Form):
     draft1 = forms.ModelChoiceField(queryset=Case.objects.filter(draft=True), label="Select First Draft")
@@ -127,3 +164,37 @@ class AddJugeAvocatForm(forms.Form):
 
     def set_avocats_queryset(self, queryset):
         self.fields['avocats'].queryset = queryset
+
+
+class ChildForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=50,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Zéèêïëâäîôöà\-\' ]+$',
+                message='Le prénom ne peut contenir que des lettres, des espaces, des tirets et les caractères spéciaux suivants : é, è, ê, ï, ë, \'.'
+            )
+        ]
+    )
+    last_name = forms.CharField(
+        max_length=50,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Zéèêïëâäîôöà\-\' ]+$',
+                message='Le nom ne peut contenir que des lettres, des espaces, des tirets et les caractères spéciaux suivants : é, è, ê, ï, ë, \'.'
+            )
+        ]
+    )
+
+    class Meta:
+        model = Child
+        fields = ['first_name', 'last_name', 'birth_date']
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'})
+        }
+
+    def clean_birth_date(self):
+        birth_date = self.cleaned_data.get('birth_date')
+        if birth_date and birth_date > date.today():
+            raise ValidationError('La date de naissance ne peut pas être postérieure à aujourd\'hui.')
+        return birth_date

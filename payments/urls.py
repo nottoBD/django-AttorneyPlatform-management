@@ -1,3 +1,23 @@
+"""
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from django.conf.urls.static import static
 from django.urls import path
 from django.conf import settings
@@ -5,7 +25,7 @@ from django.conf import settings
 from .views import (PaymentHistoryView, CaseListView, CategoryPaymentsView, add_category,
                     PaymentHistoryPDFView, index_payments, delete_indexation, submit_payment_document, create_case,
                     pending_payments, add_juge_avocat, remove_juge, remove_avocat, create_draft_case, DraftCaseListView,
-                    convert_draft_case, combine_drafts)
+                    convert_draft_case, combine_drafts, add_child, delete_child, update_percentages)
 
 app_name = 'payments'
 urlpatterns = [
@@ -26,4 +46,7 @@ urlpatterns = [
     path('add-judge-parent/<uuid:case_id>/', add_juge_avocat, name='add-juge-avocat'),
     path('remove-juge/<uuid:case_id>/<uuid:juge_id>/', remove_juge, name='remove-juge'),
     path('remove-avocat/<uuid:case_id>/<uuid:avocat_id>/', remove_avocat, name='remove-avocat'),
+    path('cases/<uuid:case_id>/child/', add_child, name='child'),
+    path('cases/<uuid:case_id>/delete_child/<uuid:child_id>/', delete_child, name='delete_child'),
+    path('case/<uuid:case_id>/update_percentages/', update_percentages, name='update_percentages'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

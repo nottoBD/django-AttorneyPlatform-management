@@ -1,3 +1,23 @@
+"""
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -7,10 +27,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Sum, Q, F
-from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseForbidden
+from django.db.models.functions import ExtractQuarter, ExtractYear
+from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseForbidden, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.text import capfirst
@@ -18,13 +38,12 @@ from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from xhtml2pdf import pisa
-from django.utils.translation import gettext_lazy as _
 
 
 from accounts.models import JugeCase, AvocatCase
 from .forms import PaymentDocumentForm, CaseForm, IndexPaymentForm, AddJugeAvocatForm, \
-    ConvertDraftCaseForm, CombineDraftsForm
-from .models import Document, Case, Category, CategoryType, IndexHistory
+    ConvertDraftCaseForm, CombineDraftsForm, ChildForm
+from .models import Document, Case, Category, CategoryType, IndexHistory, Child
 
 User = get_user_model()
 
@@ -47,7 +66,7 @@ class CaseListView(LoginRequiredMixin, ListView):
         if case_id:
             case = get_object_or_404(Case, pk=case_id)
             if not self.has_access_to_case(request.user, case):
-                return HttpResponseForbidden("You do not have permission to access this case.")
+                return Http404("You do not have permission to access this case.")
 
         return response
 
@@ -149,6 +168,12 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         selected_year = self.request.GET.get('year')
         selected_quarter = self.request.GET.get('quarter')
 
+        # Récupérer le dernier montant d'indexation
+        latest_index_history = case.latest_index_history
+        contribution_amount = 0
+        if latest_index_history:
+            contribution_amount = latest_index_history.amount * case.number_of_children
+
         if selected_year and selected_quarter:
             try:
                 parent1_valid_payments = Document.objects.filter(
@@ -235,6 +260,18 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         payment_years = Document.objects.filter(case=self.case).dates('date', 'year')
         years = [year.year for year in payment_years]
 
+        # Obtenir les trimestres avec des paiements pour les années disponibles
+        active_quarters = Document.objects.annotate(
+            quarter=ExtractQuarter('date'),
+            year=ExtractYear('date')
+        ).filter(case=self.case).values_list('year', 'quarter').distinct()
+
+        active_quarters_per_year = {year: set() for year in years}
+        for year, quarter in active_quarters:
+            active_quarters_per_year[year].add(quarter)
+
+        print("quarter : " + str(active_quarters_per_year))
+
         context.update({
             'case': case,
             'parent1_user': parent1,
@@ -250,6 +287,10 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'selected_quarter': selected_quarter,
             'category_ids': category_ids,
             'is_draft': case.draft,
+            'contribution_amount': contribution_amount,
+            'parent1_percentage': case.parent1_percentage,
+            'parent2_percentage': case.parent2_percentage,
+            'active_quarters_per_year': active_quarters_per_year,
         })
 
         payments_with_permissions = [
@@ -445,63 +486,30 @@ def get_quarter_dates(year, quarter):
     return start_date, end_date
 
 
-# PARENT
-# ----------------------------------------------------------------------------------------------------------------------
-
 @login_required
-def create_draft_case(request):
-    if request.user.role != 'parent':
-        return redirect('accounts:login')
-
-    existing_drafts_count = Case.objects.filter(parent1=request.user, draft=True).count()
-    if existing_drafts_count >= 3:
-        messages.error(request, "You can only have up to 3 draft cases.")
-        return redirect('payments:list_case')
-
-    draft_case = Case.objects.create(parent1=request.user, draft=True)
-
-    return redirect('payments:payment-history', case_id=draft_case.id)
-
-
-@login_required
-def combine_drafts(request):
-    if request.user.role not in ['administrator', 'lawyer']:
-        return redirect('login')
-
-    draft1_id = request.GET.get('draft1')
-    draft1 = None
-    if draft1_id:
-        draft1 = get_object_or_404(Case, id=draft1_id, draft=True)
+def add_child(request, case_id):
+    case = get_object_or_404(Case, id=case_id)
 
     if request.method == 'POST':
-        form = CombineDraftsForm(request.POST, user=request.user, initial_draft1=draft1)
+        form = ChildForm(request.POST)
         if form.is_valid():
-            draft1 = form.cleaned_data['draft1']
-            draft2 = form.cleaned_data['draft2']
-
-            if draft1.parent1 == draft2.parent1:
-                messages.error(request, "Cannot combine drafts of the same parent.")
-                return redirect('combine_drafts')
-
-            draft1.parent2 = draft2.parent1
-            draft1.draft = False
-            draft1.save()
-
-            for document in draft2.payment_documents.all():
-                document.case = draft1
-                document.save()
-
-            draft2.delete()
-
-            messages.success(request, "Drafts have been combined successfully.")
-            return redirect('payments:payment-history', case_id=draft1.id)
+            child = form.save(commit=False)
+            child.case = case
+            child.save()
+            return redirect('payments:child', case_id=case.id)
     else:
-        form = CombineDraftsForm(user=request.user, initial_draft1=draft1)
-        form.fields['draft1'].initial = draft1
-        form.fields['draft1'].queryset = Case.objects.filter(id=draft1.id)
+        form = ChildForm()
 
-    return render(request, 'payments/combine_drafts.html', {'form': form})
+    children = case.children.all()
 
+    return render(request, 'payments/child.html', {'form': form, 'case': case, 'children': children})
+
+
+@login_required
+def delete_child(request, case_id, child_id):
+    child = get_object_or_404(Child, id=child_id, case_id=case_id)
+    child.delete()
+    return redirect('payments:child', case_id=case_id)
 
 
 @login_required
@@ -562,6 +570,64 @@ def submit_payment_document(request, case_id):
     }
 
     return render(request, 'payments/submit_payment_document.html', context)
+
+
+# PARENT
+# ----------------------------------------------------------------------------------------------------------------------
+
+@login_required
+def create_draft_case(request):
+    if request.user.role != 'parent':
+        return redirect('accounts:login')
+
+    existing_drafts_count = Case.objects.filter(parent1=request.user, draft=True).count()
+    if existing_drafts_count >= 3:
+        messages.error(request, "You can only have up to 3 draft cases.")
+        return redirect('payments:list_case')
+
+    draft_case = Case.objects.create(parent1=request.user, draft=True)
+
+    return redirect('payments:payment-history', case_id=draft_case.id)
+
+
+@login_required
+def combine_drafts(request):
+    if request.user.role not in ['administrator', 'lawyer']:
+        return redirect('login')
+
+    draft1_id = request.GET.get('draft1')
+    draft1 = None
+    if draft1_id:
+        draft1 = get_object_or_404(Case, id=draft1_id, draft=True)
+
+    if request.method == 'POST':
+        form = CombineDraftsForm(request.POST, user=request.user, initial_draft1=draft1)
+        if form.is_valid():
+            draft1 = form.cleaned_data['draft1']
+            draft2 = form.cleaned_data['draft2']
+
+            if draft1.parent1 == draft2.parent1:
+                messages.error(request, "Cannot combine drafts of the same parent.")
+                return redirect('combine_drafts')
+
+            draft1.parent2 = draft2.parent1
+            draft1.draft = False
+            draft1.save()
+
+            for document in draft2.payment_documents.all():
+                document.case = draft1
+                document.save()
+
+            draft2.delete()
+
+            messages.success(request, "Drafts have been combined successfully.")
+            return redirect('payments:payment-history', case_id=draft1.id)
+    else:
+        form = CombineDraftsForm(user=request.user, initial_draft1=draft1)
+        form.fields['draft1'].initial = draft1
+        form.fields['draft1'].queryset = Case.objects.filter(id=draft1.id)
+
+    return render(request, 'payments/combine_drafts.html', {'form': form})
 
 
 # MAGISTRATE
@@ -769,6 +835,15 @@ def convert_draft_case(request, case_id):
         form = ConvertDraftCaseForm(instance=case)
 
     return render(request, 'payments/convert_draft_case.html', {'form': form, 'case': case})
+
+
+@require_POST
+def update_percentages(request, case_id):
+    case = get_object_or_404(Case, pk=case_id)
+    case.parent1_percentage = float(request.POST['parent1_percentage'])
+    case.parent2_percentage = float(request.POST['parent2_percentage'])
+    case.save()
+    return redirect('payments:payment-history', case_id=case_id)
 
 
 # ADMINISTRATOR

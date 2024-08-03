@@ -1,3 +1,23 @@
+<!--
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
 {% extends 'neok/base.html' %}
 {% load custom_filters %}
 {% load static i18n %}
@@ -22,6 +42,9 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton">
                                     {% if request.user.role == 'lawyer' or request.user.role == 'administrator' %}
+                                        <li> <a class="dropdown-item" href="{% url 'payments:child' case.id %}">
+                                            {% trans "Gérer enfant" %}
+                                        </a></li>
                                         <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' case.id %}">
                                             {% trans "Gérer juge/avocat" %}
                                         </a></li>
@@ -39,6 +62,9 @@
 
                                     {% if request.user.role == 'parent' %}
                                         <li><hr class="dropdown-divider"></li>
+                                        <li> <a class="dropdown-item" href="{% url 'payments:child' case.id %}">
+                                            {% trans "Gérer enfant" %}
+                                        </a></li>
                                         <li><a class="dropdown-item" href="{% url 'payments:add-payment' case_id=case.id %}">
                                             {% trans "Ajouter un paiement" %}
                                         </a></li>
@@ -98,25 +124,51 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h2 class="card-title mb-4">{% trans "Balance Summary" %}</h2>
+                    {% if request.user.role == "lawyer" %}
+                       <div class="d-flex justify-content-end">
+                            <button id="submit_percentage" class="btn btn-primary m-1">
+                                <i class="fas fa-save"></i> <!-- Icône de disquette -->
+                            </button>
+                        </div>
+                    {% endif %}
                     <table class="table table-bordered table-custom">
                         <thead>
                             <tr>
-                                <th class="col-custom">{% trans "Total for" %} {{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
-                                <th class="col-custom">{{ parent1_total }} €</th>
+                                <th class="col-custom">
+                                    {% trans "Total for" %} {{ parent1_user.first_name }} {{ parent1_user.last_name }}
+                                </th>
+                                <th class="col-custom">
+                                    <span id="parent1-total">{{ parent1_total }} €</span>
+                                    <div>Due: <span id="parent1-amount-due">{{ parent1_total }}</span> €</div>
+                                </th>
+                                <th class="col-custom">
+                                    <input type="number" class="percentage-input small-input form-control form-control-sm" id="parent1-percentage" placeholder="Percentage" step="1" min="0" max="100"> %
+                                </th>
                             </tr>
                             <tr>
-                                <th class="col-custom">{% trans "Total for" %} {{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
-                                <th class="col-custom">{{ parent2_total }} €</th>
+                                <th class="col-custom">
+                                    {% trans "Total for" %} {{ parent2_user.first_name }} {{ parent2_user.last_name }}
+                                </th>
+                                <th class="col-custom">
+                                    <span id="parent2-total">{{ parent2_total }} €</span>
+                                    <div>Due: <span id="parent2-amount-due">{{ parent2_total }}</span> €</div>
+                                </th>
+                                <th>
+                                    <input type="number" class="percentage-input small-input form-control form-control-sm" id="parent2-percentage" placeholder="Percentage" step="1" min="0" max="100"> %
+                                </th>
                             </tr>
                         </thead>
                     </table>
                     <p class="mt-3">
                         {% if difference != 0 %}
-                            {% trans "The difference is" %} {{ difference }} € {% trans "in favor of" %} {{ in_favor_of.get_full_name }}.
+                            {% trans "The difference is" %} <span id="difference">{{ difference }}</span> € {% trans "in favor of" %} <span id="in_favor_of">{{ in_favor_of.get_full_name }}</span>.
                         {% endif %}
                         {% if difference == 0 %}
                             {% trans "Amount Balanced" %}.
                         {% endif %}
+                    </p>
+                    <p class="mt-3">
+                        {% trans "Alimentary Contribution" %}: {{ contribution_amount }} €
                     </p>
                 </div>
             </div>
@@ -142,10 +194,22 @@
                                             <td>{{ y }}</td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="1">{% trans "T1" %}</button>
-                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="2">{% trans "T2" %}</button>
-                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="3">{% trans "T3" %}</button>
-                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="4">{% trans "T4" %}</button>
+                                                    {% for key, quarter in active_quarters_per_year.items %}
+                                                        {% if key == y %}
+                                                            {% if 1 in quarter %}
+                                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="1">{% trans "T1" %}</button>
+                                                            {% endif %}
+                                                            {% if 2 in quarter %}
+                                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="2">{% trans "T2" %}</button>
+                                                            {% endif %}
+                                                            {% if 3 in quarter %}
+                                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="3">{% trans "T3" %}</button>
+                                                            {% endif %}
+                                                            {% if 4 in quarter %}
+                                                                <button type="button" class="btn btn-link quarter-btn" data-quarter="4">{% trans "T4" %}</button>
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    {% endfor %}
                                                 </div>
                                             </td>
                                         </tr>
@@ -159,6 +223,13 @@
         </div>
     </div>
 </div>
+
+<!-- Permet d'update les pourcentages avec un formulaire caché -->
+<form id="percentageForm" method="post" action="{% url 'payments:update_percentages' case.id %}">
+    {% csrf_token %}
+    <input type="hidden" id="parent1-percentage-field" name="parent1_percentage" value="{{ case.parent1_percentage }}">
+    <input type="hidden" id="parent2-percentage-field" name="parent2_percentage" value="{{ case.parent2_percentage }}">
+</form>
 
 <style>
     .table-custom {
@@ -180,22 +251,90 @@
         width: 16%;
     }
     .table-custom th, .table-custom td, .col-custom {
-        font-size: 0.9rem; /* Ajustez la taille de la police si nécessaire */
+        font-size: 0.9rem;
     }
     .scrollable-table-container {
-        max-height: 200px; /* Ajustez cette valeur en fonction de vos besoins */
+        max-height: 200px;
         overflow-y: auto;
     }
     .scrollable-table {
-        display: table; /* Assurez-vous que le tableau est affiché comme une table */
+        display: table;
         width: 100%;
-        table-layout: fixed; /* Assurez-vous que la table utilise une largeur fixe pour les colonnes */
+        table-layout: fixed;
     }
+
+    .small-input {
+        width: 60px;
+        padding: 2px;
+        font-size: 0.9rem;
+    }
+
 </style>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const filterItems = document.querySelectorAll('.filter-item');
+
+        // Assurez-vous que les variables sont correctement formatées
+        const parent1Total = parseFloat('{{ parent1_total|escapejs }}');
+        const parent2Total = parseFloat('{{ parent2_total|escapejs }}');
+        const percentageForm = document.getElementById('percentageForm');
+        const submitButton = document.getElementById('submit_percentage');
+
+        const parent1Input = document.getElementById('parent1-percentage');
+        const parent2Input = document.getElementById('parent2-percentage');
+
+        const userRole = "{{ request.user.role|escapejs }}";
+
+        if (parent1Input) {
+            parent1Input.value = '{{ parent1_percentage|escapejs }}';
+            if (userRole === 'parent') {
+                parent1Input.setAttribute('readonly', 'readonly');
+            }
+        }
+
+        if (parent2Input) {
+            parent2Input.value = '{{ parent2_percentage|escapejs }}';
+            if (userRole === 'parent') {
+                parent2Input.setAttribute('readonly', 'readonly');
+            }
+        }
+
+        function updateAmounts() {
+            const parent1Percentage = parseFloat(document.getElementById('parent1-percentage').value) || 0;
+            const parent2Percentage = parseFloat(document.getElementById('parent2-percentage').value) || 0;
+
+            const totalAmount = parent1Total + parent2Total;
+            const parent1AmountDue = (parent1Percentage / 100) * totalAmount;
+            const parent2AmountDue = (parent2Percentage / 100) * totalAmount;
+
+            const difference = ((parent1Total - parent1AmountDue) - (parent2Total - parent2AmountDue)) / 2;
+
+            document.getElementById('parent1-amount-due').textContent = parent1AmountDue.toFixed(2);
+            document.getElementById('parent2-amount-due').textContent = parent2AmountDue.toFixed(2);
+            document.getElementById('difference').textContent = Math.abs(difference).toFixed(2);
+
+            const inFavorOf = difference > 0 ? '{{ parent1_user.first_name|escapejs }} {{ parent1_user.last_name|escapejs }}' : '{{ parent2_user.first_name|escapejs }} {{ parent2_user.last_name|escapejs }}';
+            document.getElementById('in_favor_of').textContent = inFavorOf;
+        }
+
+        if (submitButton) {
+            submitButton.addEventListener('click', function() {
+                const parent1Percentage = parseFloat(document.getElementById('parent1-percentage').value) || 0;
+                const parent2Percentage = parseFloat(document.getElementById('parent2-percentage').value) || 0;
+
+                document.getElementById('parent1-percentage-field').value = parent1Percentage;
+                document.getElementById('parent2-percentage-field').value = parent2Percentage;
+
+                percentageForm.submit();
+            });
+        }
+
+        document.querySelectorAll('.percentage-input').forEach(input => {
+            input.addEventListener('input', updateAmounts);
+        });
+
+        updateAmounts();
 
         filterItems.forEach(function(item) {
             const year = item.getAttribute('data-year');
@@ -203,17 +342,14 @@
 
             buttons.forEach(function(button) {
                 button.addEventListener('click', function() {
-                    // Supprimer la classe active de tous les boutons trimestriels
                     buttons.forEach(function(btn) {
                         btn.classList.remove('active');
                     });
 
-                    // Ajouter la classe active au bouton cliqué
                     button.classList.add('active');
 
                     const quarter = button.getAttribute('data-quarter');
 
-                    // Modifier les valeurs des champs du formulaire
                     const yearInput = document.getElementById('yearInput');
                     const quarterInput = document.getElementById('quarterInput');
 
@@ -221,11 +357,9 @@
                         yearInput.value = year;
                         quarterInput.value = quarter;
 
-                        // Débogage : Afficher les valeurs sélectionnées
                         console.log('Année sélectionnée :', year);
                         console.log('Trimestre sélectionné :', quarter);
 
-                        // Soumettre le formulaire
                         document.getElementById('filterForm').submit();
                     } else {
                         console.error('Les champs yearInput ou quarterInput ne sont pas trouvés.');
@@ -235,4 +369,5 @@
         });
     });
 </script>
+
 {% endblock %}
