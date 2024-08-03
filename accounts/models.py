@@ -1,5 +1,5 @@
 import uuid
-
+from django.core.validators import validate_email as django_validate_email
 from django.conf import settings
 from django.contrib.auth.models import BaseUserManager, PermissionsMixin, AbstractUser
 from django.db import models
@@ -7,7 +7,7 @@ from django.utils import timezone
 from guardian.shortcuts import assign_perm
 from datetime import timedelta
 
-from .validations import validate_image
+from .validations import validate_image, validate_telephone, clean_email, sanitize_text, validate_national_number
 
 
 # Permet un import différé pour éviter l'import circulaire et générer un message d'erreur
@@ -46,7 +46,7 @@ class User(AbstractUser, PermissionsMixin):
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=150, unique=False, null=True, blank=True)
-    email = models.EmailField(verbose_name='e-mail address', unique=True, max_length=255)
+    email = models.EmailField(verbose_name='e-mail address', unique=True, max_length=255, validators=[django_validate_email])
     is_active = models.BooleanField(default=True)
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     role = models.CharField(max_length=13, choices=ROLE_CHOICES, default='parent')
@@ -54,11 +54,10 @@ class User(AbstractUser, PermissionsMixin):
     last_name = models.CharField('last name', max_length=35, blank=True)
     first_name = models.CharField('first name', max_length=25, blank=True)
     date_of_birth = models.DateField(default=timezone.now)
-    telephone = models.CharField(max_length=16, null=True, blank=True)
+    telephone = models.CharField(max_length=16, null=True, blank=True, validators=[validate_telephone])
     address = models.CharField(null=True, blank=True, max_length=75)
-    national_number = models.CharField(max_length=11, blank=True, null=True, unique=True)
-    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.png',
-                                      validators=[validate_image])
+    national_number = models.CharField(max_length=11, blank=True, null=True, unique=True, validators=[validate_national_number])
+    profile_image = models.ImageField(upload_to='profile_images/', default='profile_images/default.png', validators=[validate_image])
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -93,10 +92,19 @@ class User(AbstractUser, PermissionsMixin):
         return self.deletion_requested_at and (timezone.now() < self.deletion_requested_at + timedelta(days=30))
 
     def get_formatted_national_number(self):
-        nn = self.national_number_raw
+        nn = self.national_number
         if nn and len(nn) == 11:
             return f"{nn[:2]}.{nn[2:4]}.{nn[4:6]}-{nn[6:9]}.{nn[9:]}"
         return nn
+
+    def clean(self):
+        self.email = clean_email(self.email)
+        self.first_name = sanitize_text(self.first_name)
+        self.last_name = sanitize_text(self.last_name)
+        self.national_number = validate_national_number(self.national_number) if self.national_number else None
+        self.telephone = validate_telephone(self.telephone) if self.telephone else None
+        self.profile_image = validate_image(self.profile_image) if self.profile_image else None
+
 
 
 class AvocatCase(models.Model):
