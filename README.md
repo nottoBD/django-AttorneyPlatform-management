@@ -29,7 +29,7 @@ We have built a complete platform for parents, lawyers, and judges based on the 
 
 The entire life cycle of the project has been handled: we developed, secured, put it into production, managed the infrastructure, and ensured compliance with GDPR and the laws in Belgium.
 
-The project is fully open-source and does not use any analytics or collect any data beyond what is necessary for its basic functionality. 
+The project is fully open-source and does not use any analytics or collect any data beyond what is necessary f
 </div>
 
 ## Features (ongoing)
