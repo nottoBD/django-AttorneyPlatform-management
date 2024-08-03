@@ -18,7 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
 
+from datetime import date
+
 from django import forms
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from accounts.views import User
 from .models import Document, Case, Category, Child
@@ -26,12 +30,15 @@ from .models import Document, Case, Category, Child
 
 class PaymentDocumentForm(forms.ModelForm):
     parent = forms.ChoiceField(choices=(), required=False)
+    amount = forms.DecimalField(max_digits=10, decimal_places=2, validators=[
+        RegexValidator(regex=r'^\d+(\.\d{1,2})?$', message='Veuillez entrer un montant valide avec jusqu\'à deux décimales.')
+    ])
 
     class Meta:
         model = Document
         fields = ['amount', 'category', 'date', 'document', 'parent']
         widgets = {
-            'date': forms.DateInput(attrs={'type': 'date'})
+            'date': forms.DateInput(attrs={'type': 'date'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -45,6 +52,15 @@ class PaymentDocumentForm(forms.ModelForm):
             self.fields['parent'].choices = parent_choices
         else:
             self.fields['parent'].widget = forms.HiddenInput()
+
+    def clean_document(self):
+        document = self.cleaned_data.get('document')
+        if document:
+            valid_mime_types = ['image/jpeg', 'image/png']
+            valid_extensions = ['jpg', 'jpeg', 'png']
+            if document.content_type not in valid_mime_types or not document.name.split('.')[-1].lower() in valid_extensions:
+                raise ValidationError('Le fichier doit être une image de type JPEG ou PNG.')
+        return document
 
 
 class CaseForm(forms.ModelForm):
@@ -151,9 +167,34 @@ class AddJugeAvocatForm(forms.Form):
 
 
 class ChildForm(forms.ModelForm):
+    first_name = forms.CharField(
+        max_length=50,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Zéèêïëâäîôöà\-\' ]+$',
+                message='Le prénom ne peut contenir que des lettres, des espaces, des tirets et les caractères spéciaux suivants : é, è, ê, ï, ë, \'.'
+            )
+        ]
+    )
+    last_name = forms.CharField(
+        max_length=50,
+        validators=[
+            RegexValidator(
+                regex=r'^[a-zA-Zéèêïëâäîôöà\-\' ]+$',
+                message='Le nom ne peut contenir que des lettres, des espaces, des tirets et les caractères spéciaux suivants : é, è, ê, ï, ë, \'.'
+            )
+        ]
+    )
+
     class Meta:
         model = Child
         fields = ['first_name', 'last_name', 'birth_date']
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'})
         }
+
+    def clean_birth_date(self):
+        birth_date = self.cleaned_data.get('birth_date')
+        if birth_date and birth_date > date.today():
+            raise ValidationError('La date de naissance ne peut pas être postérieure à aujourd\'hui.')
+        return birth_date
