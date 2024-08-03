@@ -1,0 +1,51 @@
+{% extends 'neok/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "My Cases" %}{% endblock %}
+
+{% block content %}
+    <div class="mt-4">
+        <h2>{% trans "My Cases" %}</h2>
+        {% if can_create_draft and request.user.role == 'parent' %}
+            <a href="{% url 'payments:create_draft_case' %}" class="btn btn-primary">{% trans "Start a draft case" %}</a>
+        {% endif %}
+        {% if cases %}
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered">
+                    <thead>
+                    <tr>
+                        <th>{% trans "Parent 1" %}</th>
+                        <th>{% trans "Parent 2" %}</th>
+                        <th>{% trans "Created at" %}</th>
+                        <th>{% trans "Actions" %}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for case in cases %}
+                        <tr>
+                            <td>{{ case.parent1.first_name }} {{ case.parent1.last_name }}</td>
+                            <td>
+                                {% if case.parent2 %}
+                                    {{ case.parent2.first_name }} {{ case.parent2.last_name }}
+                                {% else %}
+                                        <div class="alert alert-danger" role="alert">
+                                            <strong>{% trans "DRAFT" %}</strong>
+                                        </div>
+                                {% endif %}
+                            </td>
+                            <td>{{ case.created_at }}</td>
+                            <td>
+                                <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-info btn-sm">
+                                    {% trans "View Payment History" %}
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p>{% trans "You have no cases." %}</p>
+        {% endif %}
+    </div>
+{% endblock %}

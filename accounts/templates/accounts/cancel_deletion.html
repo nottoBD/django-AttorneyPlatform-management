@@ -1,0 +1,12 @@
+{% extends "neok/base.html" %}
+{% load i18n %}
+{% block content %}
+    <h2>{% trans "Cancel Account Deletion" %}</h2>
+    <p>{% trans "If you cancel the deletion request, your account will not be deleted. You can always request deletion again if needed." %}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% trans "Cancel Deletion Request" %}</button>
+    </form>
+    <a href="{% url 'accounts:user_update' user.pk %}">{% trans "Back to Profile" %}</a>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'neok/base.html' %}
+{% load i18n crispy_forms_tags static %}
+
+{% block title %}{% trans "Index Payments" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">{% trans "Index Payments" %}</h3>
+                </div>
+                <div class="card-body">
+                    <form id="index-form" method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <input type="hidden" id="id_confirm_indexation" name="confirm_indexation" value="false">
+                        <button type="submit" class="btn btn-primary btn-block mt-4">{% trans "index food contribution" %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5 justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h4 class="mb-0">{% trans "Existing Indexations" %}</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Year" %}</th>
+                                <th>{% trans "Indice" %}</th>
+                                <th>{% trans "Created at" %}</th>
+                                <th>{% trans "Amount" %}</th>
+                                <th>{% trans "Actions" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for index in indexations %}
+                            <tr>
+                                <td>{{ index.year }}</td>
+                                <td>{{ index.indices }}</td>
+                                <td>{{ index.created_at }}</td>
+                                <td>{{ index.amount }}</td>
+                                <td>
+                                    <form action="{% url 'payments:delete_indexation' index.id %}" method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm( {% trans 'Are you sure you want to delete this indexation?' %} );">{% trans "Delete" %}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">{% trans "No indexations found." %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById('index-form');
+    const confirmRequired = {{ confirm_required|yesno:"true,false" }};
+    const confirmIndexationField = document.getElementById('id_confirm_indexation');
+
+    form.addEventListener('submit', function(event) {
+        if (confirmRequired && confirmIndexationField.value === "false") {
+            event.preventDefault();  // Empêche la soumission initiale du formulaire
+            if (confirm("{% trans "An indexation already exists for this year. Do you want to add another one?" %}")) {
+                confirmIndexationField.value = "true";
+                form.submit();  // Soumet le formulaire une seule fois après confirmation
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

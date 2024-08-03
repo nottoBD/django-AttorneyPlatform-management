@@ -1,0 +1,11 @@
+{% extends "neok/base.html" %}
+{% load i18n %}
+{% block content %}
+    <h2>{% trans "Request Account Deletion" %}</h2>
+    <p>{% trans "Once you request account deletion, your account will be scheduled for deletion after 30 days. During this period, you can cancel the deletion request at any time. Please note that the webmaster might delete your account before the 30 days period ends." %}</p>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">{% trans "Request Deletion" %}</button>
+    </form>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends 'neok/base.html' %}
+{% load custom_filters %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 col-md-15 mb-4">
+            <div class="card">
+                {% if is_draft %}
+                    <div class="alert alert-danger" role="alert">
+                        <strong>{% trans "DRAFT" %}</strong>
+                    </div>
+                {% endif %}
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                        <h2 class="card-title mb-0">{% trans "Récapitulatif des paiements" %}</h2>
+                        <div class="d-flex flex-wrap">
+                            <div class="dropdown mb-2 mr-2 m-1">
+                                <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    {% trans "Actions" %}
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="dropdownMenuButton">
+                                    {% if request.user.role == 'lawyer' or request.user.role == 'administrator' %}
+                                        <li> <a class="dropdown-item" href="{% url 'payments:add-juge-avocat' case.id %}">
+                                            {% trans "Gérer juge/avocat" %}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'payments:add-payment' case_id=case.id %}">
+                                            {% trans "Ajouter un paiement" %}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% if case.draft %}
+                                        <li><a class="dropdown-item" href="{% url 'payments:convert-draft-case' case.id %}">
+                                            {% trans "Convert Draft Case" %}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}{% endif %}
+
+                                    {% if request.user.role == 'parent' %}
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'payments:add-payment' case_id=case.id %}">
+                                            {% trans "Ajouter un paiement" %}
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
+                                    <li><a class="dropdown-item" href="{% url 'payments:download_pdf' case_id=case_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
+                                        {% trans "Télécharger en PDF" %}
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- payments comparison table -->
+                    {% for type_id, type_data in categories_by_type.items %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-custom">
+                                <thead>
+                                    <tr>
+                                        <th class="col-custom">{{ type_data.type_name }}</th>
+                                        <th class="col-custom">{{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
+                                        <th class="col-custom">{{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                        <th class="col-custom">{% trans "Actions" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="payments-list">
+                                    {% for category_entry in type_data.categories %}
+                                        <tr class="payment-item">
+                                            <td class="col-custom">{{ category_entry.category_name }}</td>
+                                            <td class="col-custom">
+                                                {{ category_entry.parent1_amount }} €
+                                                {% if category_entry.parent1_pending_amount > 0 %}
+                                                    ({{ category_entry.parent1_pending_amount }} € en attente)
+                                                {% endif %}
+                                            </td>
+                                            <td class="col-custom">
+                                                {{ category_entry.parent2_amount }} €
+                                                {% if category_entry.parent2_pending_amount > 0 %}
+                                                    ({{ category_entry.parent2_pending_amount }} € en attente)
+                                                {% endif %}
+                                            </td>
+                                            <td style="text-align: center;" class="col-custom">
+                                                <a href="{% url 'payments:category-payments' case.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
+                                                    {% trans "View Details" %}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4 col-md-12 mb-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{% trans "Balance Summary" %}</h2>
+                    <table class="table table-bordered table-custom">
+                        <thead>
+                            <tr>
+                                <th class="col-custom">{% trans "Total for" %} {{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
+                                <th class="col-custom">{{ parent1_total }} €</th>
+                            </tr>
+                            <tr>
+                                <th class="col-custom">{% trans "Total for" %} {{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
+                                <th class="col-custom">{{ parent2_total }} €</th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <p class="mt-3">
+                        {% if difference != 0 %}
+                            {% trans "The difference is" %} {{ difference }} € {% trans "in favor of" %} {{ in_favor_of.get_full_name }}.
+                        {% endif %}
+                        {% if difference == 0 %}
+                            {% trans "Amount Balanced" %}.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filter Form Card -->
+            <div id="filterFormCard" class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{% trans "Filtrer les paiements" %}</h2>
+                    <form id="filterForm" method="get">
+                        <input type="hidden" name="year" id="yearInput">
+                        <input type="hidden" name="quarter" id="quarterInput">
+                        <div class="table-responsive scrollable-table-container">
+                            <table class="table table-bordered scrollable-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 100px">{% trans "Année" %}</th>
+                                        <th>{% trans "Trimestre" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for y in years %}
+                                        <tr class="filter-item" data-year="{{ y }}">
+                                            <td>{{ y }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="1">{% trans "T1" %}</button>
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="2">{% trans "T2" %}</button>
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="3">{% trans "T3" %}</button>
+                                                    <button type="button" class="btn btn-link quarter-btn" data-quarter="4">{% trans "T4" %}</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .table-custom {
+        table-layout: fixed;
+        width: 100%;
+    }
+    .table-custom th, .table-custom td {
+        word-wrap: break-word; /* Empêche le débordement du contenu */
+        vertical-align: middle;
+    }
+    .table-custom th:nth-child(1), .table-custom td:nth-child(1) {
+        width: 35%;
+    }
+    .table-custom th:nth-child(2), .table-custom td:nth-child(2),
+    .table-custom th:nth-child(3), .table-custom td:nth-child(3) {
+        width: 25%;
+    }
+    .table-custom th:nth-child(4), .table-custom td:nth-child(4) {
+        width: 16%;
+    }
+    .table-custom th, .table-custom td, .col-custom {
+        font-size: 0.9rem; /* Ajustez la taille de la police si nécessaire */
+    }
+    .scrollable-table-container {
+        max-height: 200px; /* Ajustez cette valeur en fonction de vos besoins */
+        overflow-y: auto;
+    }
+    .scrollable-table {
+        display: table; /* Assurez-vous que le tableau est affiché comme une table */
+        width: 100%;
+        table-layout: fixed; /* Assurez-vous que la table utilise une largeur fixe pour les colonnes */
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const filterItems = document.querySelectorAll('.filter-item');
+
+        filterItems.forEach(function(item) {
+            const year = item.getAttribute('data-year');
+            const buttons = item.querySelectorAll('.quarter-btn');
+
+            buttons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    // Supprimer la classe active de tous les boutons trimestriels
+                    buttons.forEach(function(btn) {
+                        btn.classList.remove('active');
+                    });
+
+                    // Ajouter la classe active au bouton cliqué
+                    button.classList.add('active');
+
+                    const quarter = button.getAttribute('data-quarter');
+
+                    // Modifier les valeurs des champs du formulaire
+                    const yearInput = document.getElementById('yearInput');
+                    const quarterInput = document.getElementById('quarterInput');
+
+                    if (yearInput && quarterInput) {
+                        yearInput.value = year;
+                        quarterInput.value = quarter;
+
+                        // Débogage : Afficher les valeurs sélectionnées
+                        console.log('Année sélectionnée :', year);
+                        console.log('Trimestre sélectionné :', quarter);
+
+                        // Soumettre le formulaire
+                        document.getElementById('filterForm').submit();
+                    } else {
+                        console.error('Les champs yearInput ou quarterInput ne sont pas trouvés.');
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

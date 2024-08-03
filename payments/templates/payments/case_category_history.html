@@ -1,0 +1,98 @@
+{% extends 'neok/base.html' %}
+{% load custom_filters %}
+{% load static i18n %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{% trans "Payments for Category" %}: {{ category.name }}</h2>
+                    
+                    {% if selected_year and selected_quarter %}
+                        <p><strong>{% trans "Selected Period:" %}</strong> {{ selected_year }} - T{{ selected_quarter }}</p>
+                    {% endif %}
+
+                    {% if parent1_payments or parent2_payments %}
+                        <div class="mb-3">
+                            <span class="bg-success p-1 rounded">{% trans "Validated" %}</span>
+                            <span class="bg-warning p-1 rounded">{% trans "Pending" %}</span>
+                            <span class="bg-danger p-1 rounded">{% trans "Rejected" %}</span>
+                        </div>
+
+                        {% if parent1_payments %}
+                            <h3>{% trans "Payments by" %} {{ parent1_name }}</h3>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "Date" %}</th>
+                                            <th>{% trans "Amount" %}</th>
+                                            <th>{% trans "Document" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in parent1_payments %}
+                                            <tr class="{% if payment.status == 'validated' %} bg-success {% elif payment.status == 'pending' %} bg-warning {% elif payment.status == 'rejected' %} bg-danger {% endif %}">
+                                                <td>{{ payment.date|date:"d/m/Y" }}</td>
+                                                <td>{{ payment.amount }} €</td>
+                                                <td>
+                                                    {% if payment.document %}
+                                                        <a href="{{ payment.document.url }}" class="btn btn-primary btn-sm" target="_blank">
+                                                            {% trans "View Document" %}
+                                                        </a>
+                                                    {% else %}
+                                                        {% trans "No Document" %}
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+
+                        {% if parent2_payments %}
+                            <h3>{% trans "Payments by" %} {{ parent2_name }}</h3>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "Date" %}</th>
+                                            <th>{% trans "Amount" %}</th>
+                                            <th>{% trans "Document" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for payment in parent2_payments %}
+                                            <tr class="{% if payment.status == 'validated' %} bg-success {% elif payment.status == 'pending' %} bg-warning {% elif payment.status == 'rejected' %} bg-danger {% endif %}">
+                                                <td>{{ payment.date|date:"d/m/Y" }}</td>
+                                                <td>{{ payment.amount }} €</td>
+                                                <td>
+                                                    {% if payment.document %}
+                                                        <a href="{{ payment.document.url }}" class="btn btn-primary btn-sm" target="_blank">
+                                                            {% trans "View Document" %}
+                                                        </a>
+                                                    {% else %}
+                                                        {% trans "No Document" %}
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <p>{% trans "No payments found for this category." %}</p>
+                    {% endif %}
+                        <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-secondary btn-sm mt-3">
+                            {% trans "Back to Payment History" %}
+                        </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

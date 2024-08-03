@@ -1,0 +1,28 @@
+{% extends 'neok/base.html' %}
+{% load static i18n %}
+{% block content %}
+
+<div class="container">
+    <h1>{% trans "Privacy Policy" %}</h1>
+    <p>{% trans "Welcome to our Privacy Policy page. Your privacy is critically important to us." %}</p>
+
+    <h2>{% trans "Data Collection" %}</h2>
+    <p>{% trans "This application is licensed under GPLv3.0, and we do not collect any more data than what is absolutely required for the functionality of the application. There are no analytics or tracking mechanisms in place." %}</p>
+
+    <h2>{% trans "Data Encryption" %}</h2>
+    <p>{% trans "All data transmitted between your browser and our servers is encrypted using industry-standard encryption protocols. We ensure that your data is kept safe and secure at all times." %}</p>
+
+    <h2>{% trans "Cookies" %}</h2>
+    <p>{% trans "We use cookies to ensure that our website functions properly. These cookies are essential for the website's operation and do not track your personal data." %}</p>
+
+    <h2>{% trans "Data Deletion" %}</h2>
+    <p>
+        {% trans "If you request the deletion of your account, all your data will be permanently deleted from our servers within a maximum of 30 days." %}
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'accounts:request_deletion' request.user.pk %}">{% trans "Request Account Deletion" %}</a>
+    </p>
+        {% endif %}
+    <h2>{% trans "Contact Us" %}</h2>
+    <p>{% trans "If you have any questions or concerns about our privacy practices, please do not hesitate to contact us." %}</p>
+</div>
+{% endblock content %}

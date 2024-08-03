@@ -1,6 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
-
+    const container = document.querySelector('.container-fluid');
     const isActiveCheckbox = document.getElementById('isActiveFilter');
+    let highlightedRowId = null;
+
+    if (!isActiveCheckbox) {
+        console.error('isActiveFilter checkbox not found!');
+        return;
+    }
+    if (!container) {
+        console.error('Container not found!');
+        return;
+    }
 
     function fetchUsers() {
         const isActive = isActiveCheckbox.checked;
@@ -10,62 +20,178 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
-                const magistratesTab = document.querySelector('.magistrates-list');
-                const parentsTab = document.querySelector('.parents-list');
-
-                magistratesTab.innerHTML = '';
-                parentsTab.innerHTML = '';
-
-                //Magistrate
-                data.magistrates.forEach(magistrate => {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-user-id', magistrate.id); // ID
-                    tr.innerHTML = `<td><img src="${magistrate.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td><td>${magistrate.last_name}</td><td>${magistrate.first_name}</td><td>${magistrate.email}</td><td>${magistrate.role}</td><td>${magistrate.parents_count}</td>`;
-                    magistratesTab.appendChild(tr);
-                });
-
-                //Parent
-                data.parents.forEach(parent => {
-                    const tr = document.createElement('tr');
-                    tr.setAttribute('data-user-id', parent.id); //ID
-                    tr.innerHTML = `<td><img src="${parent.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td><td>${parent.last_name}</td><td>${parent.first_name}</td><td>${parent.email}</td><td>${parent.magistrates_assigned.join('<br>')}</td>`;
-                    parentsTab.appendChild(tr);
-                });
+                renderAdministrators(data.administrators);
+                renderMagistrates(data.magistrates);
+                renderParents(data.parents);
+                attachRowEventListeners();
+                reapplyHighlight();
             })
             .catch(error => console.error('Fetch error:', error));
     }
 
-    let clickTimeout;
+    function renderAdministrators(administrators) {
+        const administratorsTab = document.querySelector('.administrators-list');
 
-    document.querySelector('.container-fluid').addEventListener('click', function(event) {
-        let targetRow = event.target.closest('tr[data-user-id]');
-        if (targetRow) {
-            clearTimeout(clickTimeout);
-            clickTimeout = setTimeout(function() {
-                if (!event.ctrlKey) {
-                    // highlight
-                    document.querySelectorAll('tr[data-user-id]').forEach(row => {
-                        row.classList.remove('highlight');
-                    });
+        if (!administratorsTab) {
+            console.error('Administrators table body not found!');
+            return;
+        }
+
+        administratorsTab.innerHTML = '';
+
+        administrators.forEach(admin => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-user-id', admin.id);
+            tr.classList.add('administrator-item');
+            tr.innerHTML = `
+                <td><img src="${admin.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td>
+                <td>${admin.last_name}</td>
+                <td>${admin.first_name}</td>
+                <td>${admin.email}</td>
+                <td>${admin.role}</td>
+            `;
+            administratorsTab.appendChild(tr);
+        });
+    }
+
+    function renderMagistrates(magistrates) {
+        const magistratesTab = document.querySelector('.magistrates-list');
+
+        if (!magistratesTab) {
+            console.error('Magistrates table body not found!');
+            return;
+        }
+
+        magistratesTab.innerHTML = '';
+
+        magistrates.forEach(magistrate => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-user-id', magistrate.id);
+            tr.classList.add('magistrate-item');
+            tr.innerHTML = `
+                <td><img src="${magistrate.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td>
+                <td>${magistrate.last_name}</td>
+                <td>${magistrate.first_name}</td>
+                <td>${magistrate.email}</td>
+                <td>${magistrate.role}</td>
+                <td>${magistrate.cases_count}</td>
+            `;
+            magistratesTab.appendChild(tr);
+        });
+    }
+
+    function renderParents(parents) {
+        const parentsTab = document.querySelector('.parents-list');
+
+        if (!parentsTab) {
+            console.error('Parents table body not found!');
+            return;
+        }
+
+        parentsTab.innerHTML = '';
+
+        parents.forEach(parent => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-user-id', parent.id);
+            tr.classList.add('parent-item');
+            tr.innerHTML = `
+                <td><img src="${parent.profile_image_url}" alt="Profile Image" width="30" height="30" class="rounded-circle"></td>
+                <td>${parent.last_name}</td>
+                <td>${parent.first_name}</td>
+                <td>${parent.email}</td>
+                <td>${parent.avocats_assigned.join('<br>')}<br>${parent.juges_assigned.join('<br>')}</td>
+            `;
+            parentsTab.appendChild(tr);
+        });
+    }
+
+    function attachRowEventListeners() {
+        document.querySelectorAll('tr[data-user-id]').forEach(row => {
+            let touchStartTime = 0;
+            let touchTimeout;
+            let clickTimeout;
+
+            row.addEventListener('click', function(event) {
+                clearTimeout(clickTimeout);
+                clickTimeout = setTimeout(() => {
+                    if (!event.ctrlKey) {
+                        document.querySelectorAll('tr[data-user-id]').forEach(r => {
+                            r.classList.remove('highlight');
+                        });
+                    }
+                    row.classList.toggle('highlight');
+                    highlightedRowId = row.classList.contains('highlight') ? row.getAttribute('data-user-id') : null;
+                }, 200);
+            });
+
+            row.addEventListener('dblclick', function(event) {
+                clearTimeout(clickTimeout);
+                let userId = row.getAttribute('data-user-id');
+                window.location.href = `/accounts/update/${userId}/`;
+            });
+
+            row.addEventListener('touchstart', function(event) {
+                touchStartTime = new Date().getTime();
+                if (touchTimeout) {
+                    clearTimeout(touchTimeout);
                 }
-                targetRow.classList.toggle('highlight');
-            }, 200); //double click
+                touchTimeout = setTimeout(() => {
+                    handleRowClick(event);
+                }, 200);
+            });
+
+            row.addEventListener('touchend', function(event) {
+                let touchDuration = new Date().getTime() - touchStartTime;
+                if (touchDuration < 200) {
+                    clearTimeout(touchTimeout);
+                    handleRowDoubleClick(event);
+                }
+            });
+        });
+    }
+
+    function handleRowClick(event) {
+        if (!event.ctrlKey) {
+            document.querySelectorAll('tr[data-user-id]').forEach(r => {
+                r.classList.remove('highlight');
+            });
+        }
+        event.currentTarget.classList.toggle('highlight');
+        highlightedRowId = event.currentTarget.classList.contains('highlight') ? event.currentTarget.getAttribute('data-user-id') : null;
+    }
+
+    function handleRowDoubleClick(event) {
+        let userId = event.currentTarget.getAttribute('data-user-id');
+        window.location.href = `/accounts/update/${userId}/`;
+    }
+
+    function reapplyHighlight() {
+        if (highlightedRowId) {
+            const rowToHighlight = document.querySelector(`tr[data-user-id='${highlightedRowId}']`);
+            if (rowToHighlight) {
+                rowToHighlight.classList.add('highlight');
+            }
+        }
+    }
+
+    document.addEventListener('click', function(event) {
+        if (!container.contains(event.target)) {
+            document.querySelectorAll('tr[data-user-id]').forEach(row => {
+                row.classList.remove('highlight');
+            });
+            highlightedRowId = null;
         }
     });
 
-    document.querySelector('.container-fluid').addEventListener('dblclick', function(event) {
-        clearTimeout(clickTimeout);
-        let targetRow = event.target.closest('tr[data-user-id]');
-        if (targetRow) {
-            let userId = targetRow.getAttribute('data-user-id');
-            window.location.href = `/accounts/update/${userId}/`;
-        }
-    });
-
-    fetchUsers(); // initial
-    isActiveCheckbox.addEventListener('change', fetchUsers); // active filtering
+    fetchUsers();
+    isActiveCheckbox.addEventListener('change', fetchUsers);
 
     setInterval(fetchUsers, 10000);
 });

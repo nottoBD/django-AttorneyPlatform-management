@@ -1,0 +1,129 @@
+{% extends 'neok/base.html' %}
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% trans "Ajouter paiement" %}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="text-center mb-0">{% trans "Ajouter un paiement" %}</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        {% if request.user.role == 'lawyer' %}
+                            {{ form.parent|as_crispy_field }}
+                        {% endif %}
+                        {{ form.amount|as_crispy_field }}
+                        <div class="form-group">
+                            <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+                            <select class="form-control" id="{{ form.category.id_for_label }}" name="{{ form.category.name }}">
+                                <option value="">{% trans "Choisir un catégorie" %}</option>
+                                {% for category_type, categories in grouped_categories.items %}
+                                    <optgroup label="{{ category_type }}">
+                                        {% for category in categories %}
+                                            <option value="{{ category.pk }}" data-description="{{ category.description }}">
+                                                {{ category.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                            <!-- Move button here and make it smaller -->
+                            <button type="button" class="btn btn-secondary btn-sm mt-2" data-toggle="modal" data-target="#addCategoryModal">
+                                {% trans "Ajouter une nouvelle catégorie" %}
+                            </button>
+                        </div>
+                        {{ form.date|as_crispy_field }}
+                        {{ form.document|as_crispy_field }}
+                        <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Add" %}</button>
+                        <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-secondary btn-sm mt-3">
+                            {% trans "Back to Payment History" %}
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for adding new category -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1" role="dialog" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addCategoryModalLabel">{% trans "Add New Category" %}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addCategoryForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="new_category_name">{% trans "Category Name" %}</label>
+                        <input type="text" class="form-control" id="new_category_name" name="new_category_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_category_description">{% trans "Description" %}</label>
+                        <textarea class="form-control" id="new_category_description" name="new_category_description"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-primary mt-2" id="saveCategoryButton">{% trans "Save" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#{{ form.category.id_for_label }}').on('mouseenter', 'option', function() {
+            console.log("test");
+            var description = $(this).data('description');
+            $('#category-description').text(description);
+        });
+
+        $('#{{ form.category.id_for_label }}').mouseleave(function() {
+            $('#category-description').text('');
+        });
+
+        $('#saveCategoryButton').on('click', function() {
+            var newCategoryName = $('#new_category_name').val();
+            var newCategoryDescription = $('#new_category_description').val();
+            var csrfToken = $('[name="csrfmiddlewaretoken"]').val();
+
+            $.ajax({
+                url: "{% url 'payments:add_category' %}",
+                type: "POST",
+                data: {
+                    'new_category_name': newCategoryName,
+                    'new_category_description': newCategoryDescription,
+                    'csrfmiddlewaretoken': csrfToken
+                },
+                success: function(response) {
+                    if (response.success) {
+                        var newOption = $('<option></option>')
+                            .attr('value', response.category_id)
+                            .text(response.category_name)
+                            .prop('selected', true);
+                        $('#{{ form.category.id_for_label }}').append(newOption);
+                        $('#addCategoryModal').modal('hide');
+                    } else {
+                        alert(response.error);
+                    }
+                },
+                error: function() {
+                    alert("{% trans 'An error occurred. Please try again.' %}");
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

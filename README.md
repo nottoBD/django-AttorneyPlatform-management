@@ -1,16 +1,40 @@
-# [BEL] Neok Budget
+# Installation locale
+## Pré-requis
+- Invite de commande windows en Administrateur
+- Python installé (3.11.8)
+- Git installé
+- postgresql configuré et **lancé**
+- copier le lien du repo: **https://github.com/nottoBD/projetTFE.git**
+- n'importe quel dossier dans lequel placer le repository
+  
+## PostgreSQL
+Option 1: remplacer dans fExtra/settings.py les coordonnées postgresql par les votres (NAME, USER, PASSWORD) 
 
-#### Nos enfants - Onze kinderen
 
-by Jurinet Law Firm: [https://jurinet.net](https://jurinet.net)
+**Option 2:** respecter les coordonnées par défaut (configurer ton postgresql selon l'image suivante)
 
-## Preamble
+![318116503-c8f9592d-bd67-4c6a-a732-dc1d587f1ff3](https://github.com/nottoBD/projetTFE/assets/94763728/0d526b67-3377-4f8c-abda-466990ca8a86)
 
-This project is the final thesis of our IT Bachelor's degree. It was commissioned by Attorney Soetaert, a family law attorney and Director of the Jurinet Law firm in Brussels, responsible for its family law branch, Neok.
+## Video d'installation (Linux)
 
-We have built a complete platform for parents, lawyers, and judges based on the real-life experiences and work processes of our client. The platform uses Python, Django, Bootstrap, a little bit of JavaScript, and PostgreSQL.
+https://github.com/nottoBD/projetTFE/assets/94763728/5c32c0d4-c302-4f28-b5c0-8451c0da0eb1
 
-The entire life cycle of the project has been handled: we developed, secured, put it into production, managed the infrastructure, and ensured compliance with GDPR and the laws in Belgium.
 
-The project is fully open-source and does not use any analytics or collect any data beyond what is necessary for its basic functionality.
+## Commandes (Windows)
 
+``` 
+git clone -b David https://github.com/nottoBD/projetTFE.git
+cd projetTFE\fExtra
+python -m venv ..\env
+..\env\Scripts\activate
+pip install --upgrade pip
+pip install -r ..\requirements.txt
+python manage.py makemigrations accounts
+python manage.py makemigrations
+python manage.py migrate
+python manage.py loaddata testdata.json 
+python manage.py createsuperuser
+
+python manage.py runserver
+
+``` 
