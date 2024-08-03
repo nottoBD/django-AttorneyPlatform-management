@@ -5,10 +5,12 @@
 #### Nos enfants ~ Onze kinderen
 <i>Neok-Budget is a Django-based web application developed for budgeting purposes. This project was developed for the belgian law firm Jurinet and its branch Neok-Budget.</i>
 
-<b>[https://jurinet.net](https://jurinet.net) <br>
-https://neok-budget.be/ <br> 
-https://app.neok-budget.eu/
+<div style="font-size: 10px;">
+<b>
+<a href="https://jurinet.net">https://jurinet.net</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://neok-budget.be/">https://neok-budget.be/</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://app.neok-budget.eu/">https://app.neok-budget.eu/</a>
 </b>
+</div>
+
 ---
 
 ## Table of Contents
@@ -27,7 +29,8 @@ We have built a complete platform for parents, lawyers, and judges based on the 
 
 The entire life cycle of the project has been handled: we developed, secured, put it into production, managed the infrastructure, and ensured compliance with GDPR and the laws in Belgium.
 
-The project is fully open-source and does not use any analytics or collect any data beyond what is necessary for its basic functionality. </div>
+The project is fully open-source and does not use any analytics or collect any data beyond what is necessary for its basic functionality. 
+</div>
 
 ## Features (ongoing)
 
@@ -62,6 +65,10 @@ This project is licensed under the GNU General Public License v3.0. See the [LIC
 
 ### School
 
+**IETC-ps**
+- Phone: (+32) 071/531.756
+- Address: Square Hiernaux n°2, 6000, Charleroi
+- Website: [IETC-ps](https://www.etudierenhainaut.be/ietcps-charleroi.html)
 ---
 
 For any further questions or support, please contact us through the provided contact details.
