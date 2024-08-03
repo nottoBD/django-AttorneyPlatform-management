@@ -1,4 +1,4 @@
-"""
+<!--
 Neok-Budget: A Django-based web application for budgeting.
 Copyright (C) 2024  David Botton, Arnaud Mahieu
 
@@ -16,18 +16,23 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
+-->
 
-from django.core.exceptions import ValidationError
-import magic
+{% extends 'neok/base.html' %}
+{% load i18n %}
 
+{% block title %}{% trans "Convert Draft Case" %}{% endblock %}
 
-# validations.py
-def validate_image(file):
-    valid_mime_types = ['image/jpeg', 'image/png', 'image/gif']
-    file_mime_type = magic.from_buffer(file.read(2048), mime=True)
-    if file_mime_type not in valid_mime_types:
-        raise ValidationError('Unsupported file type.')
-
-    file.seek(0)  # Reset file pointer
-
+{% block content %}
+    <div class="container mt-4">
+        <h2>{% trans "Convert Draft Case" %}</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="parent2" class="form-label">{% trans "Select Second Parent" %}</label>
+                {{ form.parent2 }}
+            </div>
+            <button type="submit" class="btn btn-primary">{% trans "Convert Case" %}</button>
+        </form>
+    </div>
+{% endblock %}

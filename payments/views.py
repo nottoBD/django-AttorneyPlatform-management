@@ -1,24 +1,49 @@
+"""
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
+
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.db.models import Sum, Q, F
+from django.db.models.functions import ExtractQuarter, ExtractYear
 from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseForbidden
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.utils.text import capfirst
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.views.generic import ListView
 from xhtml2pdf import pisa
 
+
 from accounts.models import JugeCase, AvocatCase
-from .forms import PaymentDocumentForm, CaseForm, PaymentDocumentFormLawyer, IndexPaymentForm, AddJugeAvocatForm
-from .models import Document, Case, Category, CategoryType, IndexHistory
+from .forms import PaymentDocumentForm, CaseForm, IndexPaymentForm, AddJugeAvocatForm, \
+    ConvertDraftCaseForm, CombineDraftsForm, ChildForm
+from .models import Document, Case, Category, CategoryType, IndexHistory, Child
 
 User = get_user_model()
 
@@ -56,14 +81,24 @@ class CaseListView(LoginRequiredMixin, ListView):
         elif JugeCase.objects.filter(juge=user).exists():
             queryset = Case.objects.filter(id__in=JugeCase.objects.filter(juge=user).values('case_id'))
 
-        return queryset
+        # Ajouter les dossiers où l'utilisateur est parent1 ou parent2
+        parent_cases = Case.objects.filter(Q(parent1=user) | Q(parent2=user))
+        queryset = queryset | parent_cases
+
+        return queryset.distinct()
 
     def has_access_to_case(self, user, case):
         # Vérifier si l'utilisateur a accès au dossier
-        if AvocatCase.objects.filter(avocat=user, case=case).exists() or \
-                JugeCase.objects.filter(juge=user, case=case).exists():
-            return True
-        return False
+        return AvocatCase.objects.filter(avocat=user, case=case).exists() or \
+            JugeCase.objects.filter(juge=user, case=case).exists() or \
+            case.parent1 == user or \
+            case.parent2 == user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context['can_create_draft'] = not Case.objects.filter(Q(parent1=user) | Q(parent2=user), draft=False).exists()
+        return context
 
 
 class PaymentHistoryView(LoginRequiredMixin, ListView):
@@ -98,7 +133,7 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
     def user_has_access_to_case(self, user, case):
         # Exemple de vérification des permissions, à ajuster selon vos besoins
-        return case.parent1 == user or case.parent2 == user or user.role == "lawyer" or user.role == "judge"
+        return case.parent1 == user or case.parent2 == user or user.role == "lawyer" or user.role == "judge" or user.role == "administrator" or (case.draft and case.parent1 == user)
 
     def get_queryset(self):
         queryset = Document.objects.filter(case=self.case)
@@ -132,6 +167,12 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
         selected_year = self.request.GET.get('year')
         selected_quarter = self.request.GET.get('quarter')
+
+        # Récupérer le dernier montant d'indexation
+        latest_index_history = case.latest_index_history
+        contribution_amount = 0
+        if latest_index_history:
+            contribution_amount = latest_index_history.amount * case.number_of_children
 
         if selected_year and selected_quarter:
             try:
@@ -219,6 +260,18 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         payment_years = Document.objects.filter(case=self.case).dates('date', 'year')
         years = [year.year for year in payment_years]
 
+        # Obtenir les trimestres avec des paiements pour les années disponibles
+        active_quarters = Document.objects.annotate(
+            quarter=ExtractQuarter('date'),
+            year=ExtractYear('date')
+        ).filter(case=self.case).values_list('year', 'quarter').distinct()
+
+        active_quarters_per_year = {year: set() for year in years}
+        for year, quarter in active_quarters:
+            active_quarters_per_year[year].add(quarter)
+
+        print("quarter : " + str(active_quarters_per_year))
+
         context.update({
             'case': case,
             'parent1_user': parent1,
@@ -233,6 +286,11 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'selected_year': selected_year,
             'selected_quarter': selected_quarter,
             'category_ids': category_ids,
+            'is_draft': case.draft,
+            'contribution_amount': contribution_amount,
+            'parent1_percentage': case.parent1_percentage,
+            'parent2_percentage': case.parent2_percentage,
+            'active_quarters_per_year': active_quarters_per_year,
         })
 
         payments_with_permissions = [
@@ -428,16 +486,97 @@ def get_quarter_dates(year, quarter):
     return start_date, end_date
 
 
+@login_required
+def add_child(request, case_id):
+    case = get_object_or_404(Case, id=case_id)
+
+    if request.method == 'POST':
+        form = ChildForm(request.POST)
+        if form.is_valid():
+            child = form.save(commit=False)
+            child.case = case
+            child.save()
+            return redirect('payments:child', case_id=case.id)
+    else:
+        form = ChildForm()
+
+    children = case.children.all()
+
+    return render(request, 'payments/child.html', {'form': form, 'case': case, 'children': children})
+
+
+@login_required
+def delete_child(request, case_id, child_id):
+    child = get_object_or_404(Child, id=child_id, case_id=case_id)
+    child.delete()
+    return redirect('payments:child', case_id=case_id)
 # PARENT
 # ----------------------------------------------------------------------------------------------------------------------
+
+@login_required
+def create_draft_case(request):
+    if request.user.role != 'parent':
+        return redirect('accounts:login')
+
+    existing_drafts_count = Case.objects.filter(parent1=request.user, draft=True).count()
+    if existing_drafts_count >= 3:
+        messages.error(request, "You can only have up to 3 draft cases.")
+        return redirect('payments:list_case')
+
+    draft_case = Case.objects.create(parent1=request.user, draft=True)
+
+    return redirect('payments:payment-history', case_id=draft_case.id)
+
+
+@login_required
+def combine_drafts(request):
+    if request.user.role not in ['administrator', 'lawyer']:
+        return redirect('login')
+
+    draft1_id = request.GET.get('draft1')
+    draft1 = None
+    if draft1_id:
+        draft1 = get_object_or_404(Case, id=draft1_id, draft=True)
+
+    if request.method == 'POST':
+        form = CombineDraftsForm(request.POST, user=request.user, initial_draft1=draft1)
+        if form.is_valid():
+            draft1 = form.cleaned_data['draft1']
+            draft2 = form.cleaned_data['draft2']
+
+            if draft1.parent1 == draft2.parent1:
+                messages.error(request, "Cannot combine drafts of the same parent.")
+                return redirect('combine_drafts')
+
+            draft1.parent2 = draft2.parent1
+            draft1.draft = False
+            draft1.save()
+
+            for document in draft2.payment_documents.all():
+                document.case = draft1
+                document.save()
+
+            draft2.delete()
+
+            messages.success(request, "Drafts have been combined successfully.")
+            return redirect('payments:payment-history', case_id=draft1.id)
+    else:
+        form = CombineDraftsForm(user=request.user, initial_draft1=draft1)
+        form.fields['draft1'].initial = draft1
+        form.fields['draft1'].queryset = Case.objects.filter(id=draft1.id)
+
+    return render(request, 'payments/combine_drafts.html', {'form': form})
+
+
+
 @login_required
 @transaction.atomic
 def submit_payment_document(request, case_id):
     user = request.user
-    case = Case.objects.filter(Q(parent1=user) | Q(parent2=user))
+    case = get_object_or_404(Case, id=case_id)
 
-    # Vérifiez si le dossier demandé existe
-    case = get_object_or_404(case, id=case_id)
+    # Determine if the user is a parent or a lawyer
+    is_parent = Case.objects.filter(Q(parent1=user) | Q(parent2=user), id=case_id).exists()
 
     categories = Category.objects.order_by('type_id', 'name')
     grouped_categories = {}
@@ -447,14 +586,23 @@ def submit_payment_document(request, case_id):
         grouped_categories[category.type].append(category)
 
     if request.method == 'POST':
-        form = PaymentDocumentForm(request.POST, request.FILES)
+        if is_parent:
+            form = PaymentDocumentForm(request.POST, request.FILES)
+        else:
+            form = PaymentDocumentForm(request.POST, request.FILES, parent_choices=get_parent_choices(case))
+
         new_category_name = request.POST.get('new_category', '').strip()
 
         if form.is_valid():
             payment_document = form.save(commit=False)
-            payment_document.user = user
             payment_document.case = case
-            payment_document.status = 'pending'
+            payment_document.status = 'validated'
+
+            if is_parent:
+                payment_document.user = user
+            else:
+                parent_user_id = form.cleaned_data['parent']
+                payment_document.user = get_user_model().objects.get(id=parent_user_id)
 
             if new_category_name:
                 other_type, created = CategoryType.objects.get_or_create(name='Autre')
@@ -467,7 +615,10 @@ def submit_payment_document(request, case_id):
             payment_document.save()
             return redirect('payments:payment-history', case_id=case_id)
     else:
-        form = PaymentDocumentForm()
+        if is_parent:
+            form = PaymentDocumentForm()
+        else:
+            form = PaymentDocumentForm(parent_choices=get_parent_choices(case))
 
     context = {
         'form': form,
@@ -480,86 +631,63 @@ def submit_payment_document(request, case_id):
 
 # MAGISTRATE
 # ----------------------------------------------------------------------------------------------------------------------
-@login_required
-@transaction.atomic
-def submit_payment_document_lawyer(request, case_id):
-    case = get_object_or_404(Case, pk=case_id)
-    categories = Category.objects.order_by('type_id', 'name')
-
-    grouped_categories = {}
-    for category in categories:
-        if category.type not in grouped_categories:
-            grouped_categories[category.type] = []
-        grouped_categories[category.type].append(category)
-
-    if request.method == 'POST':
-        form = PaymentDocumentFormLawyer(request.POST, request.FILES, parent_choices=get_parent_choices(case))
-
-        if form.is_valid():
-            payment_document = form.save(commit=False)
-            payment_document.case = case
-            parent_user_id = form.cleaned_data['parent']
-            payment_document.status = 'validated'  # Assurez-vous de définir le bon statut ici
-            payment_document.user = get_user_model().objects.get(id=parent_user_id)
-            payment_document.save()
-            return redirect(reverse('payments:payment-history', kwargs={'case_id': case_id}))
-    else:
-        form = PaymentDocumentFormLawyer(parent_choices=get_parent_choices(case))
-
-    return render(request, 'payments/submit_payment_document_lawyer.html', {
-        'form': form,
-        'case': case,
-        'grouped_categories': grouped_categories,
-    })
-
-
 def get_parent_choices(case):
     # Retrieve parent IDs from the case in question
     parent1_id = case.parent1_id
     parent2_id = case.parent2_id
 
-    # Retrieve parents' full names using IDs
-    parent1 = get_user_model().objects.get(id=parent1_id)
-    parent2 = get_user_model().objects.get(id=parent2_id)
+    # Initialize an empty list for choices
+    choices = []
 
-    # Create a wish list using parents' full names
-    choices = [
-        (parent1.id, f"{parent1.first_name} {parent1.last_name}"),
-        (parent2.id, f"{parent2.first_name} {parent2.last_name}")
-    ]
+    # Retrieve parent1's full name using ID
+    if parent1_id:
+        parent1 = get_user_model().objects.get(id=parent1_id)
+        choices.append((parent1.id, f"{parent1.first_name} {parent1.last_name}"))
+
+    # Check if parent2 exists, then retrieve parent2's full name using ID
+    if parent2_id:
+        parent2 = get_user_model().objects.get(id=parent2_id)
+        choices.append((parent2.id, f"{parent2.first_name} {parent2.last_name}"))
+
     return choices
 
 
 @login_required
 def create_case(request):
-    if not request.user.is_authenticated or request.user.role != 'lawyer':
-        # Redirect to login page if user is not a logged in lawyer
-        return redirect('login')
+    if not request.user.is_authenticated or (request.user.role != 'lawyer' and request.user.role != 'administrator'):
+        # Redirect to login page if user is not logged in or is not a lawyer or administrator
+        return redirect('accounts:login')
 
     if request.method == 'POST':
-        form = CaseForm(request.POST)
+        form = CaseForm(request.POST, user=request.user)
         if form.is_valid():
             parent1 = form.cleaned_data['parent1']
             parent2 = form.cleaned_data['parent2']
             # Check if a case with the same parent1 and parent2 already exists
             existing_case = Case.objects.filter(parent1=parent1, parent2=parent2).exists() or Case.objects.filter(parent1=parent2, parent2=parent1).exists()
-            if existing_case:
+
+            if parent1 == parent2:
+                messages.error(request, "Impossible de créer un dossier avec le même parent.")
+            elif existing_case:
                 messages.error(request, "Un dossier avec ces deux parents existe déjà.")
             else:
                 case = form.save(commit=False)
-                case.lawyer = request.user
+                if request.user.role == 'administrator':
+                    case.lawyer = form.cleaned_data['lawyer']
+                else:
+                    case.lawyer = request.user
                 case.save()
 
-                # Create AvocatParent entry
+                # Create AvocatCase entry
                 AvocatCase.objects.create(
-                    avocat=request.user,
+                    avocat=case.lawyer,
                     case=case
                 )
 
                 # Redirect to a list of cases or other success page
                 return redirect('payments:list_case')
     else:
-        form = CaseForm(initial={'parent1': request.user})  # Initialiser avec l'utilisateur connecté par défaut
+        form = CaseForm(initial={'parent1': request.user}, user=request.user)  # Initialiser avec l'utilisateur connecté par défaut
         form.fields['parent1'].queryset = form.fields['parent1'].queryset
         form.fields['parent2'].queryset = form.fields['parent2'].queryset
 
@@ -668,6 +796,56 @@ def remove_avocat(request, case_id, avocat_id):
     return redirect('payments:add-juge-avocat', case_id=case.id)
 
 
+@method_decorator(login_required, name='dispatch')
+class DraftCaseListView(ListView):
+    model = Case
+    template_name = 'payments/list_draft_case.html'
+    context_object_name = 'draft_cases'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role in ['administrator', 'lawyer']:
+            return Case.objects.filter(draft=True).order_by('parent1__username')
+        else:
+            return Case.objects.none()
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['administrator', 'lawyer']:
+            return HttpResponseForbidden("You do not have permission to access this view.")
+        return super().dispatch(request, *args, **kwargs)
+
+
+@login_required
+def convert_draft_case(request, case_id):
+    case = get_object_or_404(Case, pk=case_id)
+
+    if request.user.role not in ['administrator', 'lawyer']:
+        return HttpResponseForbidden("You do not have permission to access this case.")
+
+    if request.method == 'POST':
+        form = ConvertDraftCaseForm(request.POST, instance=case)
+        if form.is_valid():
+            case = form.save(commit=False)
+            case.draft = False
+            case.save()
+            messages.success(request, "Draft case has been converted to a regular case.")
+            return redirect('payments:payment-history', case_id=case.id)
+    else:
+        form = ConvertDraftCaseForm(instance=case)
+
+    return render(request, 'payments/convert_draft_case.html', {'form': form, 'case': case})
+
+
+@require_POST
+def update_percentages(request, case_id):
+    case = get_object_or_404(Case, pk=case_id)
+    if case.parent1 == request.user or case.parent2 == request.user:
+        case.parent1_percentage = float(request.POST['parent1_percentage'])
+        case.parent2_percentage = float(request.POST['parent2_percentage'])
+        case.save()
+    return redirect('payments:payment-history', case_id=case_id)
+
+
 # ADMINISTRATOR
 # ----------------------------------------------------------------------------------------------------------------------
 @login_required
@@ -681,7 +859,7 @@ def index_payments(request):
     if request.method == 'POST':
         form = IndexPaymentForm(request.POST)
         if form.is_valid():
-            percentage = form.cleaned_data['percentage']
+            indices = form.cleaned_data['indices']
             confirm_indexation_list = request.POST.getlist('confirm_indexation')
             confirm_indexation = confirm_indexation_list[0] == 'true' if confirm_indexation_list else False
 
@@ -694,21 +872,32 @@ def index_payments(request):
                     'confirm_required': True
                 })
             else:
-                multiplier = 1 + (percentage / 100)
-                Document.objects.all().update(amount=F('amount') * multiplier)
+                # Récupère le dernier montant et indice de l'entrée la plus récente
+                last_index = IndexHistory.objects.order_by('-created_at').first()
 
-                # Create a new entry in IndexHistory for the current year
-                IndexHistory.objects.create(year=current_year, percentage=percentage)
+                if last_index:
+                    previous_indice = Decimal(last_index.indices)
+                    previous_amount = Decimal(last_index.amount)
+                    multiplier = Decimal(indices) / previous_indice
+                    new_amount = (previous_amount * multiplier).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                else:
+                    new_amount = Decimal('0.00')
 
-                messages.success(request, f"All payments have been indexed by {percentage}%.")
+                # Crée une nouvelle entrée dans IndexHistory pour l'année en cours
+                IndexHistory.objects.create(year=current_year, indices=indices, amount=new_amount)
+
+                messages.success(request, f"Les contributions alimentaires ont été indexées par {indices}%.")
                 return redirect('payments:index_payments')
     else:
         form = IndexPaymentForm()
 
     confirm_required = IndexHistory.objects.filter(year=current_year).exists()
 
-    return render(request, 'payments/index_payments.html',
-                  {'form': form, 'indexations': indexations, 'confirm_required': confirm_required})
+    return render(request, 'payments/index_payments.html', {
+        'form': form,
+        'indexations': indexations,
+        'confirm_required': confirm_required
+    })
 
 
 @login_required

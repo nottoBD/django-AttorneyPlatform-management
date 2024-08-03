@@ -1,3 +1,23 @@
+<!--
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
 {% extends 'neok/base.html' %}
 {% load custom_filters %}
 {% load static i18n %}
@@ -18,8 +38,8 @@
                         <div class="form-group">
                             <button type="submit" class="btn btn-primary">{% trans "Ajouter" %}</button>
                             <a class="btn btn-secondary btn-sm mt-1" href="{% url 'payments:payment-history' case.id %}">
-                                        {% trans "Retourner" %}
-                                    </a>
+                                {% trans "Retourner" %}
+                            </a>
                         </div>
                     </form>
                 </div>
@@ -29,35 +49,55 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h3 class="card-title mb-4">{% trans "Juges liés au dossier" %}</h3>
-                    <ul class="list-group">
-                        {% for juge in existing_judges %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ juge }}
-                            <form method="post" action="{% url 'payments:remove-juge' case.id juge.id %}" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
-                            </form>
-                        </li>
-                        {% endfor %}
-                    </ul>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Nom du juge" %}</th>
+                                <th>{% trans "Action" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for juge in existing_judges %}
+                            <tr>
+                                <td>{{ juge }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'payments:remove-juge' case.id juge.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
             <div class="card mb-4">
                 <div class="card-body">
                     <h3 class="card-title mb-4">{% trans "Avocats liés au dossier" %}</h3>
-                    <ul class="list-group">
-                        {% for avocat in existing_lawyers %}
-                            {% if avocat.id != request.user.id %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    {{ avocat }}
-                                    <form method="post" action="{% url 'payments:remove-avocat' case.id avocat.id %}" class="d-inline">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
-                                    </form>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
-                    </ul>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Nom de l'avocat" %}</th>
+                                <th>{% trans "Action" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for avocat in existing_lawyers %}
+                                {% if avocat.id != request.user.id %}
+                                <tr>
+                                    <td>{{ avocat }}</td>
+                                    <td>
+                                        <form method="post" action="{% url 'payments:remove-avocat' case.id avocat.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

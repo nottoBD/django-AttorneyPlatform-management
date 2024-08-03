@@ -1,3 +1,23 @@
+<!--
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
 {% extends 'neok/base.html' %}
 {% load static i18n %}
 
@@ -15,78 +35,117 @@
 
     <div class="container-fluid">
         <div class="row">
+            <!-- Administrators List -->
+            <div class="col-md-12">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h2 class="card-title">{% trans "Administrators" %}</h2>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>{% trans "Last Name" %}</th>
+                                    <th>{% trans "First Name" %}</th>
+                                    <th>{% trans "Email" %}</th>
+                                    <th>{% trans "Role" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody class="administrators-list">
+                                {% for admin in administrators %}
+                                    <tr class="administrator-item" data-user-id="{{ admin.id }}">
+                                        <td><img src="{{ admin.profile_image_url }}" alt="{{ admin.first_name }} {{ admin.last_name }}" width="30" height="30" class="rounded-circle"></td>
+                                        <td>{{ admin.last_name }}</td>
+                                        <td>{{ admin.first_name }}</td>
+                                        <td>{{ admin.email }}</td>
+                                        <td>{{ admin.role }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Magistrates List -->
             <div class="col-md-12">
                 <div class="card mb-4">
                     <div class="card-body">
                         <h2 class="card-title">{% trans "Attorneys - Lawyers - Judges" %}</h2>
-                        <table class="table">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>{% trans "Last Name" %}</th>
-                                <th>{% trans "First Name" %}</th>
-                                <th>{% trans "Email" %}</th>
-                                <th>{% trans "Role" %}</th>
-                                <th>{% trans "Case" %}</th>
-                            </tr>
-                            </thead>
-                            <tbody class="magistrates-list">
-                            {% for magistrate in magistrates %}
-                                <tr class="magistrate-item" data-user-id="{{ magistrate.id }}">
-                                    <td><img src="{{ magistrate.profile_image_url }}" alt="{{ magistrate.first_name }} {{ magistrate.last_name }}" width="30" height="30" class="rounded-circle"></td>
-                                    <td>{{ magistrate.last_name }}</td>
-                                    <td>{{ magistrate.first_name }}</td>
-                                    <td>{{ magistrate.email }}</td>
-                                    <td>
-                                        {% if magistrate.is_superuser %}Administrator
-                                        {% elif magistrate.role == 'admin' %}Administrator
-                                        {% elif magistrate.role == 'lawyer' %}Lawyer
-                                        {% elif magistrate.role == 'judge' %}Judge
-                                        {% else %}Parent
-                                        {% endif %}
-                                    </td>
-                                    <td>{{ magistrate.parents_count }}</td>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>{% trans "Last Name" %}</th>
+                                    <th>{% trans "First Name" %}</th>
+                                    <th>{% trans "Email" %}</th>
+                                    <th>{% trans "Role" %}</th>
+                                    <th>{% trans "Cases" %}</th>
                                 </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="magistrates-list">
+                                {% for magistrate in magistrates %}
+                                    <tr class="magistrate-item" data-user-id="{{ magistrate.id }}">
+                                        <td><img src="{{ magistrate.profile_image_url }}" alt="{{ magistrate.first_name }} {{ magistrate.last_name }}" width="30" height="30" class="rounded-circle"></td>
+                                        <td>{{ magistrate.last_name }}</td>
+                                        <td>{{ magistrate.first_name }}</td>
+                                        <td>{{ magistrate.email }}</td>
+                                        <td>
+                                            {% if magistrate.is_superuser %}Administrator
+                                            {% elif magistrate.role == 'admin' %}Administrator
+                                            {% elif magistrate.role == 'lawyer' %}Lawyer
+                                            {% elif magistrate.role == 'judge' %}Judge
+                                            {% else %}Parent
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ magistrate.cases_count }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Parents List -->
             <div class="col-md-12">
                 <div class="card mb-4">
                     <div class="card-body">
                         <h2 class="card-title">{% trans "Parents List" %}</h2>
-                        <!-- Parents table -->
-                        <table class="table">
-                            <thead>
-                            <tr>
-                                <th></th>
-                                <th>{% trans "Last Name" %}</th>
-                                <th>{% trans "First Name" %}</th>
-                                <th>{% trans "Email" %}</th>
-                                <th>{% trans "Referent" %}</th>
-                            </tr>
-                            </thead>
-                            <tbody class="parents-list">
-                            {% for parent in parents %}
-                                <tr class="parent-item" data-user-id="{{ parent.id }}">
-                                    <td><img src="{{ parent.profile_image_url }}" alt="{% trans 'Profile Image' %}" width="30" height="30" class="rounded-circle"></td>
-                                    <td>{{ parent.last_name }}</td>
-                                    <td>{{ parent.first_name }}</td>
-                                    <td>{{ parent.email }}</td>
-                                    <td>
-                                        {% for avocat in parent.avocats_assigned %}
-                                            {{ avocat.avocat.last_name }}<br>
-                                        {% endfor %}
-                                        {% for juge in parent.juges_assigned %}
-                                            {{ juge.juge.last_name }}<br>
-                                        {% endfor %}
-                                    </td>
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>{% trans "Last Name" %}</th>
+                                    <th>{% trans "First Name" %}</th>
+                                    <th>{% trans "Email" %}</th>
+                                    <th>{% trans "Referent" %}</th>
                                 </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="parents-list">
+                                {% for parent in parents_filtered %}
+                                    <tr class="parent-item" data-user-id="{{ parent.id }}">
+                                        <td><img src="{{ parent.profile_image_url }}" alt="{% trans 'Profile Image' %}" width="30" height="30" class="rounded-circle"></td>
+                                        <td>{{ parent.last_name }}</td>
+                                        <td>{{ parent.first_name }}</td>
+                                        <td>{{ parent.email }}</td>
+                                        <td>
+                                            {% for avocat in parent.avocats_assigned %}
+                                                {{ avocat.avocat.last_name }}<br>
+                                            {% endfor %}
+                                            {% for juge in parent.juges_assigned %}
+                                                {{ juge.juge.last_name }}<br>
+                                            {% endfor %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

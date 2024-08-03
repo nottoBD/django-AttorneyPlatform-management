@@ -1,3 +1,23 @@
+<!--
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
 {% extends 'neok/base.html' %}
 {% load static i18n crispy_forms_tags %}
 
@@ -7,72 +27,75 @@
             <div class="col-md-8">
                 <div class="card shadow-sm">
                     {% if request.user == user or request.user.is_superuser %}
-                        {% if user.is_deletion_pending %}
-                            <p>{% trans "This account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"d-m-Y" }}.</p>
-                            <a href="{% url 'accounts:cancel_deletion' user.pk %}">{% trans "Cancel Deletion Request" %}</a>
-                        {% else %}
-                            {% if not user.is_superuser %}
-                                <a href="{% url 'accounts:request_deletion' user.pk %}">{% trans "Request Account Deletion" %}</a>
+                        <div class="card-body">
+                            {% if user.is_deletion_pending %}
+                                <p>{% trans "This account is scheduled for deletion on" %} {{ user.deletion_requested_at|date:"d-m-Y" }}.</p>
+                                <a href="{% url 'accounts:cancel_deletion' user.pk %}" class="btn btn-warning">{% trans "Cancel Deletion Request" %}</a>
+                            {% else %}
+                                {% if not user.is_superuser %}
+                                    <a href="{% url 'accounts:request_deletion' user.pk %}" class="btn btn-danger">{% trans "Request Account Deletion" %}</a>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
+                        </div>
                     {% endif %}
-                    {% if not request.user == user %}
-                        {% if not request.user.is_superuser %}
+                    {% if not request.user == user and not request.user.is_superuser %}
+                        <div class="card-body">
                             {% if user.is_deletion_pending %}
                                 <p>{% trans "User has requested account deletion." %}</p>
                             {% endif %}
-                        {% endif %}
+                        </div>
                     {% endif %}
                     {% if request.user.is_administrator and user.is_deletion_pending %}
-                        <form method="post" action="{% url 'accounts:delete_user' user.pk %}" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger" title="{% trans 'Delete User' %}" onclick="return confirm('{% trans 'Are you sure you want to permanently delete this user?' %}')">
-                                &#128465; <!-- Unicode for trashcan icon -->
-                            </button>
-                        </form>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'accounts:delete_user' user.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" title="{% trans 'Delete User' %}" onclick="return confirm('{% trans 'Are you sure you want to permanently delete this user?' %}')">
+                                    &#128465; <!-- Unicode for trashcan icon -->
+                                </button>
+                            </form>
+                        </div>
                     {% endif %}
-                    <div class="card-header bg-primary text-white">
-                        <h3 class="text-center mb-0">
-                            {% trans "Profile" %}: {{ user.get_role_display }}
-                        </h3>
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3 class="mb-0">{% trans "Profile" %}: {{ user.get_role_display }}</h3>
                     </div>
                     <div class="card-body">
-                        <div class="d-flex align-items-center mb-3">
-                            <img src="{{ user.profile_image.url }}" alt="{% trans "Profile image" %}" width="100" height="100" class="rounded-circle me-3">
-                            <div>
-                                <h4>{{ user.last_name }} {{ user.first_name }}</h4>
-                                <form method="post" enctype="multipart/form-data">
-                                    {% csrf_token %}
-                                    <div>
-                                        {% if not request.user == user or not user.is_superuser %}
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="isActiveCheckbox" name="is_active" {% if user.is_active %}checked{% endif %} {% if not request.user.is_superuser %}disabled{% endif %}>
-                                                <label class="form-check-label" for="isActiveCheckbox">{% trans "Active" %}</label>
-                                            </div>
-                                        {% endif %}
+                        <div class="d-flex flex-column align-items-center mb-3">
+                            <img src="{{ user.profile_image.url }}" alt="{% trans "Profile image" %}" width="100" height="100" class="rounded-circle mb-3">
+                            <h4>{{ user.last_name }} {{ user.first_name }}</h4>
+                        </div>
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                {% if not request.user == user or not user.is_superuser %}
+                                    <div class="form-check">
+                                        <input type="hidden" name="is_active" value="false">
+                                        <input class="form-check-input" type="checkbox" id="isActiveCheckbox" name="is_active" value="true" {% if user.is_active %}checked{% endif %} {% if not request.user.is_superuser %}disabled{% endif %}>
+                                        <label class="form-check-label" for="isActiveCheckbox">{% trans "Active" %}</label>
                                     </div>
-                                    {% for field in form.visible_fields %}
-                                        {% if field.name != 'is_active' %}
-                                            <div class="mb-3">
-                                                {{ field|as_crispy_field }}
-                                            </div>
-                                        {% endif %}
-                                    {% endfor %}
-                                    <button type="submit" class="btn btn-outline-primary">{% trans "Save changes" %}</button>
-                                    {% if request.user == user or request.user.is_superuser %}
-                                        <a href="{% url 'accounts:password_reset' %}" class="btn btn-outline-warning">{% trans "Reset Password" %}</a>
+                                {% endif %}
+                            </div>
+                            {% for field in form.visible_fields %}
+                                {% if field.name != 'is_active' %}
+                                    <div class="mb-3">
+                                        {{ field|as_crispy_field }}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                            <div class="d-flex flex-column align-items-center">
+                                <button type="submit" class="btn btn-outline-primary mb-2">{% trans "Save changes" %}</button>
+                                {% if request.user == user or request.user.is_superuser %}
+                                    <a href="{% url 'accounts:password_reset' %}" class="btn btn-outline-warning mb-2">{% trans "Reset Password" %}</a>
+                                {% endif %}
+                                {% if user.role == 'parent' and request.user != user %}
+                                    {% if request.user.role == 'judge' or request.user.role == 'lawyer' %}
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            <button type="submit" name="deassign" class="btn btn-danger" onclick="return confirm('{% trans "Are you sure you want to deassign?" %}')">{% trans "Deassign" %}</button>
+                                        </form>
                                     {% endif %}
-                                    {% if user.role == 'parent' and request.user != user %}
-                                        {% if request.user.role == 'judge' or request.user.role == 'lawyer' %}
-                                            <form method="post">
-                                                {% csrf_token %}
-                                                <button type="submit" name="deassign" class="btn btn-danger" onclick="return confirm('{% trans "Are you sure you want to deassign?" %}')">{% trans "Deassign" %}</button>
-                                            </form>
-                                        {% endif %}
-                                    {% endif %}
-                                </form>
-
-
+                                {% endif %}
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
