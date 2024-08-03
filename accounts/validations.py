@@ -52,11 +52,11 @@ def validate_image(file, max_size=5242880, max_width=4000, max_height=4000):
         if image_format not in valid_formats:
             raise ValidationError(_('Unsupported file type. Please upload a JPEG, PNG, or GIF image.'))
         if file.size > max_size:
-            raise ValidationError(_('Image file too large (>{0} MB).').format(max_size / 1048576))
+            raise ValidationError(_('Image file too large.').format(max_size / 1048576))
         if image.width > max_width or image.height > max_height:
-            raise ValidationError(_('Image dimensions exceed the maximum allowed: {0}x{1} pixels.').format(max_width, max_height))
+            raise ValidationError(_('Image dimensions exceed the maximum allowed.').format(max_width, max_height))
     except Exception as e:
-        raise ValidationError(_('Invalid image file. Error: {0}').format(e))
+        raise ValidationError(_('Invalid image file.').format(e))
     file.seek(0)
 
 def clean_email(email):
