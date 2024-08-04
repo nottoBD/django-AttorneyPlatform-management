@@ -101,7 +101,7 @@ class Child(models.Model):
     birth_date = models.DateField()
 
     def __str__(self):
-        return self.name
+        return f"{self.first_name} {self.last_name}"
 
 
 class IndexHistory(models.Model):
