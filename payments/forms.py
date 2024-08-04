@@ -185,10 +185,11 @@ class ChildForm(forms.ModelForm):
             )
         ]
     )
+    case = forms.ModelChoiceField(queryset=Case.objects.all(), required=True)
 
     class Meta:
         model = Child
-        fields = ['first_name', 'last_name', 'birth_date']
+        fields = ['first_name', 'last_name', 'birth_date', 'case']
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'})
         }

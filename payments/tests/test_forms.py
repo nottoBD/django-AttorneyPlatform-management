@@ -1,13 +1,15 @@
 from django.test import TestCase
-from django.core.exceptions import ValidationError
-from payments.forms import (ChildForm)
+from django.utils import timezone
+from accounts.models import User
+from payments.models import Case, Child
+from payments.forms import ChildForm
 from datetime import date
-from payments.models import Child, Case
-
 
 class ChildFormTest(TestCase):
     def setUp(self):
-        self.case = Case.objects.create(name='Test Case')
+        self.parent1 = User.objects.create_user(email='parent1@example.com', password='Complexpassword1!', role='parent')
+        self.parent2 = User.objects.create_user(email='parent2@example.com', password='Complexpassword1!', role='parent')
+        self.case = Case.objects.create(parent1=self.parent1, parent2=self.parent2, created_at=timezone.now(), updated_at=timezone.now())
 
     def test_valid_form(self):
         form_data = {
