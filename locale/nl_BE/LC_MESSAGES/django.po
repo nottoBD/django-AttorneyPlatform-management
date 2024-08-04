@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-08 11:26+0200\n"
+"POT-Creation-Date: 2024-08-03 14:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Botton David david.botton@hainaut-promsoc.be\n"
 "Language-Team: FR <LL@li.org>\n"
@@ -13,348 +13,1213 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: accounts/forms.py:34
-msgid "Unsupported file type. Please upload a JPEG, PNG, or GIF image."
-msgstr ""
-"Niet-ondersteund bestandstype. Gelieve een JPEG, PNG, of GIF afbeelding te "
-"uploaden."
+#: accounts/forms.py:41
+msgid "Current Cases"
+msgstr "Huidige zaken"
 
-#: accounts/forms.py:40 accounts/forms.py:68
-#: accounts/templates/accounts/user_list.html:15
-#: accounts/templates/accounts/user_list.html:48
+#: accounts/forms.py:47
+#, fuzzy
+#| msgid "Assign Parents"
+msgid "Assigned Users"
+msgstr "Toegewezen gebruikers"
+
+#: accounts/forms.py:83
+msgid "You are not authorized to change the active status."
+msgstr "Je bent niet gemachtigd om de actieve status te wijzigen."
+
+#: accounts/forms.py:167 accounts/forms.py:226
+#: accounts/templates/accounts/user_list.html:49
+#: accounts/templates/accounts/user_list.html:82
+#: accounts/templates/accounts/user_list.html:124
 msgid "First Name"
 msgstr "Voornaam"
 
-#: accounts/forms.py:41 accounts/forms.py:67
-#: accounts/templates/accounts/user_list.html:14
-#: accounts/templates/accounts/user_list.html:47
+#: accounts/forms.py:168 accounts/forms.py:225
+#: accounts/templates/accounts/user_list.html:48
+#: accounts/templates/accounts/user_list.html:81
+#: accounts/templates/accounts/user_list.html:123
 msgid "Last Name"
 msgstr "Achternaam"
 
-#: accounts/forms.py:42
+#: accounts/forms.py:169
 msgid "Telephone Number"
 msgstr "Telefoonnummer"
 
-#: accounts/forms.py:43
-msgid "Assign Parents"
-msgstr "Ouders toewijzen"
-
-#: accounts/forms.py:65
-msgid "Gender"
-msgstr "Geslacht"
-
-#: accounts/forms.py:66
+#: accounts/forms.py:224
 msgid "National Number"
 msgstr "Rijksregisternummer"
 
-#: accounts/forms.py:69
+#: accounts/forms.py:227
 msgid "Telephone"
 msgstr "Telefoon"
 
-#: accounts/forms.py:70
+#: accounts/forms.py:228
 msgid "Address"
 msgstr "Adres"
 
-#: accounts/forms.py:82
-msgid "National number must be exactly 11 digits long."
-msgstr "Het rijksregisternummer moet exact 11 cijfers lang zijn."
+#: accounts/forms.py:268
+msgid "The passwords do not match."
+msgstr "De wachtwoorden komen niet overeen."
 
-#: accounts/management/commands/populate_categories.py:11
+#: accounts/templates/accounts/cancel_deletion.html:24
+msgid "Cancel Account Deletion"
+msgstr "Accountverwijdering annuleren"
+
+#: accounts/templates/accounts/cancel_deletion.html:25
 msgid ""
-"Prepopulates the database with predefined categories and sub-categories."
+"If you cancel the deletion request, your account will not be deleted. You "
+"can always request deletion again if needed."
 msgstr ""
-"Vult de database vooraf in met vooraf gedefinieerde categorieën en "
-"subcategorieën."
+"Als je het verwijderingsverzoek annuleert, zal je account niet worden verwijderd. "
+"Je kunt altijd opnieuw een verwijderingsverzoek indienen indien nodig."
 
-#: accounts/management/commands/populate_categories.py:16
-msgid "Medical and paramedical expenses"
-msgstr "Medische en paramedische uitgaven"
+#: accounts/templates/accounts/cancel_deletion.html:29
+#: accounts/templates/accounts/user_update.html:33
+msgid "Cancel Deletion Request"
+msgstr "Verwijderingsverzoek annuleren"
 
-#: accounts/management/commands/populate_categories.py:17
-msgid ""
-"Treatments by medical specialists and the medications, specialized "
-"examinations and care they prescribe"
-msgstr ""
-"Behandelingen door medische specialisten en de medicijnen, gespecialiseerde "
-"onderzoeken en zorg die zij voorschrijven"
-
-#: accounts/management/commands/populate_categories.py:18
-msgid ""
-"Costs of surgical and hospitalization procedures and the specific treatments "
-"resulting therefrom"
-msgstr ""
-"Kosten van chirurgische ingrepen en ziekenhuisopnames en de specifieke "
-"behandelingen die daaruit voortvloeien"
-
-#: accounts/management/commands/populate_categories.py:19
-msgid ""
-"Medical and paramedical expenses and devices, including orthodontics, speech "
-"therapy, ophthalmology, etc."
-msgstr ""
-"Medische en paramedische uitgaven en apparaten, inclusief orthodontie, "
-"logopedie, oogheelkunde, enz."
-
-#: accounts/management/commands/populate_categories.py:20
-msgid ""
-"Annual premium for hospitalization insurance or other supplementary insurance"
-msgstr ""
-"Jaarlijkse premie voor ziekenhuisverzekering of andere aanvullende "
-"verzekeringen"
-
-#: accounts/management/commands/populate_categories.py:22
-msgid "Costs relating to school training"
-msgstr "Kosten gerelateerd aan schoolopleiding"
-
-#: accounts/management/commands/populate_categories.py:23
-msgid ""
-"School activities of several days, like snow classes, sea classes, green "
-"classes"
-msgstr ""
-"Schoolactiviteiten van meerdere dagen, zoals sneeuwklassen, zeeklassen, "
-"groene klassen"
-
-#: accounts/management/commands/populate_categories.py:24
-msgid "Necessary, specialized and costly school materials and/or clothing"
-msgstr ""
-"Noodzakelijke, gespecialiseerde en kostbare schoolmaterialen en/of kleding"
-
-#: accounts/management/commands/populate_categories.py:25
-msgid "Tuition fees and courses for higher education and special training"
-msgstr ""
-"Inschrijvingsgelden en cursussen voor hoger onderwijs en speciale opleiding"
-
-#: accounts/management/commands/populate_categories.py:26
-msgid "Purchase of computer hardware and printers with necessary software"
-msgstr "Aankoop van computerhardware en printers met noodzakelijke software"
-
-#: accounts/management/commands/populate_categories.py:27
-msgid "Private lessons for school year success"
-msgstr "Privélessen voor schoolsucces"
-
-#: accounts/management/commands/populate_categories.py:28
-msgid "Cost of renting a student room"
-msgstr "Kosten voor het huren van een studentenkamer"
-
-#: accounts/management/commands/populate_categories.py:29
-msgid "Additional specific costs related to study abroad program"
-msgstr ""
-"Aanvullende specifieke kosten gerelateerd aan studieprogramma in het "
-"buitenland"
-
-#: accounts/management/commands/populate_categories.py:31
-msgid ""
-"Expenses related to the development of the personality and development of "
-"the child"
-msgstr ""
-"Uitgaven gerelateerd aan de ontwikkeling van de persoonlijkheid en "
-"ontwikkeling van het kind"
-
-#: accounts/management/commands/populate_categories.py:32
-msgid "Child care expenses from 0 to 3 years included"
-msgstr "Kinderopvangkosten van 0 tot 3 jaar inbegrepen"
-
-#: accounts/management/commands/populate_categories.py:33
-msgid ""
-"Dues, basic supplies, and fees for camps and internships in cultural, "
-"sporting, or artistic activities"
-msgstr ""
-"Contributies, basismaterialen en kosten voor kampen en stages in culturele, "
-"sportieve of artistieke activiteiten"
-
-#: accounts/management/commands/populate_categories.py:34
-msgid ""
-"Registration fee for driving courses and theoretical and practical "
-"examinations of the driving licence"
-msgstr ""
-"Inschrijfgeld voor rijcursussen en theoretische en praktische examens van "
-"het rijbewijs"
-
-#: accounts/models.py:13
+#: accounts/templates/accounts/cancel_deletion.html:31
 #, fuzzy
-#| msgid "Enter a valid email address"
-msgid "Users must have an email address"
-msgstr "Voer een geldig e-mailadres in"
+#| msgid "Profile Image"
+msgid "Back to Profile"
+msgstr "Terug naar profiel"
 
-#: accounts/models.py:43
-msgid "first name"
-msgstr "voornaam"
+#: accounts/templates/accounts/request_deletion.html:24
+#: accounts/templates/accounts/user_update.html:36
+#: templates/cookiebanner/privacy.html:42
+msgid "Request Account Deletion"
+msgstr "Accountverwijdering aanvragen"
 
-#: accounts/models.py:44
-msgid "last name"
-msgstr "achternaam"
+#: accounts/templates/accounts/request_deletion.html:25
+msgid ""
+"Once you request account deletion, your account will be scheduled for "
+"deletion after 30 days. During this period, you can cancel the deletion "
+"request at any time. Please note that the webmaster might delete your "
+"account before the 30 days period ends."
+msgstr ""
+"Zodra je accountverwijdering aanvraagt, wordt je account na 30 dagen gepland voor verwijdering. "
+"In deze periode kun je het verwijderingsverzoek op elk moment annuleren. "
+"Houd er rekening mee dat de webmaster je account kan verwijderen voordat de periode van 30 dagen eindigt."
 
-#: accounts/models.py:45
-msgid "Enter a valid email address"
-msgstr "Voer een geldig e-mailadres in"
+#: accounts/templates/accounts/request_deletion.html:29
+msgid "Request Deletion"
+msgstr "Verwijdering aanvragen"
 
-#: accounts/templates/accounts/user_list.html:8
-msgid "Magistrat List"
-msgstr "Lijst van Magistraten"
+#: accounts/templates/accounts/user_list.html:32
+#: accounts/templates/accounts/user_update.html:73
+msgid "Active"
+msgstr "Actief"
 
-#: accounts/templates/accounts/user_list.html:16
-#: accounts/templates/accounts/user_list.html:49
+#: accounts/templates/accounts/user_list.html:42
+#, fuzzy
+#| msgid "Administrator"
+msgid "Administrators"
+msgstr "Beheerders"
+
+#: accounts/templates/accounts/user_list.html:50
+#: accounts/templates/accounts/user_list.html:83
+#: accounts/templates/accounts/user_list.html:125
 msgid "Email"
 msgstr "E-mail"
 
-#: accounts/templates/accounts/user_list.html:17
+#: accounts/templates/accounts/user_list.html:51
+#: accounts/templates/accounts/user_list.html:84
 msgid "Role"
 msgstr "Rol"
 
-#: accounts/templates/accounts/user_list.html:18
-msgid "Case"
-msgstr "Zaak"
+#: accounts/templates/accounts/user_list.html:75
+msgid "Attorneys - Lawyers - Judges"
+msgstr "Advocaten - Rechters - Juristen"
 
-#: accounts/templates/accounts/user_list.html:41
-msgid "Parent List"
-msgstr "Lijst van Ouders"
+#: accounts/templates/accounts/user_list.html:85
+#, fuzzy
+#| msgid "Case"
+msgid "Cases"
+msgstr "Zaken"
 
-#: accounts/templates/accounts/user_list.html:50
+#: accounts/templates/accounts/user_list.html:117
+#, fuzzy
+#| msgid "Parent List"
+msgid "Parents List"
+msgstr "Ouderslijst"
+
+#: accounts/templates/accounts/user_list.html:126
 msgid "Referent"
 msgstr "Referent"
 
-#: accounts/templates/accounts/user_list.html:56
+#: accounts/templates/accounts/user_list.html:132
 msgid "Profile Image"
 msgstr "Profielafbeelding"
 
-#: accounts/templates/accounts/user_update.html:15
-msgid "Save changes"
-msgstr ""
+#: accounts/templates/accounts/user_update.html:32
+msgid "This account is scheduled for deletion on"
+msgstr "Dit account is gepland voor verwijdering op"
 
-#: accounts/templates/registration/login.html:4
-#: accounts/templates/registration/login.html:13
-#: accounts/templates/registration/sign_up.html:12
-msgid "Login"
-msgstr "Inloggen"
+#: accounts/templates/accounts/user_update.html:44
+msgid "User has requested account deletion."
+msgstr "Gebruiker heeft accountverwijdering aangevraagd."
 
-#: accounts/templates/registration/login.html:10
-msgid "Don't have an account? Create one"
-msgstr "Heb je geen account? Maak er een aan"
+#: accounts/templates/accounts/user_update.html:52
+msgid "Delete User"
+msgstr "Gebruiker verwijderen"
 
-#: accounts/templates/registration/login.html:11
-msgid "Here"
-msgstr "Hier"
+#: accounts/templates/accounts/user_update.html:52
+msgid "Are you sure you want to permanently delete this user?"
+msgstr "Weet je zeker dat je deze gebruiker permanent wilt verwijderen?"
 
-#: accounts/templates/registration/sign_up.html:4
-msgid "Sign Up"
-msgstr "Registreren"
-
-#: accounts/templates/registration/sign_up.html:11
-msgid "Have an account?  "
-msgstr "Heb je al een account?  "
-
-#: accounts/templates/registration/sign_up.html:16
-msgid "Register"
-msgstr "Registreren"
-
-#: accounts/templates/registration/sign_up_magistrat.html:5
-#: accounts/templates/registration/sign_up_magistrat.html:11
-msgid "Register Magistrat"
-msgstr "Magistraat Registreren"
-
-#: accounts/views.py:27
-msgid "Your profile has been successfully updated."
-msgstr "Je profiel is succesvol bijgewerkt."
-
-#: accounts/views.py:31
-msgid ""
-"There was a problem updating your profile. Please check the form for errors."
-msgstr ""
-"Er was een probleem bij het bijwerken van je profiel. Controleer het "
-"formulier op fouten."
-
-#: accounts/views.py:38 accounts/views.py:63
-msgid "You do not have permission to update this profile."
-msgstr "Je hebt geen toestemming om dit profiel bij te werken."
-
-#: accounts/views.py:129
-#, python-format
-msgid "Magistrat \"%s\" registered successfully."
-msgstr "Magistraat \"%s\" succesvol geregistreerd."
-
-#: accounts/views.py:150
-msgid "Your account has been created! You are now logged in."
-msgstr "Je account is aangemaakt! Je bent nu ingelogd."
-
-#: accounts/views.py:157
-msgid "The parent account has been successfully created."
-msgstr "Het ouderaccount is succesvol aangemaakt."
-
-#: neok/settings.py:87
-msgid "French"
-msgstr "Frans"
-
-#: neok/settings.py:88
-msgid "English"
-msgstr "Engels"
-
-#: neok/settings.py:89
-msgid "Dutch"
-msgstr "Nederlands"
-
-#: neok/settings.py:90
-msgid "German"
-msgstr "Duits"
-
-#: templates/neok/base.html:14
-msgid "neok Plateform"
-msgstr "neok Platform"
-
-#: templates/neok/base.html:26
-msgid "Platform neok"
-msgstr "Platform neok"
-
-#: templates/neok/base.html:31
-#, fuzzy
-#| msgid "Home Page"
-msgid "Home"
-msgstr "Startpagina"
-
-#: templates/neok/base.html:37
-msgid "Accounts"
-msgstr ""
-
-#: templates/neok/base.html:42
-msgid "List All"
-msgstr "Alles Weergeven"
-
-#: templates/neok/base.html:45
-msgid "Add Parent"
-msgstr "Ouder Toevoegen"
-
-#: templates/neok/base.html:48
-msgid "Add Magistrat"
-msgstr "Magistraat Toevoegen"
-
-#: templates/neok/base.html:51
-msgid "Update"
-msgstr "Bijwerken"
-
-#: templates/neok/base.html:78
-msgid "Languages"
-msgstr "Talen"
-
-#: templates/neok/base.html:111
-msgid "Administrator"
-msgstr "Beheerder"
-
-#: templates/neok/base.html:113
-msgid "Magistrat"
-msgstr "Magistraat"
-
-#: templates/neok/base.html:115
-msgid "Parent"
-msgstr "Ouder"
-
-#: templates/neok/base.html:120
+#: accounts/templates/accounts/user_update.html:59 templates/neok/base.html:79
 #, fuzzy
 #| msgid "Profile Image"
 msgid "Profile"
+msgstr "Profiel"
+
+#: accounts/templates/accounts/user_update.html:63
+#, fuzzy
+#| msgid "Profile Image"
+msgid "Profile image"
 msgstr "Profielafbeelding"
 
-#: templates/neok/base.html:126
+#: accounts/templates/accounts/user_update.html:85
+msgid "Save changes"
+msgstr "Wijzigingen opslaan"
+
+#: accounts/templates/accounts/user_update.html:87
+msgid "Reset Password"
+msgstr "Wachtwoord opnieuw instellen"
+
+#: accounts/templates/accounts/user_update.html:93
+msgid "Are you sure you want to deassign?"
+msgstr "Weet je zeker dat je wilt de-toewijzen?"
+
+#: accounts/templates/accounts/user_update.html:93
+msgid "Deassign"
+msgstr "De-toewijzen"
+
+#: accounts/templates/registration/login.html:24
+#: accounts/templates/registration/login.html:32
+#: accounts/templates/registration/login.html:44
+#: accounts/templates/registration/register.html:51
+#: accounts/templates/registration/register_jurist.html:51
+#: templates/neok/base.html:94 templates/neok/base.html:170
+msgid "Login"
+msgstr "Inloggen"
+
+#: accounts/templates/registration/login.html:38
+msgid "Don't have an account? Create one"
+msgstr "Heb je geen account? Maak er een aan"
+
+#: accounts/templates/registration/login.html:39
+msgid "Here"
+msgstr "Hier"
+
+#: accounts/templates/registration/login.html:42
+msgid "Forgot Password"
+msgstr "Wachtwoord vergeten"
+
+#: accounts/templates/registration/password_reset.html:30
+#: accounts/templates/registration/password_reset_confirmation.html:27
+msgid "Reset Your Password"
+msgstr "Wachtwoord opnieuw instellen"
+
+#: accounts/templates/registration/password_reset.html:33
+msgid ""
+"Please enter your email address to receive a link to reset your password."
+msgstr "Voer je e-mailadres in om een link te ontvangen om je wachtwoord opnieuw in te stellen."
+
+#: accounts/templates/registration/password_reset.html:40
+msgid "Notification"
+msgstr "Melding"
+
+#: accounts/templates/registration/password_reset.html:41
+msgid "Close"
+msgstr "Sluiten"
+
+#: accounts/templates/registration/password_reset.html:54
+msgid "Send reset instructions"
+msgstr "Stuur resetinstructies"
+
+#: accounts/templates/registration/password_reset_confirmation.html:31
+msgid "Change my password"
+msgstr "Verander mijn wachtwoord"
+
+#: accounts/templates/registration/register.html:24
+#: accounts/templates/registration/register_jurist.html:24
+msgid "Sign Up"
+msgstr "Registreren"
+
+#: accounts/templates/registration/register.html:32
+#: accounts/templates/registration/register.html:53
+#: accounts/templates/registration/register_jurist.html:53
+#: templates/neok/base.html:97 templates/neok/base.html:175
+msgid "Register"
+msgstr "Registreren"
+
+#: accounts/templates/registration/register.html:50
+#: accounts/templates/registration/register_jurist.html:50
+#, fuzzy
+#| msgid "Have an account?  "
+msgid "Have an account?"
+msgstr "Heb je een account?"
+
+#: accounts/templates/registration/register_jurist.html:32
+msgid "Register a judge or an attorney"
+msgstr "Registreer een rechter of een advocaat"
+
+#: accounts/validations.py:53
+msgid "Unsupported file type. Please upload a JPEG, PNG, or GIF image."
+msgstr ""
+"Niet-ondersteund bestandstype. Gelieve een JPEG, PNG, of GIF afbeelding te uploaden."
+
+#: accounts/validations.py:55
+msgid "Image file too large."
+msgstr "Bestand is te groot."
+
+#: accounts/validations.py:57
+msgid "Image dimensions exceed the maximum allowed."
+msgstr "Afbeeldingsdimensies overschrijden het toegestane maximum."
+
+#: accounts/validations.py:59
+#, fuzzy
+#| msgid "Enter a valid email address"
+msgid "Invalid image file."
+msgstr "Ongeldig afbeeldingsbestand."
+
+#: accounts/validations.py:78
+#, fuzzy
+#| msgid "Enter a valid email address"
+msgid "Invalid email address."
+msgstr "Ongeldig e-mailadres."
+
+#: accounts/validations.py:114
+msgid "National number must be exactly 11 digits long."
+msgstr "Het rijksregisternummer moet precies 11 cijfers lang zijn."
+
+#: accounts/validations.py:120
+msgid "The month must be between 01 and 12."
+msgstr "De maand moet tussen 01 en 12 zijn."
+
+#: accounts/validations.py:122
+msgid "The day must be between 01 and 31."
+msgstr "De dag moet tussen 01 en 31 zijn."
+
+#: accounts/validations.py:140
+msgid "The password must be at least 8 characters long."
+msgstr "Het wachtwoord moet minimaal 8 tekens lang zijn."
+
+#: accounts/validations.py:142
+msgid "Password must include lowercase, uppercase, and numbers."
+msgstr "Wachtwoord moet kleine letters, hoofdletters en cijfers bevatten."
+
+#: accounts/validations.py:166
+msgid "Invalid phone number format."
+msgstr "Ongeldig telefoonnummer formaat."
+
+#: accounts/views.py:54
+msgid "You are not authorized to change the role."
+msgstr "Je bent niet gemachtigd om de rol te wijzigen."
+
+#: accounts/views.py:147
+msgid "You are not authorized to deassign this user."
+msgstr "Je bent niet gemachtigd om deze gebruiker te de-toewijzen."
+
+#: accounts/views.py:152
+msgid "You have been deassigned from this case."
+msgstr "Je bent ontkoppeld van deze zaak."
+
+#: accounts/views.py:155
+msgid "You are not assigned to this case."
+msgstr "Je bent niet toegewezen aan deze zaak."
+
+#: accounts/views.py:277
+#, fuzzy
+#| msgid "Magistrat \"%s\" registered successfully."
+msgid "Attorney registered successfully."
+msgstr "Advocaat succesvol geregistreerd."
+
+#: accounts/views.py:298
+msgid "The parent account has been successfully created."
+msgstr "Het ouderaccount is succesvol aangemaakt."
+
+#: accounts/views.py:315
+msgid ""
+"We've emailed you instructions for setting your password, if an account "
+"exists with the email you entered. You should receive them shortly. If you "
+"don't receive an email, please make sure you've entered the address you "
+"registered with, and check your spam case."
+msgstr ""
+"We hebben je instructies gestuurd om je wachtwoord in te stellen, als er een account bestaat met het ingevoerde e-mailadres. "
+"Je zou deze binnenkort moeten ontvangen. Als je geen e-mail ontvangt, controleer dan of je het adres hebt ingevoerd waarmee je je hebt geregistreerd en controleer je spam-map."
+
+#: accounts/views.py:332
+msgid "You are not authorized to delete this account."
+msgstr "Je bent niet gemachtigd om dit account te verwijderen."
+
+#: accounts/views.py:339
+msgid "Account deletion requested successfully."
+msgstr "Accountverwijdering succesvol aangevraagd."
+
+#: accounts/views.py:350
+msgid "You are not authorized to cancel the deletion of this account."
+msgstr "Je bent niet gemachtigd om de verwijdering van dit account te annuleren."
+
+#: accounts/views.py:353
+msgid "You cannot cancel deletion for an administrator account."
+msgstr "Je kunt de verwijdering van een beheerdersaccount niet annuleren."
+
+#: accounts/views.py:360
+msgid "Account deletion request cancelled successfully."
+msgstr "Accountverwijderingsverzoek succesvol geannuleerd."
+
+#: accounts/views.py:373
+#, fuzzy
+#| msgid "The parent account has been successfully created."
+msgid "The user has been deleted successfully."
+msgstr "De gebruiker is succesvol verwijderd."
+
+#: accounts/views.py:375
+msgid "You are not authorized to delete this user."
+msgstr "Je bent niet gemachtigd om deze gebruiker te verwijderen."
+
+#: neok/settings.py:178
+msgid "Cookie settings"
+msgstr "Cookie-instellingen"
+
+#: neok/settings.py:179
+msgid "We are using a few essential cookies on this website."
+msgstr "We gebruiken een paar essentiële cookies op deze website."
+
+#: neok/settings.py:180
+msgid "Please accept our cookies"
+msgstr "Accepteer onze cookies"
+
+#: neok/settings.py:182
+msgid "Imprint"
+msgstr "Afdruk"
+
+#: neok/settings.py:183
+msgid "Privacy"
+msgstr "Privacy"
+
+#: neok/settings.py:188
+msgid "Essential"
+msgstr "Essentieel"
+
+#: neok/settings.py:189
+msgid "Essential cookies allow this page to work."
+msgstr "Essentiële cookies zorgen ervoor dat deze pagina werkt."
+
+#: neok/settings.py:193
+msgid "Meta cookie for the cookies that are set."
+msgstr "Meta-cookie voor de cookies die zijn ingesteld."
+
+#: neok/settings.py:197
+msgid "This cookie prevents Cross-Site-Request-Forgery attacks."
+msgstr "Deze cookie voorkomt Cross-Site-Request-Forgery-aanvallen."
+
+#: neok/settings.py:201
+msgid "This cookie is necessary to allow logging in, for example."
+msgstr "Deze cookie is bijvoorbeeld nodig om in te loggen."
+
+#: neok/settings.py:205
+msgid "Stores the language preference of the user."
+msgstr "Slaat de taalvoorkeur van de gebruiker op."
+
+#: payments/templates/payments/add_juge_avocat.html:32
+msgid "Ajouter ou supprimer des juges et avocats au dossier"
+msgstr "Rechters en advocaten toevoegen of verwijderen aan het dossier"
+
+#: payments/templates/payments/add_juge_avocat.html:39
+msgid "Ajouter"
+msgstr "Toevoegen"
+
+#: payments/templates/payments/add_juge_avocat.html:41
+#: payments/templates/payments/pending_payments.html:71
+msgid "Retourner"
+msgstr "Teruggaan"
+
+#: payments/templates/payments/add_juge_avocat.html:51
+msgid "Juges liés au dossier"
+msgstr "Rechters verbonden aan het dossier"
+
+#: payments/templates/payments/add_juge_avocat.html:55
+msgid "Nom du juge"
+msgstr "Naam van de rechter"
+
+#: payments/templates/payments/add_juge_avocat.html:56
+#: payments/templates/payments/add_juge_avocat.html:82
+msgid "Action"
+msgstr "Actie"
+
+#: payments/templates/payments/add_juge_avocat.html:66
+#: payments/templates/payments/add_juge_avocat.html:93
+#: payments/templates/payments/child.html:53
+msgid "Supprimer"
+msgstr "Verwijderen"
+
+#: payments/templates/payments/add_juge_avocat.html:77
+msgid "Avocats liés au dossier"
+msgstr "Advocaten verbonden aan het dossier"
+
+#: payments/templates/payments/add_juge_avocat.html:81
+msgid "Nom de l'avocat"
+msgstr "Naam van de advocaat"
+
+#: payments/templates/payments/case_category_history.html:31
+msgid "Payments for Category"
+msgstr "Betalingen voor categorie"
+
+#: payments/templates/payments/case_category_history.html:34
+msgid "Selected Period:"
+msgstr "Geselecteerde periode:"
+
+#: payments/templates/payments/case_category_history.html:39
+msgid "Validated"
+msgstr "Gevalideerd"
+
+#: payments/templates/payments/case_category_history.html:40
+msgid "Pending"
+msgstr "In behandeling"
+
+#: payments/templates/payments/case_category_history.html:41
+msgid "Rejected"
+msgstr "Afgewezen"
+
+#: payments/templates/payments/case_category_history.html:45
+#: payments/templates/payments/case_category_history.html:77
+msgid "Payments by"
+msgstr "Betalingen door"
+
+#: payments/templates/payments/case_category_history.html:50
+#: payments/templates/payments/case_category_history.html:82
+#: payments/templates/payments/pending_payments.html:40
+msgid "Date"
+msgstr "Datum"
+
+#: payments/templates/payments/case_category_history.html:51
+#: payments/templates/payments/case_category_history.html:83
+#: payments/templates/payments/index_payments.html:59
+msgid "Amount"
+msgstr "Bedrag"
+
+#: payments/templates/payments/case_category_history.html:52
+#: payments/templates/payments/case_category_history.html:84
+#: payments/templates/payments/pending_payments.html:41
+msgid "Document"
+msgstr "Document"
+
+#: payments/templates/payments/case_category_history.html:63
+#: payments/templates/payments/case_category_history.html:95
+#: payments/templates/payments/pending_payments.html:54
+msgid "View Document"
+msgstr "Bekijk document"
+
+#: payments/templates/payments/case_category_history.html:66
+#: payments/templates/payments/case_category_history.html:98
+#: payments/templates/payments/pending_payments.html:57
+msgid "No Document"
+msgstr "Geen document"
+
+#: payments/templates/payments/case_category_history.html:108
+msgid "No payments found for this category."
+msgstr "Geen betalingen gevonden voor deze categorie."
+
+#: payments/templates/payments/case_category_history.html:111
+#: payments/templates/payments/submit_payment_document.html:65
+msgid "Back to Payment History"
+msgstr "Terug naar betalingsgeschiedenis"
+
+#: payments/templates/payments/case_payment_history.html:32
+#: payments/templates/payments/list_case.html:52
+msgid "DRAFT"
+msgstr "Kladversie"
+
+#: payments/templates/payments/case_payment_history.html:37
+#: payments/templates/payments/pdf_template.html:32
+msgid "Récapitulatif des paiements"
+msgstr "Betalingssamenvatting"
+
+#: payments/templates/payments/case_payment_history.html:41
+#: payments/templates/payments/case_payment_history.html:90
+#: payments/templates/payments/child.html:43
+#: payments/templates/payments/index_payments.html:60
+#: payments/templates/payments/list_case.html:40
+#: payments/templates/payments/list_draft_case.html:36
+msgid "Actions"
+msgstr "Acties"
+
+#: payments/templates/payments/case_payment_history.html:46
+#: payments/templates/payments/case_payment_history.html:66
+msgid "Gérer enfant"
+msgstr "Beheer kind"
+
+#: payments/templates/payments/case_payment_history.html:49
+msgid "Gérer juge/avocat"
+msgstr "Beheer rechter/advocaat"
+
+#: payments/templates/payments/case_payment_history.html:53
+#: payments/templates/payments/case_payment_history.html:69
+#: payments/templates/payments/submit_payment_document.html:32
+msgid "Ajouter un paiement"
+msgstr "Betaling toevoegen"
+
+#: payments/templates/payments/case_payment_history.html:58
+#: payments/templates/payments/convert_draft_case.html:24
+#: payments/templates/payments/convert_draft_case.html:28
+msgid "Convert Draft Case"
+msgstr "Kladversie omzetten"
+
+#: payments/templates/payments/case_payment_history.html:74
+msgid "Télécharger en PDF"
+msgstr "Downloaden als PDF"
+
+#: payments/templates/payments/case_payment_history.html:111
+msgid "View Details"
+msgstr "Bekijk details"
+
+#: payments/templates/payments/case_payment_history.html:126
+msgid "Balance Summary"
+msgstr "Balansoverzicht"
+
+#: payments/templates/payments/case_payment_history.html:138
+#: payments/templates/payments/case_payment_history.html:150
+msgid "Total for"
+msgstr "Totaal voor"
+
+#: payments/templates/payments/case_payment_history.html:164
+msgid "The difference is"
+msgstr "Het verschil is"
+
+#: payments/templates/payments/case_payment_history.html:164
+msgid "in favor of"
+msgstr "in het voordeel van"
+
+#: payments/templates/payments/case_payment_history.html:167
+msgid "Amount Balanced"
+msgstr "Gebalanceerd bedrag"
+
+#: payments/templates/payments/case_payment_history.html:171
+msgid "Alimentary Contribution"
+msgstr "Voedingsbijdrage"
+
+
+#: payments/templates/payments/case_payment_history.html:179
+msgid "Filtrer les paiements"
+msgstr "Betalingen filteren"
+
+#: payments/templates/payments/case_payment_history.html:187
+#: payments/templates/payments/pdf_template.html:34
+msgid "Année"
+msgstr "Jaar"
+
+#: payments/templates/payments/case_payment_history.html:188
+#: payments/templates/payments/pdf_template.html:34
+msgid "Trimestre"
+msgstr "Kwartaal"
+
+#: payments/templates/payments/case_payment_history.html:200
+msgid "T1"
+msgstr "K1"
+
+#: payments/templates/payments/case_payment_history.html:203
+msgid "T2"
+msgstr "K2"
+
+#: payments/templates/payments/case_payment_history.html:206
+msgid "T3"
+msgstr "K3"
+
+#: payments/templates/payments/case_payment_history.html:209
+msgid "T4"
+msgstr "K4"
+
+#: payments/templates/payments/child.html:24
+#: payments/templates/payments/child.html:67
+msgid "Ajouter un enfant au dossier"
+msgstr "Een kind toevoegen aan het dossier"
+
+#: payments/templates/payments/child.html:33
+msgid "Liste des enfants"
+msgstr "Kinderen lijst"
+
+#: payments/templates/payments/child.html:34
+msgid "Retour au dossier"
+msgstr "Terug naar dossier"
+
+#: payments/templates/payments/child.html:40
+msgid "Prénom"
+msgstr "Voornaam"
+
+#: payments/templates/payments/child.html:41
+msgid "Nom"
+msgstr "Achternaam"
+
+#: payments/templates/payments/child.html:42
+msgid "Date de naissance"
+msgstr "Geboortedatum"
+
+#: payments/templates/payments/child.html:73
+msgid "Ajouter l'enfant"
+msgstr "Kind toevoegen"
+
+#: payments/templates/payments/combine_drafts.html:24
+#: payments/templates/payments/combine_drafts.html:30
+#: payments/templates/payments/combine_drafts.html:41
+#: payments/templates/payments/list_draft_case.html:50
+msgid "Combine Drafts"
+msgstr "Ontwerpen combineren"
+
+#: payments/templates/payments/combine_drafts.html:34
+msgid "Select First Draft"
+msgstr "Selecteer eerste ontwerp"
+
+#: payments/templates/payments/combine_drafts.html:38
+msgid "Select Second Draft"
+msgstr "Selecteer tweede ontwerp"
+
+#: payments/templates/payments/convert_draft_case.html:32
+msgid "Select Second Parent"
+msgstr "Selecteer tweede ouder"
+
+#: payments/templates/payments/convert_draft_case.html:35
+msgid "Convert Case"
+msgstr "Dossier omzetten"
+
+#: payments/templates/payments/create_case.html:24
+#: payments/templates/payments/create_case.html:32
+#: payments/templates/payments/create_case.html:38
+msgid "Create Case"
+msgstr "Dossier aanmaken"
+
+#: payments/templates/payments/index_payments.html:24
+#: payments/templates/payments/index_payments.html:32
+msgid "Index Payments"
+msgstr "Index betalingen"
+
+#: payments/templates/payments/index_payments.html:39
+msgid "index food contribution"
+msgstr "Index voedselbijdrage"
+
+#: payments/templates/payments/index_payments.html:50
+msgid "Existing Indexations"
+msgstr "Bestaande indexeringen"
+
+#: payments/templates/payments/index_payments.html:56
+msgid "Year"
+msgstr "Jaar"
+
+#: payments/templates/payments/index_payments.html:57
+msgid "Indice"
+msgstr "Index"
+
+#: payments/templates/payments/index_payments.html:58
+#: payments/templates/payments/list_case.html:39
+#: payments/templates/payments/list_draft_case.html:35
+msgid "Created at"
+msgstr "Gemaakt op"
+
+#: payments/templates/payments/index_payments.html:73
+msgid "Are you sure you want to delete this indexation?"
+msgstr "Weet u zeker dat u deze indexering wilt verwijderen?"
+
+#: payments/templates/payments/index_payments.html:73
+msgid "Delete"
+msgstr "Verwijderen"
+
+#: payments/templates/payments/index_payments.html:79
+msgid "No indexations found."
+msgstr "Geen indexeringen gevonden."
+
+#: payments/templates/payments/index_payments.html:99
+msgid "An indexation already exists for this year. Do you want to add another one?"
+msgstr "Er bestaat al een indexering voor dit jaar. Wilt u er nog een toevoegen?"
+
+#: payments/templates/payments/list_case.html:24
+#: payments/templates/payments/list_case.html:28
+msgid "My Cases"
+msgstr "Mijn dossiers"
+
+#: payments/templates/payments/list_case.html:30
+msgid "Start a draft case"
+msgstr "Begin een conceptdossier"
+
+#: payments/templates/payments/list_case.html:37
+#: payments/templates/payments/list_draft_case.html:34
+msgid "Parent 1"
+msgstr "Ouder 1"
+
+#: payments/templates/payments/list_case.html:38
+msgid "Parent 2"
+msgstr "Ouder 2"
+
+#: payments/templates/payments/list_case.html:59
+#: payments/templates/payments/list_draft_case.html:46
+msgid "View Payment History"
+msgstr "Bekijk betalingsgeschiedenis"
+
+#: payments/templates/payments/list_case.html:68
+msgid "You have no cases."
+msgstr "U heeft geen dossiers."
+
+#: payments/templates/payments/list_draft_case.html:24
+#: payments/templates/payments/list_draft_case.html:28
+msgid "Draft Cases"
+msgstr "Conceptdossiers"
+
+#: payments/templates/payments/list_draft_case.html:60
+msgid "No draft cases available."
+msgstr "Geen conceptdossiers beschikbaar."
+
+#: payments/templates/payments/pdf_template.html:36
+msgid "date "
+msgstr "datum "
+
+#: payments/templates/payments/pdf_template.html:45
+#: payments/templates/payments/pending_payments.html:37
+msgid "Catégorie"
+msgstr "Categorie"
+
+#: payments/templates/payments/pdf_template.html:62
+msgid "Résumé de la balance"
+msgstr "Samenvatting van het saldo"
+
+#: payments/templates/payments/pdf_template.html:66
+#: payments/templates/payments/pdf_template.html:70
+msgid "Total pour"
+msgstr "Totaal voor"
+
+#: payments/templates/payments/pdf_template.html:74
+msgid "Balance"
+msgstr "Saldo"
+
+#: payments/templates/payments/pdf_template.html:77
+msgid "en faveur de"
+msgstr "ten gunste van"
+
+#: payments/templates/payments/pdf_template.html:79
+msgid "Montant équilibré"
+msgstr "Gebalanceerd bedrag"
+
+#: payments/templates/payments/pending_payments.html:30
+msgid "Paiements en attente de validation"
+msgstr "Betalingen in afwachting van goedkeuring"
+
+#: payments/templates/payments/pending_payments.html:38
+msgid "Parent"
+msgstr "Ouder"
+
+#: payments/templates/payments/pending_payments.html:39
+msgid "Montant"
+msgstr "Bedrag"
+
+#: payments/templates/payments/pending_payments.html:67
+msgid "Valider"
+msgstr "Valideren"
+
+#: payments/templates/payments/pending_payments.html:68
+msgid "Rejeter"
+msgstr "Afwijzen"
+
+#: payments/templates/payments/submit_payment_document.html:24
+msgid "Ajouter paiement"
+msgstr "Betaling toevoegen"
+
+#: payments/templates/payments/submit_payment_document.html:45
+msgid "Choisir un catégorie"
+msgstr "Kies een categorie"
+
+#: payments/templates/payments/submit_payment_document.html:58
+msgid "Ajouter une nouvelle catégorie"
+msgstr "Een nieuwe categorie toevoegen"
+
+#: payments/templates/payments/submit_payment_document.html:63
+msgid "Add"
+msgstr "Toevoegen"
+
+#: payments/templates/payments/submit_payment_document.html:79
+msgid "Add New Category"
+msgstr "Nieuwe categorie toevoegen"
+
+#: payments/templates/payments/submit_payment_document.html:88
+msgid "Category Name"
+msgstr "Categorienaam"
+
+#: payments/templates/payments/submit_payment_document.html:92
+msgid "Description"
+msgstr "Beschrijving"
+
+#: payments/templates/payments/submit_payment_document.html:95
+msgid "Save"
+msgstr "Opslaan"
+
+#: payments/templates/payments/submit_payment_document.html:143
+msgid "An error occurred. Please try again."
+msgstr "Er is een fout opgetreden. Probeer het opnieuw."
+
+#: templates/cookiebanner/customcookiebanner.html:25
+msgid "Your Privacy Matters"
+msgstr "Uw privacy is belangrijk"
+
+#: templates/cookiebanner/customcookiebanner.html:26
+msgid "We use cookies to ensure that you have the best experience on our website. These cookies are essential for the website to function properly and do not collect any personal data."
+msgstr "We gebruiken cookies om ervoor te zorgen dat u de beste ervaring heeft op onze website. Deze cookies zijn essentieel voor het goed functioneren van de website en verzamelen geen persoonlijke gegevens."
+
+#: templates/cookiebanner/customcookiebanner.html:40
+msgid "Show cookie details"
+msgstr "Toon cookie details"
+
+#: templates/cookiebanner/customcookiebanner.html:60
+msgid "Accept"
+msgstr "Accepteren"
+
+#: templates/cookiebanner/customcookiebanner.html:62
+msgid "This website does not collect any data not required to its basic functions."
+msgstr "Deze website verzamelt geen gegevens die niet nodig zijn voor de basisfunctionaliteit."
+
+#: templates/cookiebanner/customcookiebanner.html:63
+#: templates/cookiebanner/privacy.html:26
+msgid "Privacy Policy"
+msgstr "Privacybeleid"
+
+#: templates/cookiebanner/privacy.html:27
+msgid "Welcome to our Privacy Policy page. Your privacy is critically important to us."
+msgstr "Welkom op onze privacybeleid pagina. Uw privacy is van cruciaal belang voor ons."
+
+#: templates/cookiebanner/privacy.html:29
+msgid "Data Collection"
+msgstr "Gegevensverzameling"
+
+#: templates/cookiebanner/privacy.html:30
+msgid "This application is licensed under GPLv3.0, and we do not collect any more data than what is absolutely required for the functionality of the application. There are no analytics or tracking mechanisms in place."
+msgstr "Deze applicatie is gelicentieerd onder GPLv3.0, en we verzamelen niet meer gegevens dan absoluut noodzakelijk is voor de functionaliteit van de applicatie. Er zijn geen analytische of traceermechanismen aanwezig."
+
+
+#: templates/cookiebanner/privacy.html:32
+msgid "Data Encryption"
+msgstr "Gegevensversleuteling"
+
+#: templates/cookiebanner/privacy.html:33
+msgid ""
+"All data transmitted between your browser and our servers is encrypted using "
+"industry-standard encryption protocols. We ensure that your data is kept "
+"safe and secure at all times."
+msgstr ""
+"Alle gegevens die tussen uw browser en onze servers worden verzonden, zijn versleuteld "
+"met industriestandaard versleutelingsprotocollen. We zorgen ervoor dat uw gegevens "
+"te allen tijde veilig en beveiligd blijven."
+
+#: templates/cookiebanner/privacy.html:35
+msgid "Cookies"
+msgstr "Cookies"
+
+#: templates/cookiebanner/privacy.html:36
+msgid ""
+"We use cookies to ensure that our website functions properly. These cookies "
+"are essential for the website's operation and do not track your personal "
+"data."
+msgstr ""
+"We gebruiken cookies om ervoor te zorgen dat onze website correct functioneert. Deze cookies "
+"zijn essentieel voor de werking van de website en volgen uw persoonlijke gegevens niet."
+
+#: templates/cookiebanner/privacy.html:38
+msgid "Data Deletion"
+msgstr "Gegevensverwijdering"
+
+#: templates/cookiebanner/privacy.html:40
+msgid ""
+"If you request the deletion of your account, all your data will be "
+"permanently deleted from our servers within a maximum of 30 days."
+msgstr ""
+"Als u om verwijdering van uw account vraagt, worden al uw gegevens "
+"binnen maximaal 30 dagen permanent van onze servers verwijderd."
+
+#: templates/cookiebanner/privacy.html:45
+msgid "Contact Us"
+msgstr "Contacteer Ons"
+
+#: templates/cookiebanner/privacy.html:46
+msgid ""
+"If you have any questions or concerns about our privacy practices, please do "
+"not hesitate to contact us."
+msgstr ""
+"Als u vragen of zorgen heeft over onze privacypraktijken, aarzel dan niet "
+"om contact met ons op te nemen."
+
+#: templates/neok/base.html:36 templates/neok/base.html:47
+msgid "Neok Platform"
+msgstr "Neok Platform"
+
+#: templates/neok/base.html:84
 msgid "Logout"
 msgstr "Uitloggen"
 
-#: templates/neok/home.html:6
+#: templates/neok/base.html:102 templates/neok/base.html:182
+msgid "Home"
+msgstr "Startpagina"
+
+#: templates/neok/base.html:106 templates/neok/base.html:187
+msgid "Payments"
+msgstr "Betalingen"
+
+#: templates/neok/base.html:110 templates/neok/base.html:192
+msgid "Add case"
+msgstr "Zaak Toevoegen"
+
+#: templates/neok/base.html:113 templates/neok/base.html:197
+msgid "Case list"
+msgstr "Zaak Lijst"
+
+#: templates/neok/base.html:116 templates/neok/base.html:202
+msgid "Indexation"
+msgstr "Indexering"
+
+#: templates/neok/base.html:123 templates/neok/base.html:215
+msgid "Accounts"
+msgstr "Rekeningen"
+
+#: templates/neok/base.html:126 templates/neok/base.html:219
+msgid "List All"
+msgstr "Alles Weergeven"
+
+#: templates/neok/base.html:127 templates/neok/base.html:222
+msgid "Add Parent"
+msgstr "Ouder Toevoegen"
+
+#: templates/neok/base.html:129 templates/neok/base.html:226
+msgid "Add Jurist"
+msgstr "Jurist Toevoegen"
+
+#: templates/neok/base.html:139 templates/neok/base.html:237
+msgid "Languages"
+msgstr "Talen"
+
+#: templates/neok/base.html:207
+msgid "View Drafts"
+msgstr "Concepten Bekijken"
+
+#: templates/neok/home.html:26
 msgid "Home Page"
 msgstr "Startpagina"
+
+#: templates/neok/home.html:32
+msgid "Jurinet"
+msgstr "Jurinet"
+
+#: templates/neok/home.html:39
+msgid "Welcome,"
+msgstr "Welkom,"
+
+#: templates/neok/home.html:40
+msgid "You are logged in."
+msgstr "U bent ingelogd."
+
+#: templates/neok/home.html:47
+msgid "About This Site"
+msgstr "Over Deze Site"
+
+#: templates/neok/home.html:49
+msgid ""
+"This platform is designed to help parents going through a divorce manage "
+"extraordinary expenses. It provides a clear overview of payments, balances, "
+"and allows for easy tracking and management of financial responsibilities "
+"related to child support and other related costs."
+msgstr ""
+"Dit platform is ontworpen om ouders die een scheiding doormaken te helpen buitengewone kosten te beheren. Het biedt een duidelijk overzicht van betalingen, saldi, en maakt het gemakkelijk om financiële verantwoordelijkheden met betrekking tot kinderalimentatie en andere gerelateerde kosten bij te houden en te beheren."
+
+#: templates/neok/home.html:52
+msgid ""
+"Our goal is to simplify the process, ensuring transparency and helping both "
+"parents to efficiently handle and share these financial responsibilities."
+msgstr ""
+"Ons doel is om het proces te vereenvoudigen, transparantie te waarborgen en beide ouders te helpen deze financiële verantwoordelijkheden efficiënt af te handelen en te delen."
+
+#: templates/neok/home.html:61
+msgid "Feature 1"
+msgstr "Functie 1"
+
+#: templates/neok/home.html:63
+msgid "Manage Payments"
+msgstr "Beheer Betalingen"
+
+#: templates/neok/home.html:65
+msgid ""
+"Easily add, track, and manage extraordinary expenses with our user-friendly "
+"interface. Keep everything organized in one place."
+msgstr ""
+"Voeg eenvoudig buitengewone uitgaven toe, volg en beheer ze met onze gebruiksvriendelijke interface. Houd alles georganiseerd op één plek."
+
+#: templates/neok/home.html:72
+msgid "Feature 3"
+msgstr "Functie 3"
+
+#: templates/neok/home.html:74
+msgid "Download Reports"
+msgstr "Download Rapporten"
+
+#: templates/neok/home.html:76
+msgid ""
+"Generate and download detailed reports in PDF format for your records or for "
+"sharing with your legal advisor."
+msgstr ""
+"Genereer en download gedetailleerde rapporten in PDF-formaat voor uw administratie of om te delen met uw juridisch adviseur."
+
+#: templates/neok/home.html:83
+msgid "Feature 2"
+msgstr "Functie 2"
+
+#: templates/neok/home.html:85
+msgid "Track Balances"
+msgstr "Volg Saldi"
+
+#: templates/neok/home.html:87
+msgid ""
+"Get a clear overview of balances and payments, ensuring transparency and "
+"easy tracking of financial responsibilities."
+msgstr ""
+"Krijg een duidelijk overzicht van saldi en betalingen, wat zorgt voor transparantie en eenvoudig volgen van financiële verantwoordelijkheden."
+
+#: templates/neok/home.html:97
+msgid "Need Help?"
+msgstr "Hulp Nodig?"
+
+#: templates/neok/home.html:99
+msgid ""
+"If you have any questions or need assistance, feel free to contact our "
+"support team."
+msgstr ""
+"Als u vragen heeft of hulp nodig heeft, neem dan gerust contact op met ons ondersteuningsteam."
+
+#~ msgid "Gender"
+#~ msgstr "Geslacht"
+
+#~ msgid ""
+#~ "Prepopulates the database with predefined categories and sub-categories."
+#~ msgstr ""
+#~ "Vult de database vooraf in met vooraf gedefinieerde categorieën en subcategorieën."
+
+#~ msgid "Medical and paramedical expenses"
+#~ msgstr "Medische en paramedische uitgaven"
+
+#~ msgid ""
+#~ "Treatments by medical specialists and the medications, specialized "
+#~ "examinations and care they prescribe"
+#~ msgstr ""
+#~ "Behandelingen door medische specialisten en de medicijnen, gespecialiseerde onderzoeken en zorg die zij voorschrijven"
+
+#~ msgid ""
+#~ "Costs of surgical and hospitalization procedures and the specific "
+#~ "treatments resulting therefrom"
+#~ msgstr ""
+#~ "Kosten van chirurgische ingrepen en ziekenhuisopnames en de specifieke behandelingen die daaruit voortvloeien"
+
+#~ msgid ""
+#~ "Medical and paramedical expenses and devices, including orthodontics, "
+#~ "speech therapy, ophthalmology, etc."
+#~ msgstr ""
+#~ "Medische en paramedische uitgaven en apparaten, inclusief orthodontie, logopedie, oogheelkunde, enz."
+
+#~ msgid ""
+#~ "Annual premium for hospitalization insurance or other supplementary "
+#~ "insurance"
+#~ msgstr ""
+#~ "Jaarlijkse premie voor ziekenhuisverzekering of andere aanvullende verzekeringen"
+
+#~ msgid "Costs relating to school training"
+#~ msgstr "Kosten gerelateerd aan schoolopleiding"
+
+#~ msgid ""
+#~ "School activities of several days, like snow classes, sea classes, green "
+#~ "classes"
+#~ msgstr ""
+#~ "Schoolactiviteiten van meerdere dagen, zoals sneeuwklassen, zeeklassen, groene klassen"
+
+#~ msgid "Necessary, specialized and costly school materials and/or clothing"
+#~ msgstr ""
+#~ "Noodzakelijke, gespecialiseerde en kostbare schoolmaterialen en/of kleding"
+
+#~ msgid "Tuition fees and courses for higher education and special training"
+#~ msgstr ""
+#~ "Inschrijvingsgelden en cursussen voor hoger onderwijs en speciale opleiding"
+
+#~ msgid "Purchase of computer hardware and printers with necessary software"
+#~ msgstr "Aankoop van computerhardware en printers met noodzakelijke software"
+
+#~ msgid "Private lessons for school year success"
+#~ msgstr "Privélessen voor schoolsucces"
+
+#~ msgid "Cost of renting a student room"
+#~ msgstr "Kosten voor het huren van een studentenkamer"
+
+#~ msgid "Additional specific costs related to study abroad program"
+#~ msgstr ""
+#~ "Aanvullende specifieke kosten gerelateerd aan studieprogramma in het buitenland"
+
+#~ msgid ""
+#~ "Expenses related to the development of the personality and development of "
+#~ "the child"
+#~ msgstr ""
+#~ "Uitgaven gerelateerd aan de ontwikkeling van de persoonlijkheid en ontwikkeling van het kind"
+
+#~ msgid "Child care expenses from 0 to 3 years included"
+#~ msgstr "Kinderopvangkosten van 0 tot 3 jaar inbegrepen"
+
+#~ msgid ""
+#~ "Dues, basic supplies, and fees for camps and internships in cultural, "
+#~ "sporting, or artistic activities"
+#~ msgstr ""
+#~ "Contributies, basismaterialen en kosten voor kampen en stages in culturele, sportieve of artistieke activiteiten"
+
+#~ msgid ""
+#~ "Registration fee for driving courses and theoretical and practical "
+#~ "examinations of the driving licence"
+#~ msgstr ""
+#~ "Inschrijfgeld voor rijcursussen en theoretische en praktische examens van het rijbewijs"
+
+#, fuzzy
+#~| msgid "Enter a valid email address"
+#~ msgid "Users must have an email address"
+#~ msgstr "Voer een geldig e-mailadres in"
+
+#~ msgid "first name"
+#~ msgstr "voornaam"
+
+#~ msgid "last name"
+#~ msgstr "achternaam"
+
+#~ msgid "Magistrat List"
+#~ msgstr "Lijst van Magistraten"
+
+#~ msgid "Register Magistrat"
+#~ msgstr "Magistraat Registreren"
+
+#~ msgid "Your profile has been successfully updated."
+#~ msgstr "Je profiel is succesvol bijgewerkt."
+
+#~ msgid ""
+#~ "There was a problem updating your profile. Please check the form for "
+#~ "errors."
+#~ msgstr ""
+#~ "Er was een probleem bij het bijwerken van je profiel. Controleer het formulier op fouten."
+
+#~ msgid "You do not have permission to update this profile."
+#~ msgstr "Je hebt geen toestemming om dit profiel bij te werken."
+
+#~ msgid "Your account has been created! You are now logged in."
+#~ msgstr "Je account is aangemaakt! Je bent nu ingelogd."
+
+#~ msgid "French"
+#~ msgstr "Frans"
+
+#~ msgid "English"
+#~ msgstr "Engels"
+
+#~ msgid "Dutch"
+#~ msgstr "Nederlands"
+
+#~ msgid "German"
+#~ msgstr "Duits"
+
+#~ msgid "Platform neok"
+#~ msgstr "Platform neok"
+
+#~ msgid "Magistrat"
+#~ msgstr "Magistraat"

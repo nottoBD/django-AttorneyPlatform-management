@@ -1,3 +1,23 @@
+<!--
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
 <!DOCTYPE html>
 {% load i18n static language_filters cookiebanner %}
 
@@ -48,7 +68,7 @@
                 {% if request.user.is_authenticated %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{{ request.user.profile_image.url }}" alt="{{ request.user.get_full_name }}" width="30" height="30" class="rounded-circle">
+                        <img src="{% if request.user.profile_image %}{{ request.user.profile_image.url }}{% else %}/media/profile_images/default.png{% endif %}" alt="{{ request.user.get_full_name }}" width="30" height="30" class="rounded-circle">
                         {% if request.user.first_name and request.user.last_name %}
                             {{ request.user.last_name }} {{ request.user.first_name|first|upper }}.
                         {% else %}
@@ -86,7 +106,7 @@
                             {% trans "Payments" %}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="paymentsDropdown">
-                            {% if request.user.role == 'lawyer' %}
+                            {% if request.user.role == 'lawyer' or request.user.role == 'administrator' %}
                                 <li><a class="dropdown-item" href="/payments/create_case">{% trans "Add case" %}</a></li>
                             {% endif %}
                             {% if request.user.role != 'administrator' %}
@@ -167,7 +187,7 @@
                                 <i class="fs-4 bi-currency-dollar"></i> <span class="ms-1 d-none d-sm-inline">{% trans "Payments" %}</span>
                             </a>
                             <ul class="collapse nav flex-column ms-1" id="submenu2" data-bs-parent="#menu">
-                                {% if request.user.role == 'lawyer' %}
+                                {% if request.user.role == 'lawyer' or request.user.role == 'administrator' %}
                                     <li class="w-100">
                                         <a href="/payments/create_case" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Add case" %}</a>
                                     </li>
@@ -180,6 +200,11 @@
                                 {% if request.user.role == 'administrator' %}
                                     <li>
                                         <a href="/payments/index_payments" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "Indexation" %}</a>
+                                    </li>
+                                {% endif %}
+                                {% if request.user.role == 'lawyer' or request.user.role == 'administrator' or request.user.is_superuser %}
+                                    <li>
+                                        <a href="/payments/list_draft" class="nav-link px-0 ms-4"> <span class="d-none d-sm-inline"></span>{% trans "View Drafts" %}</a>
                                     </li>
                                 {% endif %}
                             </ul>

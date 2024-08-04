@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-03 15:59+0200\n"
+"POT-Creation-Date: 2024-08-03 14:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Botton David david.botton@hainaut-promsoc.be\n"
 "Language-Team: FR <LL@li.org>\n"
@@ -18,319 +18,85 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: Payments/templates/Payments/create_folder.html:4
-#: Payments/templates/Payments/create_folder.html:12
-#: Payments/templates/Payments/create_folder.html:18
-msgid "Create Folder"
-msgstr "Créer un dossier"
+#: accounts/forms.py:41
+msgid "Current Cases"
+msgstr "Dossiers actifs"
 
-#: Payments/templates/Payments/list_folder.html:4
-#: Payments/templates/Payments/list_folder.html:8
-msgid "My Folders"
-msgstr "Mes dossiers"
-
-#: Payments/templates/Payments/list_folder.html:13
-#, fuzzy
-#| msgid "Parent"
-msgid "Parent 1"
-msgstr "Parent"
-
-#: Payments/templates/Payments/list_folder.html:14
-#, fuzzy
-#| msgid "Parent"
-msgid "Parent 2"
-msgstr "Parent"
-
-#: Payments/templates/Payments/list_folder.html:15
-msgid "Created at"
-msgstr "Créé le"
-
-#: Payments/templates/Payments/list_folder.html:16
-msgid "Actions"
-msgstr "Actions"
-
-#: Payments/templates/Payments/list_folder.html:27
-msgid "View Payment History"
-msgstr "Voir l'historique des paiements"
-
-#: Payments/templates/Payments/list_folder.html:35
-msgid "You have no folders."
-msgstr "Vous n'avez pas de dossiers."
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:14
-#, fuzzy
-#| msgid "Parent List"
-msgid "Payments List"
-msgstr "Liste des paiements"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:16
-#: Payments/templates/Payments/submit_payment_document.html:12
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:11
-#, fuzzy
-#| msgid "Add Parent"
-msgid "Add Payment Document"
-msgstr "Ajouter un document de paiement"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:23
-msgid "Username"
-msgstr "Nom d'utilisateur"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:24
-#: Payments/templates/Payments/parent_category_history.html:26
-#: Payments/templates/Payments/parent_category_history.html:58
-msgid "Date"
-msgstr "Date"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:25
-#: Payments/templates/Payments/parent_category_history.html:27
-#: Payments/templates/Payments/parent_category_history.html:59
-#, fuzzy
-#| msgid "Accounts"
-msgid "Amount"
-msgstr "Montant"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:26
-#: Payments/templates/Payments/parent_category_history.html:28
-#: Payments/templates/Payments/parent_category_history.html:60
-msgid "Document"
-msgstr "Document"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:42
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:46
-msgid "Document Preview"
-msgstr "Aperçu du document"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:43
-msgid "View"
-msgstr "Voir"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:50
-#: Payments/templates/Payments/parent_category_history.html:42
-#: Payments/templates/Payments/parent_category_history.html:74
-msgid "No Document"
-msgstr "Aucun document"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:66
-msgid "Total Amount"
-msgstr "Montant total"
-
-#: Payments/templates/Payments/magistrate_folder_payment_history.html:77
-msgid "In Favor Of"
-msgstr "En faveur de"
-
-#: Payments/templates/Payments/parent_category_history.html:11
-msgid "Payments for Category"
-msgstr "Paiements pour la catégorie"
-
-#: Payments/templates/Payments/parent_category_history.html:15
-msgid "Validated"
-msgstr "Validé"
-
-#: Payments/templates/Payments/parent_category_history.html:16
-msgid "Pending"
-msgstr "En attente"
-
-#: Payments/templates/Payments/parent_category_history.html:17
-msgid "Rejected"
-msgstr "Rejeté"
-
-#: Payments/templates/Payments/parent_category_history.html:21
-#: Payments/templates/Payments/parent_category_history.html:53
-msgid "Payments by"
-msgstr "Paiements par"
-
-#: Payments/templates/Payments/parent_category_history.html:39
-#: Payments/templates/Payments/parent_category_history.html:71
-msgid "View Document"
-msgstr "Voir le document"
-
-#: Payments/templates/Payments/parent_category_history.html:84
-msgid "No payments found for this category."
-msgstr "Aucun paiement trouvé pour cette catégorie."
-
-#: Payments/templates/Payments/parent_category_history.html:88
-msgid "Back to Payment History"
-msgstr "Retour à l'historique des paiements"
-
-#: Payments/templates/Payments/parent_payment_history.html:14
-msgid "Payments Comparison"
-msgstr "Comparaison des paiements"
-
-#: Payments/templates/Payments/parent_payment_history.html:45
-msgid "View Details"
-msgstr "Voir les détails"
-
-#: Payments/templates/Payments/parent_payment_history.html:60
-msgid "Balance Summary"
-msgstr "Résumé du solde"
-
-#: Payments/templates/Payments/parent_payment_history.html:64
-#: Payments/templates/Payments/parent_payment_history.html:68
-msgid "Total for"
-msgstr "Total pour"
-
-#: Payments/templates/Payments/parent_payment_history.html:75
-msgid "The difference is"
-msgstr "La différence est"
-
-#: Payments/templates/Payments/parent_payment_history.html:75
-msgid "in favor of"
-msgstr "en faveur de"
-
-#: Payments/templates/Payments/parent_payment_history.html:78
-msgid "Amount Balanced"
-msgstr "Montant équilibré"
-
-#: Payments/templates/Payments/submit_payment_document.html:4
-#: templates/neok/base.html:118
-#, fuzzy
-#| msgid "Add Parent"
-msgid "Add Payments"
-msgstr "Ajouter des paiements"
-
-#: Payments/templates/Payments/submit_payment_document.html:22
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:22
-msgid "Select a category"
-msgstr "Sélectionnez une catégorie"
-
-#: Payments/templates/Payments/submit_payment_document.html:33
-#: Payments/templates/Payments/submit_payment_document.html:57
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:33
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:51
-msgid "Add New Category"
-msgstr "Ajouter une nouvelle catégorie"
-
-#: Payments/templates/Payments/submit_payment_document.html:41
-msgid "This payment is currently pending validation."
-msgstr "Ce paiement est actuellement en attente de validation."
-
-#: Payments/templates/Payments/submit_payment_document.html:44
-#: templates/neok/base.html:141
-#, fuzzy
-#| msgid "Address"
-msgid "Add"
-msgstr "Ajouter"
-
-#: Payments/templates/Payments/submit_payment_document.html:66
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:60
-#, fuzzy
-#| msgid "Last Name"
-msgid "Category Name"
-msgstr "Nom de la catégorie"
-
-#: Payments/templates/Payments/submit_payment_document.html:70
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:64
-msgid "Description"
-msgstr "Description"
-
-#: Payments/templates/Payments/submit_payment_document.html:73
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:67
-msgid "Save"
-msgstr "Enregistrer"
-
-#: Payments/templates/Payments/submit_payment_document.html:110
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:104
-msgid "An error occurred. Please try again."
-msgstr "Une erreur s'est produite. Veuillez réessayer."
-
-#: Payments/templates/Payments/submit_payment_document_lawyer.html:38
-msgid "Submit"
-msgstr "Soumettre"
-
-#: accounts/forms.py:18
+#: accounts/forms.py:47
 #, fuzzy
 #| msgid "Assign Parents"
 msgid "Assigned Users"
 msgstr "Utilisateurs assignés"
 
-#: accounts/forms.py:31
+#: accounts/forms.py:83
 msgid "You are not authorized to change the active status."
 msgstr "Vous n'êtes pas autorisé à changer le statut actif."
 
-#: accounts/forms.py:101 accounts/views.py:33
-msgid "You are not authorized to change the role."
-msgstr "Vous n'êtes pas autorisé à changer le rôle."
-
-#: accounts/forms.py:163
-msgid "Unsupported file type. Please upload a JPEG, PNG, or GIF image."
-msgstr ""
-"Type de fichier non pris en charge. Veuillez télécharger une image JPEG, PNG "
-"ou GIF."
-
-#: accounts/forms.py:174 accounts/forms.py:225
-#: accounts/templates/accounts/user_list.html:27
-#: accounts/templates/accounts/user_list.html:66
+#: accounts/forms.py:167 accounts/forms.py:226
+#: accounts/templates/accounts/user_list.html:49
+#: accounts/templates/accounts/user_list.html:82
+#: accounts/templates/accounts/user_list.html:124
 msgid "First Name"
 msgstr "Prénom"
 
-#: accounts/forms.py:175 accounts/forms.py:224
-#: accounts/templates/accounts/user_list.html:26
-#: accounts/templates/accounts/user_list.html:65
+#: accounts/forms.py:168 accounts/forms.py:225
+#: accounts/templates/accounts/user_list.html:48
+#: accounts/templates/accounts/user_list.html:81
+#: accounts/templates/accounts/user_list.html:123
 msgid "Last Name"
 msgstr "Nom"
 
-#: accounts/forms.py:176
+#: accounts/forms.py:169
 msgid "Telephone Number"
 msgstr "Numéro de téléphone"
 
-#: accounts/forms.py:178
-msgid "Assign Parents"
-msgstr "Attribuer des parents"
-
-#: accounts/forms.py:190
-msgid "Press Control or Shift to select several Parents."
-msgstr "Appuyez sur Control ou Shift pour sélectionner plusieurs parents."
-
-#: accounts/forms.py:222
-msgid "Gender"
-msgstr "Genre"
-
-#: accounts/forms.py:223
+#: accounts/forms.py:224
 msgid "National Number"
 msgstr "Numéro national"
 
-#: accounts/forms.py:226
+#: accounts/forms.py:227
 msgid "Telephone"
 msgstr "Téléphone"
 
-#: accounts/forms.py:227
+#: accounts/forms.py:228
 msgid "Address"
 msgstr "Adresse"
 
-#: accounts/forms.py:233
-msgid "National number must be exactly 11 digits long."
-msgstr "Le numéro national doit comporter exactement 11 chiffres."
+#: accounts/forms.py:268
+msgid "The passwords do not match."
+msgstr "Les mots de passe ne correspondent pas."
 
-#: accounts/templates/accounts/cancel_deletion.html:4
+#: accounts/templates/accounts/cancel_deletion.html:24
 msgid "Cancel Account Deletion"
 msgstr "Annuler la suppression du compte"
 
-#: accounts/templates/accounts/cancel_deletion.html:5
+#: accounts/templates/accounts/cancel_deletion.html:25
 msgid ""
 "If you cancel the deletion request, your account will not be deleted. You "
 "can always request deletion again if needed."
 msgstr ""
-"Si vous annulez la demande de suppression, votre compte ne sera pas supprimé. Vous "
-"pouvez toujours demander la suppression à nouveau si nécessaire."
+"Si vous annulez la demande de suppression, votre compte ne sera pas "
+"supprimé. Vous pouvez toujours demander la suppression à nouveau si "
+"nécessaire."
 
-#: accounts/templates/accounts/cancel_deletion.html:9
-#: accounts/templates/accounts/user_update.html:12
+#: accounts/templates/accounts/cancel_deletion.html:29
+#: accounts/templates/accounts/user_update.html:33
 msgid "Cancel Deletion Request"
 msgstr "Annuler la demande de suppression"
 
-#: accounts/templates/accounts/cancel_deletion.html:11
+#: accounts/templates/accounts/cancel_deletion.html:31
 #, fuzzy
 #| msgid "Profile Image"
 msgid "Back to Profile"
 msgstr "Retour au profil"
 
-#: accounts/templates/accounts/request_deletion.html:4
-#: accounts/templates/accounts/user_update.html:15
-#: templates/cookiebanner/privacy.html:21
+#: accounts/templates/accounts/request_deletion.html:24
+#: accounts/templates/accounts/user_update.html:36
+#: templates/cookiebanner/privacy.html:42
 msgid "Request Account Deletion"
 msgstr "Demander la suppression du compte"
 
-#: accounts/templates/accounts/request_deletion.html:5
+#: accounts/templates/accounts/request_deletion.html:25
 msgid ""
 "Once you request account deletion, your account will be scheduled for "
 "deletion after 30 days. During this period, you can cancel the deletion "
@@ -338,688 +104,1315 @@ msgid ""
 "account before the 30 days period ends."
 msgstr ""
 "Une fois que vous demandez la suppression du compte, votre compte sera "
-"programmé pour être supprimé après 30 jours. Pendant cette période, vous pouvez annuler la demande "
-"de suppression à tout moment. Veuillez noter que le webmaster peut supprimer votre "
-"compte avant la fin des 30 jours."
+"programmé pour être supprimé après 30 jours. Pendant cette période, vous "
+"pouvez annuler la demande de suppression à tout moment. Veuillez noter que "
+"le webmaster peut supprimer votre compte avant la fin des 30 jours."
 
-#: accounts/templates/accounts/request_deletion.html:9
+#: accounts/templates/accounts/request_deletion.html:29
 msgid "Request Deletion"
 msgstr "Demander la suppression"
 
-#: accounts/templates/accounts/user_list.html:12
-#: accounts/templates/accounts/user_update.html:51
+#: accounts/templates/accounts/user_list.html:32
+#: accounts/templates/accounts/user_update.html:73
 msgid "Active"
 msgstr "Actif"
 
-#: accounts/templates/accounts/user_list.html:21
-msgid "Attorneys - Lawyers - Judges"
-msgstr "Avocats - Juges"
+#: accounts/templates/accounts/user_list.html:42
+#, fuzzy
+#| msgid "Administrator"
+msgid "Administrators"
+msgstr "Administrateur"
 
-#: accounts/templates/accounts/user_list.html:28
-#: accounts/templates/accounts/user_list.html:67
+#: accounts/templates/accounts/user_list.html:50
+#: accounts/templates/accounts/user_list.html:83
+#: accounts/templates/accounts/user_list.html:125
 msgid "Email"
 msgstr "E-mail"
 
-#: accounts/templates/accounts/user_list.html:29
+#: accounts/templates/accounts/user_list.html:51
+#: accounts/templates/accounts/user_list.html:84
 msgid "Role"
 msgstr "Rôle"
 
-#: accounts/templates/accounts/user_list.html:30
-msgid "Case"
+#: accounts/templates/accounts/user_list.html:75
+msgid "Attorneys - Lawyers - Judges"
+msgstr "Avocats - Juges"
+
+#: accounts/templates/accounts/user_list.html:85
+#, fuzzy
+#| msgid "Case"
+msgid "Cases"
 msgstr "Affaire"
 
-#: accounts/templates/accounts/user_list.html:59
+#: accounts/templates/accounts/user_list.html:117
 #, fuzzy
 #| msgid "Parent List"
 msgid "Parents List"
 msgstr "Liste des parents"
 
-#: accounts/templates/accounts/user_list.html:68
+#: accounts/templates/accounts/user_list.html:126
 msgid "Referent"
 msgstr "Référent"
 
-#: accounts/templates/accounts/user_list.html:74
+#: accounts/templates/accounts/user_list.html:132
 msgid "Profile Image"
 msgstr "Image de profil"
 
-#: accounts/templates/accounts/user_update.html:11
+#: accounts/templates/accounts/user_update.html:32
 msgid "This account is scheduled for deletion on"
 msgstr "Ce compte est programmé pour être supprimé le"
 
-#: accounts/templates/accounts/user_update.html:22
+#: accounts/templates/accounts/user_update.html:44
 msgid "User has requested account deletion."
 msgstr "L'utilisateur a demandé la suppression du compte."
 
-#: accounts/templates/accounts/user_update.html:29
+#: accounts/templates/accounts/user_update.html:52
 msgid "Delete User"
 msgstr "Supprimer l'utilisateur"
 
-#: accounts/templates/accounts/user_update.html:29
+#: accounts/templates/accounts/user_update.html:52
 msgid "Are you sure you want to permanently delete this user?"
 msgstr "Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ?"
 
-#: accounts/templates/accounts/user_update.html:36
-#: templates/neok/base.html:58
+#: accounts/templates/accounts/user_update.html:59 templates/neok/base.html:79
 #, fuzzy
 #| msgid "Profile Image"
 msgid "Profile"
 msgstr "Profil"
 
-#: accounts/templates/accounts/user_update.html:41
+#: accounts/templates/accounts/user_update.html:63
 #, fuzzy
 #| msgid "Profile Image"
 msgid "Profile image"
 msgstr "Image de profil"
 
-#: accounts/templates/accounts/user_update.html:63
+#: accounts/templates/accounts/user_update.html:85
 msgid "Save changes"
 msgstr "Enregistrer les modifications"
 
-#: accounts/templates/accounts/user_update.html:65
+#: accounts/templates/accounts/user_update.html:87
 msgid "Reset Password"
 msgstr "Réinitialiser le mot de passe"
 
-#: accounts/templates/accounts/user_update.html:71
+#: accounts/templates/accounts/user_update.html:93
 msgid "Are you sure you want to deassign?"
 msgstr "Êtes-vous sûr de vouloir désassigner ?"
 
-#: accounts/templates/accounts/user_update.html:71
+#: accounts/templates/accounts/user_update.html:93
 msgid "Deassign"
 msgstr "Désassigner"
 
-#: accounts/templates/registration/login.html:4
-#: accounts/templates/registration/login.html:12
 #: accounts/templates/registration/login.html:24
-#: accounts/templates/registration/register.html:31
-#: accounts/templates/registration/register_magistrate.html:31
-#: templates/neok/base.html:85
+#: accounts/templates/registration/login.html:32
+#: accounts/templates/registration/login.html:44
+#: accounts/templates/registration/register.html:51
+#: accounts/templates/registration/register_jurist.html:51
+#: templates/neok/base.html:94 templates/neok/base.html:170
 msgid "Login"
 msgstr "Connexion"
 
-#: accounts/templates/registration/login.html:18
+#: accounts/templates/registration/login.html:38
 msgid "Don't have an account? Create one"
 msgstr "Vous n'avez pas de compte ? Créez-en un"
 
-#: accounts/templates/registration/login.html:19
+#: accounts/templates/registration/login.html:39
 msgid "Here"
 msgstr "Ici"
 
-#: accounts/templates/registration/login.html:22
+#: accounts/templates/registration/login.html:42
 msgid "Forgot Password"
 msgstr "Mot de passe oublié"
 
-#: accounts/templates/registration/password_reset.html:10
-#: accounts/templates/registration/password_reset_confirmation.html:7
+#: accounts/templates/registration/password_reset.html:30
+#: accounts/templates/registration/password_reset_confirmation.html:27
 msgid "Reset Your Password"
 msgstr "Réinitialisez votre mot de passe"
 
-#: accounts/templates/registration/password_reset.html:13
+#: accounts/templates/registration/password_reset.html:33
 msgid ""
 "Please enter your email address to receive a link to reset your password."
-msgstr "Veuillez entrer votre adresse e-mail pour recevoir un lien de réinitialisation de votre mot de passe."
+msgstr ""
+"Veuillez entrer votre adresse e-mail pour recevoir un lien de "
+"réinitialisation de votre mot de passe."
 
-#: accounts/templates/registration/password_reset.html:20
+#: accounts/templates/registration/password_reset.html:40
 msgid "Notification"
 msgstr "Notification"
 
-#: accounts/templates/registration/password_reset.html:21
+#: accounts/templates/registration/password_reset.html:41
 msgid "Close"
 msgstr "Fermer"
 
-#: accounts/templates/registration/password_reset.html:34
+#: accounts/templates/registration/password_reset.html:54
 msgid "Send reset instructions"
 msgstr "Envoyer les instructions de réinitialisation"
 
-#: accounts/templates/registration/password_reset_confirmation.html:11
+#: accounts/templates/registration/password_reset_confirmation.html:31
 msgid "Change my password"
 msgstr "Changer mon mot de passe"
 
-#: accounts/templates/registration/register.html:4
-#: accounts/templates/registration/register_magistrate.html:4
+#: accounts/templates/registration/register.html:24
+#: accounts/templates/registration/register_jurist.html:24
 msgid "Sign Up"
 msgstr "S'inscrire"
 
-#: accounts/templates/registration/register.html:12
-#: accounts/templates/registration/register.html:33
-#: accounts/templates/registration/register_magistrate.html:33
-#: templates/neok/base.html:90
+#: accounts/templates/registration/register.html:32
+#: accounts/templates/registration/register.html:53
+#: accounts/templates/registration/register_jurist.html:53
+#: templates/neok/base.html:97 templates/neok/base.html:175
 msgid "Register"
 msgstr "Inscription"
 
-#: accounts/templates/registration/register.html:30
-#: accounts/templates/registration/register_magistrate.html:30
+#: accounts/templates/registration/register.html:50
+#: accounts/templates/registration/register_jurist.html:50
 #, fuzzy
 #| msgid "Have an account?  "
 msgid "Have an account?"
 msgstr "Vous avez un compte ?  "
 
-#: accounts/templates/registration/register_magistrate.html:12
+#: accounts/templates/registration/register_jurist.html:32
 msgid "Register a judge or an attorney"
 msgstr "Enregistrer un juge ou un avocat"
 
-#: accounts/views.py:85
+#: accounts/validations.py:53
+msgid "Unsupported file type. Please upload a JPEG, PNG, or GIF image."
+msgstr ""
+"Type de fichier non pris en charge. Veuillez télécharger une image JPEG, PNG "
+"ou GIF."
+
+#: accounts/validations.py:55
+#, python-brace-format
+msgid "Image file too large."
+msgstr "Image trop lourde"
+
+#: accounts/validations.py:57
+#, python-brace-format
+msgid "Image dimensions exceed the maximum allowed."
+msgstr "Image aux dimensions trop grandes."
+
+#: accounts/validations.py:59
+#, python-brace-format
+msgid "Invalid image file."
+msgstr "Image au format invalide"
+
+#: accounts/validations.py:78
+#, fuzzy
+#| msgid "Enter a valid email address"
+msgid "Invalid email address."
+msgstr "Entrez une adresse e-mail valide"
+
+#: accounts/validations.py:114
+msgid "National number must be exactly 11 digits long."
+msgstr "Le numéro national doit comporter exactement 11 chiffres."
+
+#: accounts/validations.py:120
+msgid "The month must be between 01 and 12."
+msgstr "Numéro national invalide."
+
+#: accounts/validations.py:122
+msgid "The day must be between 01 and 31."
+msgstr "Numéro national invalide."
+
+#: accounts/validations.py:140
+msgid "The password must be at least 8 characters long."
+msgstr "Le mot de passe doit être au moins de 8 caractères."
+
+#: accounts/validations.py:142
+msgid "Password must include lowercase, uppercase, and numbers."
+msgstr "Le mot de passe doit inclure au minimum une minuscule, une majuscule, un chiffre."
+
+#: accounts/validations.py:166
+msgid "Invalid phone number format."
+msgstr "Format du numéro de téléphone invalide."
+
+#: accounts/views.py:54
+msgid "You are not authorized to change the role."
+msgstr "Vous n'êtes pas autorisé à changer le rôle."
+
+#: accounts/views.py:147
 msgid "You are not authorized to deassign this user."
 msgstr "Vous n'êtes pas autorisé à désassigner cet utilisateur."
 
-#: accounts/views.py:90
-msgid "You have been deassigned from this parent."
+#: accounts/views.py:152
+#, fuzzy
+#| msgid "You have been deassigned from this parent."
+msgid "You have been deassigned from this case."
 msgstr "Vous avez été désassigné de ce parent."
 
-#: accounts/views.py:93
+#: accounts/views.py:155
 #, fuzzy
 #| msgid "You do not have permission to update this profile."
-msgid "You are not assigned to this parent."
+msgid "You are not assigned to this case."
 msgstr "Vous n'avez pas la permission de mettre à jour ce profil."
 
-#: accounts/views.py:196
-#, fuzzy, python-format
+#: accounts/views.py:277
+#, fuzzy
 #| msgid "Magistrat \"%s\" registered successfully."
-msgid "Lawyer \"%s\" registered successfully."
-msgstr "Le magistrat \"%s\" a été enregistré avec succès."
+msgid "Attorney registered successfully."
+msgstr "Le magistrat a été enregistré avec succès."
 
-#: accounts/views.py:227
+#: accounts/views.py:298
 msgid "The parent account has been successfully created."
 msgstr "Le compte parent a été créé avec succès."
 
-#: accounts/views.py:244
+#: accounts/views.py:315
+#, fuzzy
+#| msgid ""
+#| "We've emailed you instructions for setting your password, if an account "
+#| "exists with the email you entered. You should receive them shortly. If "
+#| "you don't receive an email, please make sure you've entered the address "
+#| "you registered with, and check your spam folder."
 msgid ""
 "We've emailed you instructions for setting your password, if an account "
 "exists with the email you entered. You should receive them shortly. If you "
 "don't receive an email, please make sure you've entered the address you "
-"registered with, and check your spam folder."
+"registered with, and check your spam case."
 msgstr ""
-"Nous vous avons envoyé par email les instructions pour définir votre mot de passe, si un compte "
-"existe avec l'email que vous avez entré. Vous devriez les recevoir sous peu. Si vous "
-"ne recevez pas d'email, veuillez vous assurer que vous avez entré l'adresse avec laquelle vous "
-"vous êtes inscrit, et vérifiez votre dossier de spam."
+"Nous vous avons envoyé par email les instructions pour définir votre mot de "
+"passe, si un compte existe avec l'email que vous avez entré. Vous devriez "
+"les recevoir sous peu. Si vous ne recevez pas d'email, veuillez vous assurer "
+"que vous avez entré l'adresse avec laquelle vous vous êtes inscrit, et "
+"vérifiez votre dossier de spam."
 
-#: accounts/views.py:261
+#: accounts/views.py:332
 msgid "You are not authorized to delete this account."
 msgstr "Vous n'êtes pas autorisé à supprimer ce compte."
 
-#: accounts/views.py:268
+#: accounts/views.py:339
 msgid "Account deletion requested successfully."
 msgstr "La demande de suppression du compte a été effectuée avec succès."
 
-#: accounts/views.py:279
+#: accounts/views.py:350
 msgid "You are not authorized to cancel the deletion of this account."
 msgstr "Vous n'êtes pas autorisé à annuler la suppression de ce compte."
 
-#: accounts/views.py:282
+#: accounts/views.py:353
 msgid "You cannot cancel deletion for an administrator account."
 msgstr "Vous ne pouvez pas annuler la suppression d'un compte administrateur."
 
-#: accounts/views.py:289
+#: accounts/views.py:360
 msgid "Account deletion request cancelled successfully."
 msgstr "La demande de suppression du compte a été annulée avec succès."
 
-#: accounts/views.py:302
+#: accounts/views.py:373
 #, fuzzy
 #| msgid "The parent account has been successfully created."
 msgid "The user has been deleted successfully."
 msgstr "L'utilisateur a été supprimé avec succès."
 
-#: accounts/views.py:304
+#: accounts/views.py:375
 msgid "You are not authorized to delete this user."
 msgstr "Vous n'êtes pas autorisé à supprimer cet utilisateur."
 
-#: neok/settings.py:155
+#: neok/settings.py:175
 msgid "Cookie settings"
 msgstr "Paramètres des cookies"
 
-#: neok/settings.py:156
-msgid ""
-"We are using cookies on this website. A few are essential, others are not."
-msgstr "Nous utilisons des cookies sur ce site web. Certains sont essentiels, d'autres non."
+#: neok/settings.py:176
+msgid "We are using a few essential cookies on this website."
+msgstr "Nous utilisons quelques cookies essentiels pour le site."
 
-#: neok/settings.py:157
+#: neok/settings.py:177
 msgid "Please accept our cookies"
 msgstr "Veuillez accepter nos cookies"
 
-#: neok/settings.py:159
+#: neok/settings.py:179
 msgid "Imprint"
 msgstr "Empreinte"
 
-#: neok/settings.py:160
+#: neok/settings.py:180
 msgid "Privacy"
 msgstr "Confidentialité"
 
-#: neok/settings.py:165
+#: neok/settings.py:185
 msgid "Essential"
 msgstr "Essentiel"
 
-#: neok/settings.py:166
+#: neok/settings.py:186
 msgid "Essential cookies allow this page to work."
 msgstr "Les cookies essentiels permettent à cette page de fonctionner."
 
-#: neok/settings.py:170
+#: neok/settings.py:190
 msgid "Meta cookie for the cookies that are set."
 msgstr "Cookie méta pour les cookies qui sont définis."
 
-#: neok/settings.py:174
+#: neok/settings.py:194
 msgid "This cookie prevents Cross-Site-Request-Forgery attacks."
-msgstr "Ce cookie prévient les attaques par falsification de requête intersites."
+msgstr ""
+"Ce cookie prévient les attaques par falsification de requête intersites."
 
-#: neok/settings.py:178
+#: neok/settings.py:198
 msgid "This cookie is necessary to allow logging in, for example."
 msgstr "Ce cookie est nécessaire pour permettre la connexion, par exemple."
 
-#: templates/cookiebanner/customcookiebanner.html:5
+#: neok/settings.py:202
+msgid "Stores the language preference of the user."
+msgstr "Enregistre la préférence linguistique de l'utilisateur."
+
+#: payments/templates/payments/add_juge_avocat.html:32
+msgid "Ajouter ou supprimer des juges et avocats au dossier"
+msgstr ""
+
+#: payments/templates/payments/add_juge_avocat.html:39
+msgid "Ajouter"
+msgstr ""
+
+#: payments/templates/payments/add_juge_avocat.html:41
+#: payments/templates/payments/pending_payments.html:71
+msgid "Retourner"
+msgstr ""
+
+#: payments/templates/payments/add_juge_avocat.html:51
+msgid "Juges liés au dossier"
+msgstr ""
+
+#: payments/templates/payments/add_juge_avocat.html:55
+msgid "Nom du juge"
+msgstr ""
+
+#: payments/templates/payments/add_juge_avocat.html:56
+#: payments/templates/payments/add_juge_avocat.html:82
+#, fuzzy
+#| msgid "Actions"
+msgid "Action"
+msgstr "Actions"
+
+#: payments/templates/payments/add_juge_avocat.html:66
+#: payments/templates/payments/add_juge_avocat.html:93
+#: payments/templates/payments/child.html:53
+msgid "Supprimer"
+msgstr ""
+
+#: payments/templates/payments/add_juge_avocat.html:77
+msgid "Avocats liés au dossier"
+msgstr ""
+
+#: payments/templates/payments/add_juge_avocat.html:81
+msgid "Nom de l'avocat"
+msgstr ""
+
+#: payments/templates/payments/case_category_history.html:31
+msgid "Payments for Category"
+msgstr "Paiements pour la catégorie"
+
+#: payments/templates/payments/case_category_history.html:34
+msgid "Selected Period:"
+msgstr "Choisir la période:"
+
+#: payments/templates/payments/case_category_history.html:39
+msgid "Validated"
+msgstr "Validé"
+
+#: payments/templates/payments/case_category_history.html:40
+msgid "Pending"
+msgstr "En attente"
+
+#: payments/templates/payments/case_category_history.html:41
+msgid "Rejected"
+msgstr "Rejeté"
+
+#: payments/templates/payments/case_category_history.html:45
+#: payments/templates/payments/case_category_history.html:77
+msgid "Payments by"
+msgstr "Paiements par"
+
+#: payments/templates/payments/case_category_history.html:50
+#: payments/templates/payments/case_category_history.html:82
+#: payments/templates/payments/pending_payments.html:40
+msgid "Date"
+msgstr "Date"
+
+#: payments/templates/payments/case_category_history.html:51
+#: payments/templates/payments/case_category_history.html:83
+#: payments/templates/payments/index_payments.html:59
+#, fuzzy
+#| msgid "Accounts"
+msgid "Amount"
+msgstr "Montant"
+
+#: payments/templates/payments/case_category_history.html:52
+#: payments/templates/payments/case_category_history.html:84
+#: payments/templates/payments/pending_payments.html:41
+msgid "Document"
+msgstr "Document"
+
+#: payments/templates/payments/case_category_history.html:63
+#: payments/templates/payments/case_category_history.html:95
+#: payments/templates/payments/pending_payments.html:54
+msgid "View Document"
+msgstr "Voir le document"
+
+#: payments/templates/payments/case_category_history.html:66
+#: payments/templates/payments/case_category_history.html:98
+#: payments/templates/payments/pending_payments.html:57
+msgid "No Document"
+msgstr "Aucun document"
+
+#: payments/templates/payments/case_category_history.html:108
+msgid "No payments found for this category."
+msgstr "Aucun paiement trouvé pour cette catégorie."
+
+#: payments/templates/payments/case_category_history.html:111
+#: payments/templates/payments/submit_payment_document.html:65
+msgid "Back to Payment History"
+msgstr "Retour à l'historique des paiements"
+
+#: payments/templates/payments/case_payment_history.html:32
+#: payments/templates/payments/list_case.html:52
+msgid "DRAFT"
+msgstr "BROUILLON"
+
+#: payments/templates/payments/case_payment_history.html:37
+#: payments/templates/payments/pdf_template.html:32
+msgid "Récapitulatif des paiements"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:41
+#: payments/templates/payments/case_payment_history.html:90
+#: payments/templates/payments/child.html:43
+#: payments/templates/payments/index_payments.html:60
+#: payments/templates/payments/list_case.html:40
+#: payments/templates/payments/list_draft_case.html:36
+msgid "Actions"
+msgstr "Actions"
+
+#: payments/templates/payments/case_payment_history.html:46
+#: payments/templates/payments/case_payment_history.html:66
+msgid "Gérer enfant"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:49
+msgid "Gérer juge/avocat"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:53
+#: payments/templates/payments/case_payment_history.html:69
+#: payments/templates/payments/submit_payment_document.html:32
+msgid "Ajouter un paiement"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:58
+#: payments/templates/payments/convert_draft_case.html:24
+#: payments/templates/payments/convert_draft_case.html:28
+msgid "Convert Draft Case"
+msgstr "Convertir en dossier courant"
+
+#: payments/templates/payments/case_payment_history.html:74
+msgid "Télécharger en PDF"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:111
+msgid "View Details"
+msgstr "Voir les détails"
+
+#: payments/templates/payments/case_payment_history.html:126
+msgid "Balance Summary"
+msgstr "Résumé du solde"
+
+#: payments/templates/payments/case_payment_history.html:138
+#: payments/templates/payments/case_payment_history.html:150
+msgid "Total for"
+msgstr "Total pour"
+
+#: payments/templates/payments/case_payment_history.html:164
+msgid "The difference is"
+msgstr "La différence est"
+
+#: payments/templates/payments/case_payment_history.html:164
+msgid "in favor of"
+msgstr "en faveur de"
+
+#: payments/templates/payments/case_payment_history.html:167
+msgid "Amount Balanced"
+msgstr "Montant équilibré"
+
+#: payments/templates/payments/case_payment_history.html:171
+msgid "Alimentary Contribution"
+msgstr "Contribution Alimentaire"
+
+#: payments/templates/payments/case_payment_history.html:179
+msgid "Filtrer les paiements"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:187
+#: payments/templates/payments/pdf_template.html:34
+msgid "Année"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:188
+#: payments/templates/payments/pdf_template.html:34
+msgid "Trimestre"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:200
+msgid "T1"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:203
+msgid "T2"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:206
+msgid "T3"
+msgstr ""
+
+#: payments/templates/payments/case_payment_history.html:209
+msgid "T4"
+msgstr ""
+
+#: payments/templates/payments/child.html:24
+#: payments/templates/payments/child.html:67
+msgid "Ajouter un enfant au dossier"
+msgstr ""
+
+#: payments/templates/payments/child.html:33
+msgid "Liste des enfants"
+msgstr ""
+
+#: payments/templates/payments/child.html:34
+#, fuzzy
+#| msgid "Reset Your Password"
+msgid "Retour au dossier"
+msgstr "Réinitialisez votre mot de passe"
+
+#: payments/templates/payments/child.html:40
+msgid "Prénom"
+msgstr ""
+
+#: payments/templates/payments/child.html:41
+msgid "Nom"
+msgstr ""
+
+#: payments/templates/payments/child.html:42
+msgid "Date de naissance"
+msgstr ""
+
+#: payments/templates/payments/child.html:73
+msgid "Ajouter l'enfant"
+msgstr ""
+
+#: payments/templates/payments/combine_drafts.html:24
+#: payments/templates/payments/combine_drafts.html:30
+#: payments/templates/payments/combine_drafts.html:41
+#: payments/templates/payments/list_draft_case.html:50
+msgid "Combine Drafts"
+msgstr "Fusionner les 2 brouillons"
+
+#: payments/templates/payments/combine_drafts.html:34
+msgid "Select First Draft"
+msgstr "Selectionner le premier brouillon"
+
+#: payments/templates/payments/combine_drafts.html:38
+msgid "Select Second Draft"
+msgstr "Selectionner le deuxième brouillon"
+
+#: payments/templates/payments/convert_draft_case.html:32
+msgid "Select Second Parent"
+msgstr "Selectionner le deuxième parent"
+
+#: payments/templates/payments/convert_draft_case.html:35
+msgid "Convert Case"
+msgstr "Convertir le dossier"
+
+#: payments/templates/payments/create_case.html:24
+#: payments/templates/payments/create_case.html:32
+#: payments/templates/payments/create_case.html:38
+#, fuzzy
+#| msgid "Created at"
+msgid "Create Case"
+msgstr "Créer le dossier"
+
+#: payments/templates/payments/index_payments.html:24
+#: payments/templates/payments/index_payments.html:32
+#, fuzzy
+#| msgid "Add Parent"
+msgid "Index Payments"
+msgstr "Ajouter des paiements"
+
+#: payments/templates/payments/index_payments.html:39
+msgid "index food contribution"
+msgstr "Index de la contribution alimentaire"
+
+#: payments/templates/payments/index_payments.html:50
+msgid "Existing Indexations"
+msgstr "Indexations existantes"
+
+#: payments/templates/payments/index_payments.html:56
+msgid "Year"
+msgstr "Année"
+
+#: payments/templates/payments/index_payments.html:57
+msgid "Indice"
+msgstr ""
+
+#: payments/templates/payments/index_payments.html:58
+#: payments/templates/payments/list_case.html:39
+#: payments/templates/payments/list_draft_case.html:35
+msgid "Created at"
+msgstr "Créé le"
+
+#: payments/templates/payments/index_payments.html:73
+#, fuzzy
+#| msgid "Are you sure you want to permanently delete this user?"
+msgid "Are you sure you want to delete this indexation?"
+msgstr "Êtes-vous sûr de vouloir supprimer définitivement cet utilisateur ?"
+
+#: payments/templates/payments/index_payments.html:73
+#, fuzzy
+#| msgid "Delete User"
+msgid "Delete"
+msgstr "Supprimer l'utilisateur"
+
+#: payments/templates/payments/index_payments.html:79
+msgid "No indexations found."
+msgstr "Pas de précédents indexations"
+
+#: payments/templates/payments/index_payments.html:99
+msgid ""
+"An indexation already exists for this year. Do you want to add another one?"
+msgstr "Une indexation existe déjà pour cette année. En ajouter quand même?"
+
+#: payments/templates/payments/list_case.html:24
+#: payments/templates/payments/list_case.html:28
+#, fuzzy
+#| msgid "Case"
+msgid "My Cases"
+msgstr "Mes Affaires"
+
+#: payments/templates/payments/list_case.html:30
+msgid "Start a draft case"
+msgstr "Ouvrir un dossier brouillon"
+
+#: payments/templates/payments/list_case.html:37
+#: payments/templates/payments/list_draft_case.html:34
+#, fuzzy
+#| msgid "Parent"
+msgid "Parent 1"
+msgstr "Parent #1"
+
+#: payments/templates/payments/list_case.html:38
+#, fuzzy
+#| msgid "Parent"
+msgid "Parent 2"
+msgstr "Parent #2"
+
+#: payments/templates/payments/list_case.html:59
+#: payments/templates/payments/list_draft_case.html:46
+msgid "View Payment History"
+msgstr "Voir l'historique des paiements"
+
+#: payments/templates/payments/list_case.html:68
+#, fuzzy
+#| msgid "You have no folders."
+msgid "You have no cases."
+msgstr "Vous n'avez pas de dossiers."
+
+#: payments/templates/payments/list_draft_case.html:24
+#: payments/templates/payments/list_draft_case.html:28
+msgid "Draft Cases"
+msgstr "Dossiers brouillons"
+
+#: payments/templates/payments/list_draft_case.html:60
+msgid "No draft cases available."
+msgstr "Pas de dossier brouillon."
+
+#: payments/templates/payments/pdf_template.html:36
+#, fuzzy
+#| msgid "Update"
+msgid "date "
+msgstr "Mettre à jour"
+
+#: payments/templates/payments/pdf_template.html:45
+#: payments/templates/payments/pending_payments.html:37
+msgid "Catégorie"
+msgstr "Catégorie"
+
+#: payments/templates/payments/pdf_template.html:62
+msgid "Résumé de la balance"
+msgstr "Résumé de la balance"
+
+#: payments/templates/payments/pdf_template.html:66
+#: payments/templates/payments/pdf_template.html:70
+#, fuzzy
+#| msgid "Total for"
+msgid "Total pour"
+msgstr "Total pour"
+
+#: payments/templates/payments/pdf_template.html:74
+#, fuzzy
+#| msgid "Balance Summary"
+msgid "Balance"
+msgstr "Résumé du solde"
+
+#: payments/templates/payments/pdf_template.html:77
+#, fuzzy
+#| msgid "in favor of"
+msgid "en faveur de"
+msgstr "en faveur de"
+
+#: payments/templates/payments/pdf_template.html:79
+msgid "Montant équilibré"
+msgstr ""
+
+#: payments/templates/payments/pending_payments.html:30
+#, fuzzy
+#| msgid "This payment is currently pending validation."
+msgid "Paiements en attente de validation"
+msgstr "Ce paiement est actuellement en attente de validation."
+
+#: payments/templates/payments/pending_payments.html:38
+#, fuzzy
+#| msgid "Parent"
+msgid "Parent"
+msgstr "Parent"
+
+#: payments/templates/payments/pending_payments.html:39
+msgid "Montant"
+msgstr ""
+
+#: payments/templates/payments/pending_payments.html:67
+#, fuzzy
+#| msgid "Validated"
+msgid "Valider"
+msgstr "Validé"
+
+#: payments/templates/payments/pending_payments.html:68
+#, fuzzy
+#| msgid "Rejected"
+msgid "Rejeter"
+msgstr "Rejeté"
+
+#: payments/templates/payments/submit_payment_document.html:24
+msgid "Ajouter paiement"
+msgstr ""
+
+#: payments/templates/payments/submit_payment_document.html:45
+msgid "Choisir un catégorie"
+msgstr ""
+
+#: payments/templates/payments/submit_payment_document.html:58
+msgid "Ajouter une nouvelle catégorie"
+msgstr ""
+
+#: payments/templates/payments/submit_payment_document.html:63
+#, fuzzy
+#| msgid "Address"
+msgid "Add"
+msgstr "Ajouter"
+
+#: payments/templates/payments/submit_payment_document.html:79
+msgid "Add New Category"
+msgstr "Ajouter une nouvelle catégorie"
+
+#: payments/templates/payments/submit_payment_document.html:88
+#, fuzzy
+#| msgid "Last Name"
+msgid "Category Name"
+msgstr "Nom de la catégorie"
+
+#: payments/templates/payments/submit_payment_document.html:92
+msgid "Description"
+msgstr "Description"
+
+#: payments/templates/payments/submit_payment_document.html:95
+msgid "Save"
+msgstr "Enregistrer"
+
+#: payments/templates/payments/submit_payment_document.html:143
+msgid "An error occurred. Please try again."
+msgstr "Une erreur s'est produite. Veuillez réessayer."
+
+#: templates/cookiebanner/customcookiebanner.html:25
 msgid "Your Privacy Matters"
 msgstr "Votre confidentialité compte"
 
-#: templates/cookiebanner/customcookiebanner.html:6
+#: templates/cookiebanner/customcookiebanner.html:26
 msgid ""
 "We use cookies to ensure that you have the best experience on our website. "
 "These cookies are essential for the website to function properly and do not "
 "collect any personal data."
 msgstr ""
-"Nous utilisons des cookies pour vous garantir la meilleure expérience sur notre site web. "
-"Ces cookies sont essentiels au bon fonctionnement du site et ne collectent aucune donnée personnelle."
+"Nous utilisons des cookies pour vous garantir la meilleure expérience sur "
+"notre site web. Ces cookies sont essentiels au bon fonctionnement du site et "
+"ne collectent aucune donnée personnelle."
 
-#: templates/cookiebanner/customcookiebanner.html:20
+#: templates/cookiebanner/customcookiebanner.html:40
 msgid "Show cookie details"
 msgstr "Afficher les détails des cookies"
 
-#: templates/cookiebanner/customcookiebanner.html:33
-msgid "Stores the language preference of the user."
-msgstr "Enregistre la préférence linguistique de l'utilisateur."
-
-#: templates/cookiebanner/customcookiebanner.html:44
+#: templates/cookiebanner/customcookiebanner.html:60
 msgid "Accept"
 msgstr "Accepter"
 
-#: templates/cookiebanner/customcookiebanner.html:46
+#: templates/cookiebanner/customcookiebanner.html:62
 msgid ""
 "This website does not collect any data not required to its basic functions."
 msgstr ""
-"Ce site web ne collecte aucune donnée qui ne soit pas nécessaire à ses fonctions de base."
+"Ce site web ne collecte aucune donnée qui ne soit pas nécessaire à ses "
+"fonctions de base."
 
-#: templates/cookiebanner/customcookiebanner.html:47
-#: templates/cookiebanner/privacy.html:6
+#: templates/cookiebanner/customcookiebanner.html:63
+#: templates/cookiebanner/privacy.html:26
 msgid "Privacy Policy"
 msgstr "Politique de confidentialité"
 
-#: templates/cookiebanner/privacy.html:7
+#: templates/cookiebanner/privacy.html:27
 msgid ""
 "Welcome to our Privacy Policy page. Your privacy is critically important to "
 "us."
 msgstr ""
-"Bienvenue sur notre page de politique de confidentialité. Votre confidentialité est extrêmement importante pour nous."
+"Bienvenue sur notre page de politique de confidentialité. Votre "
+"confidentialité est extrêmement importante pour nous."
 
-#: templates/cookiebanner/privacy.html:9
+#: templates/cookiebanner/privacy.html:29
 msgid "Data Collection"
 msgstr "Collecte de données"
 
-#: templates/cookiebanner/privacy.html:10
+#: templates/cookiebanner/privacy.html:30
 msgid ""
 "This application is licensed under GPLv3.0, and we do not collect any more "
 "data than what is absolutely required for the functionality of the "
 "application. There are no analytics or tracking mechanisms in place."
 msgstr ""
-"Cette application est sous licence GPLv3.0, et nous ne collectons aucune donnée "
-"autre que ce qui est absolument nécessaire au fonctionnement de l'application. Il n'y a pas de mécanismes d'analyse ou de suivi en place."
+"Cette application est sous licence GPLv3.0, et nous ne collectons aucune "
+"donnée autre que ce qui est absolument nécessaire au fonctionnement de "
+"l'application. Il n'y a pas de mécanismes d'analyse ou de suivi en place."
 
-#: templates/cookiebanner/privacy.html:12
+#: templates/cookiebanner/privacy.html:32
 msgid "Data Encryption"
 msgstr "Chiffrement des données"
 
-#: templates/cookiebanner/privacy.html:13
+#: templates/cookiebanner/privacy.html:33
 msgid ""
 "All data transmitted between your browser and our servers is encrypted using "
 "industry-standard encryption protocols. We ensure that your data is kept "
 "safe and secure at all times."
 msgstr ""
-"Toutes les données transmises entre votre navigateur et nos serveurs sont chiffrées en utilisant des protocoles de chiffrement standard de l'industrie. Nous veillons à ce que vos données soient toujours protégées et sécurisées."
+"Toutes les données transmises entre votre navigateur et nos serveurs sont "
+"chiffrées en utilisant des protocoles de chiffrement standard de "
+"l'industrie. Nous veillons à ce que vos données soient toujours protégées et "
+"sécurisées."
 
-#: templates/cookiebanner/privacy.html:15
+#: templates/cookiebanner/privacy.html:35
 msgid "Cookies"
 msgstr "Cookies"
 
-#: templates/cookiebanner/privacy.html:16
+#: templates/cookiebanner/privacy.html:36
 msgid ""
 "We use cookies to ensure that our website functions properly. These cookies "
 "are essential for the website's operation and do not track your personal "
 "data."
 msgstr ""
-"Nous utilisons des cookies pour garantir le bon fonctionnement de notre site web. Ces cookies sont essentiels au fonctionnement du site et ne suivent pas vos données personnelles."
+"Nous utilisons des cookies pour garantir le bon fonctionnement de notre site "
+"web. Ces cookies sont essentiels au fonctionnement du site et ne suivent pas "
+"vos données personnelles."
 
-#: templates/cookiebanner/privacy.html:18
+#: templates/cookiebanner/privacy.html:38
 msgid "Data Deletion"
 msgstr "Suppression des données"
 
-#: templates/cookiebanner/privacy.html:20
+#: templates/cookiebanner/privacy.html:40
 msgid ""
 "If you request the deletion of your account, all your data will be "
 "permanently deleted from our servers within a maximum of 30 days."
 msgstr ""
 "Si vous demandez la suppression de votre compte, toutes vos données seront "
-"suppression de votre compte, toutes vos données seront définitivement supprimées de nos serveurs dans un délai maximum de 30 jours."
+"suppression de votre compte, toutes vos données seront définitivement "
+"supprimées de nos serveurs dans un délai maximum de 30 jours."
 
-#: templates/cookiebanner/privacy.html:24
+#: templates/cookiebanner/privacy.html:45
 msgid "Contact Us"
 msgstr "Nous contacter"
 
-#: templates/cookiebanner/privacy.html:25
+#: templates/cookiebanner/privacy.html:46
 msgid ""
 "If you have any questions or concerns about our privacy practices, please do "
 "not hesitate to contact us."
 msgstr ""
-"Si vous avez des questions ou des préoccupations concernant nos pratiques en matière de confidentialité, n'hésitez pas à nous contacter."
+"Si vous avez des questions ou des préoccupations concernant nos pratiques en "
+"matière de confidentialité, n'hésitez pas à nous contacter."
 
-#: templates/neok/base.html:14 templates/neok/base.html:26
+#: templates/neok/base.html:36 templates/neok/base.html:47
 #, fuzzy
 #| msgid "neok Plateform"
 msgid "Neok Platform"
 msgstr "Plateforme Neok"
 
-#: templates/neok/base.html:63
+#: templates/neok/base.html:84
 msgid "Logout"
 msgstr "Déconnexion"
 
-#: templates/neok/base.html:97
+#: templates/neok/base.html:102 templates/neok/base.html:182
 #, fuzzy
 #| msgid "Home Page"
 msgid "Home"
 msgstr "Accueil"
 
-#: templates/neok/base.html:103
+#: templates/neok/base.html:106 templates/neok/base.html:187
 msgid "Payments"
 msgstr "Paiements"
 
-#: templates/neok/base.html:108
-msgid "Add folder"
-msgstr "Ajouter un dossier"
+#: templates/neok/base.html:110 templates/neok/base.html:192
+#, fuzzy
+#| msgid "Add Parent"
+msgid "Add case"
+msgstr "Ajouter un parent"
 
-#: templates/neok/base.html:113
-msgid "Folder list"
-msgstr "Liste des dossiers"
+#: templates/neok/base.html:113 templates/neok/base.html:197
+#, fuzzy
+#| msgid "Case"
+msgid "Case list"
+msgstr "Affaire"
 
-#: templates/neok/base.html:121
-msgid "History"
-msgstr "Historique"
+#: templates/neok/base.html:116 templates/neok/base.html:202
+msgid "Indexation"
+msgstr ""
 
-#: templates/neok/base.html:130
+#: templates/neok/base.html:123 templates/neok/base.html:215
 msgid "Accounts"
 msgstr "Comptes"
 
-#: templates/neok/base.html:134
+#: templates/neok/base.html:126 templates/neok/base.html:219
 msgid "List All"
 msgstr "Tout lister"
 
-#: templates/neok/base.html:137
+#: templates/neok/base.html:127 templates/neok/base.html:222
 msgid "Add Parent"
 msgstr "Ajouter un parent"
 
-#: templates/neok/base.html:152
+#: templates/neok/base.html:129 templates/neok/base.html:226
+#, fuzzy
+#| msgid "Add Magistrat"
+msgid "Add Jurist"
+msgstr "Ajouter un magistrat"
+
+#: templates/neok/base.html:139 templates/neok/base.html:237
 msgid "Languages"
 msgstr "Langues"
 
-#: templates/neok/home.html:6
+#: templates/neok/base.html:207
+#, fuzzy
+#| msgid "View Details"
+msgid "View Drafts"
+msgstr "Voir les détails"
+
+#: templates/neok/home.html:26
 msgid "Home Page"
 msgstr "Page d'accueil"
 
-#: templates/neok/home.html:10
+#: templates/neok/home.html:32
+msgid "Jurinet"
+msgstr ""
+
+#: templates/neok/home.html:39
 msgid "Welcome,"
 msgstr "Bienvenue,"
 
-#: templates/neok/home.html:11
+#: templates/neok/home.html:40
 msgid "You are logged in."
 msgstr "Vous êtes connecté."
 
+#: templates/neok/home.html:47
+msgid "About This Site"
+msgstr ""
+
+#: templates/neok/home.html:49
+msgid ""
+"This platform is designed to help parents going through a divorce manage "
+"extraordinary expenses. It provides a clear overview of payments, balances, "
+"and allows for easy tracking and management of financial responsibilities "
+"related to child support and other related costs."
+msgstr ""
+"Cette plateforme a pour but de permettre aux parents en situation de séparation "
+"de gérer les frais extraordinaires. Elle permet une vision globale des paiements, "
+"des comptes ainsi que le suivi des frais et la gestion des responsabilités financières "
+"pour le bien être de nos enfants."
+
+#: templates/neok/home.html:52
+msgid ""
+"Our goal is to simplify the process, ensuring transparency and helping both "
+"parents to efficiently handle and share these financial responsibilities."
+msgstr ""
+"Notre objectif est de simplifier la gestion des dossiers de séparation, "
+"de garantir la transparence entre les deux parents et le partage des "
+"responsabilités financières de chacun"
+
+#: templates/neok/home.html:61
+msgid "Feature 1"
+msgstr "Fonctionnalité 1"
+
+#: templates/neok/home.html:63
 #, fuzzy
-#~| msgid "Last Name"
-#~ msgid "Name"
-#~ msgstr "Nom"
+#| msgid "Payments"
+msgid "Manage Payments"
+msgstr "Gérer les Paiements"
 
+#: templates/neok/home.html:65
+msgid ""
+"Easily add, track, and manage extraordinary expenses with our user-friendly "
+"interface. Keep everything organized in one place."
+msgstr ""
+"Ajoutez, suivez et gérez facilement les dépenses extraordinaires avec notre interface conviviale. Gardez tout organisé en un seul endroit."
+
+#: templates/neok/home.html:72
+msgid "Feature 3"
+msgstr ""
+"Fonctionnalité 3"
+
+#: templates/neok/home.html:74
+msgid "Download Reports"
+msgstr ""
+"Télécharger les rapports"
+
+#: templates/neok/home.html:76
+msgid ""
+"Generate and download detailed reports in PDF format for your records or for "
+"sharing with your legal advisor."
+msgstr ""
+"Générez et téléchargez des rapports détaillés au format PDF pour vos archives ou pour les partager avec votre conseiller juridique."
+
+#: templates/neok/home.html:83
+msgid "Feature 2"
+msgstr ""
+"Fonctionnalité 2"
+
+#: templates/neok/home.html:85
+msgid "Track Balances"
+msgstr ""
+"Suivre les soldes"
+
+#: templates/neok/home.html:87
+msgid ""
+"Get a clear overview of balances and payments, ensuring transparency and "
+"easy tracking of financial responsibilities."
+msgstr ""
+"Obtenez une vue d'ensemble claire des soldes et des paiements, assurant la transparence et le suivi facile des responsabilités financières."
+
+#: templates/neok/home.html:97
+msgid "Need Help?"
+msgstr ""
+"Besoin d'aide ?"
+
+#: templates/neok/home.html:99
 #, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid value."
-#~ msgstr "Entrez une adresse e-mail valide"
+#| msgid ""
+#| "If you have any questions or concerns about our privacy practices, please "
+#| "do not hesitate to contact us."
+msgid ""
+"If you have any questions or need assistance, feel free to contact our "
+"support team."
+msgstr ""
+"Si vous avez des questions ou des préoccupations concernant nos pratiques en "
+"matière de confidentialité, n'hésitez pas à nous contacter."
+msgid "Create Folder"
+msgstr "Créer un dossier"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid URL."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "My Folders"
+msgstr "Mes dossiers"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid integer."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Payments List"
+msgstr "Liste des paiements"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid email address."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Add Payment Document"
+msgstr "Ajouter un document de paiement"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid IPv4 address."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Username"
+msgstr "Nom d'utilisateur"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid IPv6 address."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Document Preview"
+msgstr "Aperçu du document"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid IPv4 or IPv6 address."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "View"
+msgstr "Voir"
 
-#, fuzzy
-#~| msgid "National Number"
-#~ msgid "Decimal number"
-#~ msgstr "Numéro national"
+msgid "Total Amount"
+msgstr "Montant total"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Email address"
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "In Favor Of"
+msgstr "En faveur de"
 
-#, fuzzy
-#~| msgid "National Number"
-#~ msgid "Floating point number"
-#~ msgstr "Numéro national"
+msgid "Payments Comparison"
+msgstr "Comparaison des paiements"
 
-#, fuzzy
-#~| msgid "Address"
-#~ msgid "IPv4 address"
-#~ msgstr "Adresse"
+msgid "Select a category"
+msgstr "Sélectionnez une catégorie"
 
-#, fuzzy
-#~| msgid "Address"
-#~ msgid "IP address"
-#~ msgstr "Adresse"
+msgid "Submit"
+msgstr "Soumettre"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid date."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Assign Parents"
+msgstr "Attribuer des parents"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid time."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Press Control or Shift to select several Parents."
+msgstr "Appuyez sur Control ou Shift pour sélectionner plusieurs parents."
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid date/time."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Gender"
+msgstr "Genre"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid duration."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "We are using cookies on this website. A few are essential, others are not."
+msgstr "Nous utilisons des cookies sur ce site web. Certains sont essentiels, d'autres non."
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a list of values."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Add folder"
+msgstr "Ajouter un dossier"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid UUID."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Folder list"
+msgstr "Liste des dossiers"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Enter a valid JSON."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "History"
+msgstr "Historique"
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "This is not a valid IPv6 address."
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "Name"
+msgstr "Nom"
 
-#~ msgid ""
-#~ "Prepopulates the database with predefined categories and sub-categories."
-#~ msgstr ""
-#~ "Pré-remplit la base de données avec des catégories et sous-catégories "
-#~ "prédéfinies."
+msgid "Enter a valid value."
+msgstr "Entrez une valeur valide."
 
-#~ msgid "Medical and paramedical expenses"
-#~ msgstr "Dépenses médicales et paramédicales"
+msgid "Enter a valid URL."
+msgstr "Entrez une URL valide."
 
-#~ msgid ""
-#~ "Treatments by medical specialists and the medications, specialized "
-#~ "examinations and care they prescribe"
-#~ msgstr ""
-#~ "Traitements par des spécialistes médicaux et les médicaments, examens "
-#~ "spécialisés et soins qu'ils prescrivent"
+msgid "Enter a valid integer."
+msgstr "Entrez un entier valide."
 
-#~ msgid ""
-#~ "Costs of surgical and hospitalization procedures and the specific "
-#~ "treatments resulting therefrom"
-#~ msgstr ""
-#~ "Coûts des procédures chirurgicales et d'hospitalisation et des "
-#~ "traitements spécifiques qui en découlent"
+msgid "Enter a valid IPv4 address."
+msgstr "Entrez une adresse IPv4 valide."
 
-#~ msgid ""
-#~ "Medical and paramedical expenses and devices, including orthodontics, "
-#~ "speech therapy, ophthalmology, etc."
-#~ msgstr ""
-#~ "Dépenses et dispositifs médicaux et paramédicaux, y compris orthodontie, "
-#~ "orthophonie, ophtalmologie, etc."
+msgid "Enter a valid IPv6 address."
+msgstr "Entrez une adresse IPv6 valide."
 
-#~ msgid ""
-#~ "Annual premium for hospitalization insurance or other supplementary "
-#~ "insurance"
-#~ msgstr ""
-#~ "Prime annuelle pour l'assurance hospitalisation ou autre assurance "
-#~ "complémentaire"
+msgid "Enter a valid IPv4 or IPv6 address."
+msgstr "Entrez une adresse IPv4 ou IPv6 valide."
 
-#~ msgid "Costs relating to school training"
-#~ msgstr "Coûts relatifs à la formation scolaire"
+msgid "Decimal number"
+msgstr "Nombre décimal"
 
-#~ msgid ""
-#~ "School activities of several days, like snow classes, sea classes, green "
-#~ "classes"
-#~ msgstr ""
-#~ "Activités scolaires de plusieurs jours, comme les classes de neige, de "
-#~ "mer, vertes"
+msgid "Email address"
+msgstr "Adresse e-mail"
 
-#~ msgid "Necessary, specialized and costly school materials and/or clothing"
-#~ msgstr ""
-#~ "Matériels et/ou vêtements scolaires nécessaires, spécialisés et coûteux"
+msgid "Floating point number"
+msgstr "Nombre à virgule flottante"
 
-#~ msgid "Tuition fees and courses for higher education and special training"
-#~ msgstr ""
-#~ "Frais de scolarité et cours pour l'enseignement supérieur et la formation "
-#~ "spécialisée"
+msgid "IPv4 address"
+msgstr "Adresse IPv4"
 
-#~ msgid "Purchase of computer hardware and printers with necessary software"
-#~ msgstr ""
-#~ "Achat de matériel informatique et d'imprimantes avec les logiciels "
-#~ "nécessaires"
+msgid "IP address"
+msgstr "Adresse IP"
 
-#~ msgid "Private lessons for school year success"
-#~ msgstr "Cours particuliers pour la réussite de l'année scolaire"
+msgid "Enter a valid date."
+msgstr "Entrez une date valide."
 
-#~ msgid "Cost of renting a student room"
-#~ msgstr "Coût de la location d'une chambre d'étudiant"
+msgid "Enter a valid time."
+msgstr "Entrez une heure valide."
 
-#~ msgid "Additional specific costs related to study abroad program"
-#~ msgstr ""
-#~ "Coûts spécifiques supplémentaires liés au programme d'études à l'étranger"
+msgid "Enter a valid date/time."
+msgstr "Entrez une date/heure valide."
 
-#~ msgid ""
-#~ "Expenses related to the development of the personality and development of "
-#~ "the child"
-#~ msgstr ""
-#~ "Dépenses liées au développement de la personnalité et à l'évolution de "
-#~ "l'enfant"
+msgid "Enter a valid duration."
+msgstr "Entrez une durée valide."
 
-#~ msgid "Child care expenses from 0 to 3 years included"
-#~ msgstr "Frais de garde d'enfants de 0 à 3 ans inclus"
+msgid "Enter a list of values."
+msgstr "Entrez une liste de valeurs."
 
-#~ msgid ""
-#~ "Dues, basic supplies, and fees for camps and internships in cultural, "
-#~ "sporting, or artistic activities"
-#~ msgstr ""
-#~ "Cotisations, fournitures de base et frais pour les camps et stages dans "
-#~ "des activités culturelles, sportives ou artistiques"
+msgid "Enter a valid UUID."
+msgstr "Entrez un UUID valide."
 
-#~ msgid ""
-#~ "Registration fee for driving courses and theoretical and practical "
-#~ "examinations of the driving licence"
-#~ msgstr ""
-#~ "Frais d'inscription pour les cours de conduite et les examens théoriques "
-#~ "et pratiques du permis de conduire"
+msgid "Enter a valid JSON."
+msgstr "Entrez un JSON valide."
 
-#, fuzzy
-#~| msgid "Enter a valid email address"
-#~ msgid "Users must have an email address"
-#~ msgstr "Entrez une adresse e-mail valide"
+msgid "This is not a valid IPv6 address."
+msgstr "Ce n'est pas une adresse IPv6 valide."
 
-#~ msgid "first name"
-#~ msgstr "prénom"
+msgid "Prepopulates the database with predefined categories and sub-categories."
+msgstr "Pré-remplit la base de données avec des catégories et sous-catégories prédéfinies."
 
-#~ msgid "last name"
-#~ msgstr "nom"
+msgid "Medical and paramedical expenses"
+msgstr "Dépenses médicales et paramédicales"
 
-#~ msgid "Magistrat List"
-#~ msgstr "Liste des magistrats"
+msgid "Treatments by medical specialists and the medications, specialized examinations and care they prescribe"
+msgstr "Traitements par des spécialistes médicaux et les médicaments, examens spécialisés et soins qu'ils prescrivent"
 
-#~ msgid "Register Magistrat"
-#~ msgstr "Inscription Magistrat"
+msgid "Costs of surgical and hospitalization procedures and the specific treatments resulting therefrom"
+msgstr "Coûts des procédures chirurgicales et d'hospitalisation et des traitements spécifiques qui en découlent"
 
-#~ msgid "Your profile has been successfully updated."
-#~ msgstr "Votre profil a été mis à jour avec succès."
+msgid "Medical and paramedical expenses and devices, including orthodontics, speech therapy, ophthalmology, etc."
+msgstr "Dépenses et dispositifs médicaux et paramédicaux, y compris orthodontie, orthophonie, ophtalmologie, etc."
 
-#~ msgid ""
-#~ "There was a problem updating your profile. Please check the form for "
-#~ "errors."
-#~ msgstr ""
-#~ "Il y a eu un problème lors de la mise à jour de votre profil. Veuillez "
-#~ "vérifier le formulaire pour les erreurs."
+msgid "Annual premium for hospitalization insurance or other supplementary insurance"
+msgstr "Prime annuelle pour l'assurance hospitalisation ou autre assurance complémentaire"
 
-#~ msgid "Your account has been created! You are now logged in."
-#~ msgstr "Votre compte a été créé ! Vous êtes maintenant connecté."
+msgid "Costs relating to school training"
+msgstr "Coûts relatifs à la formation scolaire"
 
-#~ msgid "French"
-#~ msgstr "Français"
+msgid "School activities of several days, like snow classes, sea classes, green classes"
+msgstr "Activités scolaires de plusieurs jours, comme les classes de neige, de mer, vertes"
 
-#~ msgid "English"
-#~ msgstr "Anglais"
+msgid "Necessary, specialized and costly school materials and/or clothing"
+msgstr "Matériels et/ou vêtements scolaires nécessaires, spécialisés et coûteux"
 
-#~ msgid "Dutch"
-#~ msgstr "Néerlandais"
+msgid "Tuition fees and courses for higher education and special training"
+msgstr "Frais de scolarité et cours pour l'enseignement supérieur et la formation spécialisée"
 
-#~ msgid "German"
-#~ msgstr "Allemand"
+msgid "Purchase of computer hardware and printers with necessary software"
+msgstr "Achat de matériel informatique et d'imprimantes avec les logiciels nécessaires"
 
-#~ msgid "Platform neok"
-#~ msgstr "Plateforme neok"
+msgid "Private lessons for school year success"
+msgstr "Cours particuliers pour la réussite de l'année scolaire"
 
-#~ msgid "Add Magistrat"
-#~ msgstr "Ajouter un magistrat"
+msgid "Cost of renting a student room"
+msgstr "Coût de la location d'une chambre d'étudiant"
 
-#~ msgid "Update"
-#~ msgstr "Mettre à jour"
+msgid "Additional specific costs related to study abroad program"
+msgstr "Coûts spécifiques supplémentaires liés au programme d'études à l'étranger"
 
-#~ msgid "Administrator"
-#~ msgstr "Administrateur"
+msgid "Expenses related to the development of the personality and development of the child"
+msgstr "Dépenses liées au développement de la personnalité et à l'évolution de l'enfant"
 
-#~ msgid "Magistrat"
-#~ msgstr "Magistrat"
+msgid "Child care expenses from 0 to 3 years included"
+msgstr "Frais de garde d'enfants de 0 à 3 ans inclus"
+
+msgid "Dues, basic supplies, and fees for camps and internships in cultural, sporting, or artistic activities"
+msgstr "Cotisations, fournitures de base et frais pour les camps et stages dans des activités culturelles, sportives ou artistiques"
+
+msgid "Registration fee for driving courses and theoretical and practical examinations of the driving licence"
+msgstr "Frais d'inscription pour les cours de conduite et les examens théoriques et pratiques du permis de conduire"
+
+msgid "Users must have an email address"
+msgstr "Les utilisateurs doivent avoir une adresse e-mail"
+
+msgid "first name"
+msgstr "prénom"
+
+msgid "last name"
+msgstr "nom"
+
+msgid "Magistrat List"
+msgstr "Liste des magistrats"
+
+msgid "Register Magistrat"
+msgstr "Inscription Magistrat"
+
+msgid "Your profile has been successfully updated."
+msgstr "Votre profil a été mis à jour avec succès."
+
+msgid "There was a problem updating your profile. Please check the form for errors."
+msgstr "Il y a eu un problème lors de la mise à jour de votre profil. Veuillez vérifier le formulaire pour les erreurs."
+
+msgid "Your account has been created! You are now logged in."
+msgstr "Votre compte a été créé ! Vous êtes maintenant connecté."
+
+msgid "French"
+msgstr "Français"
+
+msgid "English"
+msgstr "Anglais"
+
+msgid "Dutch"
+msgstr "Néerlandais"
+
+msgid "German"
+msgstr "Allemand"
+
+msgid "Platform neok"
+msgstr "Plateforme neok"
+
+msgid "Magistrat"
+msgstr "Magistrat"

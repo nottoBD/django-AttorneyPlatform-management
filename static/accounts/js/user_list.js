@@ -1,3 +1,23 @@
+/*
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 document.addEventListener('DOMContentLoaded', function () {
     const container = document.querySelector('.container-fluid');
     const isActiveCheckbox = document.getElementById('isActiveFilter');
@@ -114,9 +134,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function attachRowEventListeners() {
         document.querySelectorAll('tr[data-user-id]').forEach(row => {
+            let touchStartTime = 0;
+            let touchTimeout;
+            let clickTimeout;
+
             row.addEventListener('click', function(event) {
                 clearTimeout(clickTimeout);
-                clickTimeout = setTimeout(function() {
+                clickTimeout = setTimeout(() => {
                     if (!event.ctrlKey) {
                         document.querySelectorAll('tr[data-user-id]').forEach(r => {
                             r.classList.remove('highlight');
@@ -132,7 +156,40 @@ document.addEventListener('DOMContentLoaded', function () {
                 let userId = row.getAttribute('data-user-id');
                 window.location.href = `/accounts/update/${userId}/`;
             });
+
+            row.addEventListener('touchstart', function(event) {
+                touchStartTime = new Date().getTime();
+                if (touchTimeout) {
+                    clearTimeout(touchTimeout);
+                }
+                touchTimeout = setTimeout(() => {
+                    handleRowClick(event);
+                }, 200);
+            });
+
+            row.addEventListener('touchend', function(event) {
+                let touchDuration = new Date().getTime() - touchStartTime;
+                if (touchDuration < 200) {
+                    clearTimeout(touchTimeout);
+                    handleRowDoubleClick(event);
+                }
+            });
         });
+    }
+
+    function handleRowClick(event) {
+        if (!event.ctrlKey) {
+            document.querySelectorAll('tr[data-user-id]').forEach(r => {
+                r.classList.remove('highlight');
+            });
+        }
+        event.currentTarget.classList.toggle('highlight');
+        highlightedRowId = event.currentTarget.classList.contains('highlight') ? event.currentTarget.getAttribute('data-user-id') : null;
+    }
+
+    function handleRowDoubleClick(event) {
+        let userId = event.currentTarget.getAttribute('data-user-id');
+        window.location.href = `/accounts/update/${userId}/`;
     }
 
     function reapplyHighlight() {
@@ -152,8 +209,6 @@ document.addEventListener('DOMContentLoaded', function () {
             highlightedRowId = null;
         }
     });
-
-    let clickTimeout;
 
     fetchUsers();
     isActiveCheckbox.addEventListener('change', fetchUsers);

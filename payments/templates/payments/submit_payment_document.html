@@ -1,3 +1,23 @@
+<!--
+Neok-Budget: A Django-based web application for budgeting.
+Copyright (C) 2024  David Botton, Arnaud Mahieu
+
+Developed for Jurinet and its branch Neok-Budget.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+
 {% extends 'neok/base.html' %}
 {% load i18n crispy_forms_tags %}
 
@@ -15,6 +35,9 @@
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ form.non_field_errors }}
+                        {% if request.user.role == 'lawyer' %}
+                            {{ form.parent|as_crispy_field }}
+                        {% endif %}
                         {{ form.amount|as_crispy_field }}
                         <div class="form-group">
                             <label for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
@@ -37,12 +60,6 @@
                         </div>
                         {{ form.date|as_crispy_field }}
                         {{ form.document|as_crispy_field }}
-                        <!-- Affichage de l'état du paiement -->
-                        {% if form.instance.status == 'pending' %}
-                            <div class="alert alert-warning" role="alert">
-                                {% trans "This payment is currently pending validation." %}
-                            </div>
-                        {% endif %}
                         <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Add" %}</button>
                         <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-secondary btn-sm mt-3">
                             {% trans "Back to Payment History" %}
