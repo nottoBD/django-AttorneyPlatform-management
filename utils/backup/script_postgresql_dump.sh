@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Vérifie l'existence du fichier .env
-if [ ! -f ../.env ]; then
-  echo "Erreur: Fichier ../.env introuvable."
+if [ ! -f /home/devid/django-AttorneyPlatform-management/.env ]; then
+  echo "Erreur: Fichier /home/devid/django-AttorneyPlatform-management/.env introuvable."
   exit 1
 fi
 
 set -a
-source ../.env
+source /home/devid/django-AttorneyPlatform-management/.env
 set +a
 
 # Vérifie les variables d'environnement
@@ -18,9 +18,9 @@ fi
 
 # Variables
 TIMESTAMP=$(date +"%F")
-BACKUP_FILE="$BACKUP_DIR/neok-backup-$TIMESTAMP.tar.gz"
-SQL_BACKUP_FILE="$BACKUP_DIR/neok-backup-$TIMESTAMP.sql"
-LOG_DIR="/home/devid/django-AttorneyPlatform-management/log"
+SQL_BACKUP_FILE="$BACKUP_DIR/$TIMESTAMP-dump.sql"
+LOG_BACKUP_FILE="$BACKUP_DIR/$TIMESTAMP-warnings.log"
+LOG_DIR="$PROJECT_ROOT/log"
 
 # Créer le dossier backup, si inexistant
 if [ ! -d "$BACKUP_DIR" ]; then
@@ -42,7 +42,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Vérifie existance du dossier racine
-APP_DIR="/home/devid/django-AttorneyPlatform-management"
+APP_DIR=$PROJECT_ROOT
 if [ ! -d "$APP_DIR" ]; then
   echo "Erreur: Dossier racine $APP_DIR introuvable."
   exit 1
@@ -54,24 +54,17 @@ if [ ! -d "$LOG_DIR" ]; then
   exit 1
 fi
 
-# Vérifie existance du back-up
-if [ ! -f "$SQL_BACKUP_FILE" ]; then
-  echo "Erreur: SQL backup $SQL_BACKUP_FILE n'existe pas."
+if [ ! -f "$LOG_DIR/$TIMESTAMP-warnings.log" ]; then
+  echo "Erreur: Fichier de log $LOG_DIR/$TIMESTAMP-warnings.log introuvable."
   exit 1
 fi
 
-# Backup des fichiers et de la base de données
-tar --exclude='.gitkeep' -czvf "$BACKUP_FILE" -C "$BACKUP_DIR" "$(basename $SQL_BACKUP_FILE)" -C "$LOG_DIR" .
+cp "$LOG_DIR/$TIMESTAMP-warnings.log" "$LOG_BACKUP_FILE"
 if [ $? -ne 0 ]; then
-  echo "Erreur: Impossible de créer l'archive tar."
+  echo "Erreur: Impossible de copier le fichier de log."
   exit 1
 fi
 
-# retirer le dump .sql, ne garder que l'archive
-rm "$SQL_BACKUP_FILE"
-if [ $? -ne 0 ]; then
-  echo "Erreur: Impossible de supprimer le dump au format sql."
-  exit 1
-fi
+./script_encrypt_dump.sh "$SQL_BACKUP_FILE"
 
 echo "Backup terminée avec succès."
