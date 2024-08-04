@@ -68,7 +68,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 {% if request.user.is_authenticated %}
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="{{ request.user.profile_image.url }}" alt="{{ request.user.get_full_name }}" width="30" height="30" class="rounded-circle">
+                        <img src="{% if request.user.profile_image %}{{ request.user.profile_image.url }}{% else %}/media/profile_images/default.png{% endif %}" alt="{{ request.user.get_full_name }}" width="30" height="30" class="rounded-circle">
                         {% if request.user.first_name and request.user.last_name %}
                             {{ request.user.last_name }} {{ request.user.first_name|first|upper }}.
                         {% else %}

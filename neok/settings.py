@@ -98,6 +98,9 @@ LANGUAGES = [
     ('de', 'German'),
 ]
 
+# django-admin makemessages -l fr -i env -i .idea -i __pycache__ -i .pytest_cache -i static -d django
+# django-admin compilemessages -l fr
+
 LANGUAGE_CODE = 'fr'
 
 LOCALE_PATHS = (

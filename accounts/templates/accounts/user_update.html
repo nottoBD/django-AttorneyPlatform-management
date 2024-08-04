@@ -60,7 +60,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     </div>
                     <div class="card-body">
                         <div class="d-flex flex-column align-items-center mb-3">
-                            <img src="{{ user.profile_image.url }}" alt="{% trans "Profile image" %}" width="100" height="100" class="rounded-circle mb-3">
+                            {% if user.profile_image %}
+                                <img src="{{ user.profile_image.url }}" alt="{% trans "Profile image" %}" width="100" height="100" class="rounded-circle mb-3">
+                            {% else %}
+                                <img src="/media/profile_images/default.png" alt="{% trans "Default profile image" %}" width="100" height="100" class="rounded-circle mb-3">
+                            {% endif %}
                             <h4>{{ user.last_name }} {{ user.first_name }}</h4>
                         </div>
                         <form method="post" enctype="multipart/form-data">
