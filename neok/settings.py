@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from pathlib import Path
 from environ import environ
 from django.utils.translation import gettext_lazy as _
@@ -201,6 +202,13 @@ COOKIEBANNER = {
     ],
 }
 
+def get_log_file_path():
+    current_date = datetime.now().strftime('%Y-%m-%d')
+    log_dir = os.path.join(BASE_DIR, 'log')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    return os.path.join(log_dir, f'{current_date}-warnings.log')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -214,7 +222,7 @@ LOGGING = {
         'file': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'log', 'neok-warnings.log'),
+            'filename': get_log_file_path(),
             'formatter': 'verbose',
         },
     },
