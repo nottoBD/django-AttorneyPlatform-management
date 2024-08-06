@@ -291,11 +291,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             if (userRole === 'parent') {
                 parent1Input.setAttribute('readonly', 'readonly');
             }
+            if (userRole === 'judge') {
+                parent1Input.setAttribute('readonly', 'readonly');
+            }
         }
 
         if (parent2Input) {
             parent2Input.value = '{{ parent2_percentage|escapejs }}';
             if (userRole === 'parent') {
+                parent2Input.setAttribute('readonly', 'readonly');
+            }
+            if (userRole === 'judge') {
                 parent2Input.setAttribute('readonly', 'readonly');
             }
         }
