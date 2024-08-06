@@ -23,6 +23,7 @@ from datetime import date
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
 from accounts.views import User
 from .models import Document, Case, Category, Child
@@ -52,6 +53,13 @@ class PaymentDocumentForm(forms.ModelForm):
             self.fields['parent'].choices = parent_choices
         else:
             self.fields['parent'].widget = forms.HiddenInput()
+
+    def clean_category(self):
+        category = self.cleaned_data.get('category')
+        print("init : " + category)
+        if not category:
+            raise ValidationError('Ce champ est obligatoire.')
+        return category
 
     def clean_document(self):
         document = self.cleaned_data.get('document')
@@ -185,16 +193,23 @@ class ChildForm(forms.ModelForm):
             )
         ]
     )
+    case = forms.ModelChoiceField(queryset=Case.objects.all(), widget=forms.HiddenInput())
 
     class Meta:
         model = Child
-        fields = ['first_name', 'last_name', 'birth_date']
+        fields = ['first_name', 'last_name', 'birth_date', 'case']
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'})
         }
 
+    def __init__(self, *args, **kwargs):
+        case_id = kwargs.pop('case_id', None)
+        super().__init__(*args, **kwargs)
+        if case_id is not None:
+            self.fields['case'].initial = case_id
+
     def clean_birth_date(self):
         birth_date = self.cleaned_data.get('birth_date')
-        if birth_date and birth_date > date.today():
+        if birth_date and birth_date > timezone.now().date():
             raise ValidationError('La date de naissance ne peut pas être postérieure à aujourd\'hui.')
         return birth_date
