@@ -491,7 +491,7 @@ def add_child(request, case_id):
     case = get_object_or_404(Case, id=case_id)
 
     if request.method == 'POST':
-        form = ChildForm(request.POST)
+        form = ChildForm(request.POST, case_id=case.id)
         if form.is_valid():
             child = form.save(commit=False)
             child.case = case
