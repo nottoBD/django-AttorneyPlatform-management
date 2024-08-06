@@ -53,6 +53,13 @@ class PaymentDocumentForm(forms.ModelForm):
         else:
             self.fields['parent'].widget = forms.HiddenInput()
 
+    def clean_category(self):
+        category = self.cleaned_data.get('category')
+        print("init : " + category)
+        if not category:
+            raise ValidationError('Ce champ est obligatoire.')
+        return category
+
     def clean_document(self):
         document = self.cleaned_data.get('document')
         if document:
@@ -185,11 +192,10 @@ class ChildForm(forms.ModelForm):
             )
         ]
     )
-    case = forms.ModelChoiceField(queryset=Case.objects.all(), required=True)
 
     class Meta:
         model = Child
-        fields = ['first_name', 'last_name', 'birth_date', 'case']
+        fields = ['first_name', 'last_name', 'birth_date']
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'})
         }
