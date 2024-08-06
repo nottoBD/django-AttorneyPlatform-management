@@ -908,7 +908,7 @@ def delete_indexation(request, index_id):
 
     indexation = get_object_or_404(IndexHistory, id=index_id)
     current_year = timezone.now().year
-    percentage = indexation.percentage
+    percentage = indexation.indices
 
     if request.method == 'POST':
         # Reverser l'indexation
