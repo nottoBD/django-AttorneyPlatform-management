@@ -5,6 +5,7 @@ from payments.models import Case, Child
 from payments.forms import ChildForm
 from datetime import date
 
+
 class ChildFormTest(TestCase):
     def setUp(self):
         self.parent1 = User.objects.create_user(email='parent1@example.com', password='Complexpassword1!', role='parent')

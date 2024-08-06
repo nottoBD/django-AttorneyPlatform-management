@@ -547,6 +547,7 @@ def submit_payment_document(request, case_id):
                 parent_user_id = form.cleaned_data['parent']
                 payment_document.user = get_user_model().objects.get(id=parent_user_id)
 
+            new_category_name = request.POST.get('new_category', '').strip()
             if new_category_name:
                 other_type, created = CategoryType.objects.get_or_create(name='Autre')
                 new_category, created = Category.objects.get_or_create(
