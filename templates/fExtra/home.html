@@ -1,0 +1,14 @@
+
+{% extends 'fExtra/base.html' %}
+
+{% load i18n %}
+
+{% block title %}{% trans "Home Page" %}{% endblock %}
+
+{% block content %}
+<h2>Welcome, {{ user.first_name }} !</h2>
+<p>You are logged in.</p>
+
+
+
+{% endblock %}
