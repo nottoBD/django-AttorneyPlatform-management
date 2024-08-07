@@ -1,0 +1,5 @@
+.nav-link.active, .nav-item.active {
+    /*!important overrides all current styles*/
+    background-color: transparent !important;
+
+}

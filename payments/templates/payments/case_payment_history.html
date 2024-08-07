@@ -70,7 +70,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
                                     {% endif %}
-                                    <li><a class="dropdown-item" href="{% url 'payments:download_pdf' case_id=case_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
+                                    <li><a class="dropdown-item" href="{% url 'payments:download_pdf' case_id=case.id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
                                         {% trans "Télécharger en PDF" %}
                                     </a></li>
                                 </ul>
@@ -123,14 +123,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <div class="col-lg-4 col-md-12 mb-4">
             <div class="card mb-4">
                 <div class="card-body">
-                    <h2 class="card-title mb-4">{% trans "Balance Summary" %}</h2>
-                    {% if request.user.role == "lawyer" %}
-                       <div class="d-flex justify-content-end">
-                            <button id="submit_percentage" class="btn btn-primary m-1">
-                                <i class="fas fa-save"></i> <!-- Icône de disquette -->
-                            </button>
-                        </div>
-                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h2 class="card-title">{% trans "Balance Summary" %}</h2>
+                        {% if request.user.role == "lawyer" %}
+                           <div class="d-flex justify-content-end">
+                                <button id="submit_percentage" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> <!-- Icône de disquette -->
+                                </button>
+                            </div>
+                        {% endif %}
+                    </div>
                     <table class="table table-bordered table-custom">
                         <thead>
                             <tr>
@@ -176,7 +178,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <!-- Filter Form Card -->
             <div id="filterFormCard" class="card mb-4">
                 <div class="card-body">
-                    <h2 class="card-title mb-4">{% trans "Filtrer les paiements" %}</h2>
+                     <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="card-title mb-0">{% trans "Filtrer les paiements" %}</h2>
+                        <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-secondary" aria-label="{% trans 'Réinitialiser filtre' %}">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
                     <form id="filterForm" method="get">
                         <input type="hidden" name="year" id="yearInput">
                         <input type="hidden" name="quarter" id="quarterInput">
@@ -220,6 +227,28 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     </form>
                 </div>
             </div>
+            <!-- End of Filter Form Card -->
+
+            <!-- Add the line below to display messages -->
+            {% if messages %}
+                <div class="alert alert-info">
+                    {% for message in messages %}
+                        {{ message }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+<!--            <div class="card mb-4">-->
+<!--                <div class="card-body">-->
+<!--                    <h2 class="card-title mb-4">{% trans "Information sur le cas" %}</h2>-->
+<!--                    <p><strong>{% trans "Nom de l'enfant" %}:</strong> {{ case.child_name }}</p>-->
+<!--                    <p><strong>{% trans "Nom du parent 1" %}:</strong> {{ parent1_user.first_name }} {{ parent1_user.last_name }}</p>-->
+<!--                    <p><strong>{% trans "Nom du parent 2" %}:</strong> {{ parent2_user.first_name }} {{ parent2_user.last_name }}</p>-->
+<!--                    <p><strong>{% trans "Nom du juge" %}:</strong> {{ case.judge }}</p>-->
+<!--                    <p><strong>{% trans "Nom de l'avocat" %}:</strong> {{ case.lawyer }}</p>-->
+<!--                    <p><strong>{% trans "Description" %}:</strong> {{ case.description }}</p>-->
+<!--                </div>-->
+<!--            </div>-->
         </div>
     </div>
 </div>
@@ -268,7 +297,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         padding: 2px;
         font-size: 0.9rem;
     }
-
 </style>
 
 <script>
@@ -291,11 +319,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             if (userRole === 'parent') {
                 parent1Input.setAttribute('readonly', 'readonly');
             }
+            if (userRole === 'judge') {
+                parent1Input.setAttribute('readonly', 'readonly');
+            }
         }
 
         if (parent2Input) {
             parent2Input.value = '{{ parent2_percentage|escapejs }}';
             if (userRole === 'parent') {
+                parent2Input.setAttribute('readonly', 'readonly');
+            }
+            if (userRole === 'judge') {
                 parent2Input.setAttribute('readonly', 'readonly');
             }
         }
