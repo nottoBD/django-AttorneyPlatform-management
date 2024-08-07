@@ -1,6 +1,6 @@
 # <u>[BEL] Neok Budget</u>
 
-<a>Author: David Botton </a>
+<a>Authors: Arnaud Mahieu, David Botton </a>
 
 #### Nos enfants ~ Onze kinderen
 <i>Neok-Budget is a Django-based web application developed for budgeting purposes. This project was developed for the belgian law firm Jurinet and its branch Neok-Budget.</i>
@@ -64,7 +64,7 @@ This project is licensed under the GNU General Public License v3.0. See the [LIC
 
 <table>
   <tr>
-    <th style="text-align: left; padding: 10px;">Developer</th>
+    <th style="text-align: left; padding: 10px;">Authors</th>
     <th style="text-align: left; padding: 10px;">Client</th>
     <th style="text-align: left; padding: 10px;">School</th>
   </tr>
@@ -73,6 +73,9 @@ This project is licensed under the GNU General Public License v3.0. See the [LIC
       <p><strong>David Botton</strong></p>
       <p>Email: david.botton@mail.com</p>
       <p>LinkedIn: <a href="https://www.linkedin.com/in/davidljbotton">David Botton</a></p>
+      <hr>
+      <p><strong>Arnaud Mahieu</strong></p>
+      <p>Email: arnaud.mahieu@hainaut-promsoc.be</p>
     </td>
     <td style="vertical-align: top; padding: 10px;">
       <p><strong>Jurinet & Neok-Budget</strong></p>
@@ -91,4 +94,4 @@ This project is licensed under the GNU General Public License v3.0. See the [LIC
 </table>
 ---
 
-For any further questions or support, please contact me through the provided contact details.
+For any further questions or support, please contact us through the provided contact details.
