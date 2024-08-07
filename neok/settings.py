@@ -4,11 +4,15 @@ from pathlib import Path
 from environ import environ
 from django.utils.translation import gettext_lazy as _
 
+env = environ.Env()
+
 DEBUG = False
 
-ALLOWED_HOSTS = ['38.180.87.128', 'jurinet.net', 'neok-budget.eu', 'app.neok-budget.eu', 'neok-budget.be']
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
+
+ALLOWED_HOSTS = ['38.180.87.128', 'jurinet.net', 'neok-budget.eu', 'app.neok-budget.eu', 'neok-budget.be']
 
 SECURE_SSL_REDIRECT = True
 
@@ -19,10 +23,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CSRF_COOKIE_SECURE = True
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-env = environ.Env()
-
-environ.Env.read_env(env_file=str(BASE_DIR / ".env"))
 
 SECRET_KEY = env('SECRET_KEY')
 
