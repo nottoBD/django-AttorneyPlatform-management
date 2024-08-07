@@ -47,25 +47,36 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th>{% trans "Date" %}</th>
-                                            <th>{% trans "Amount" %}</th>
-                                            <th>{% trans "Document" %}</th>
+                                            <th class="date-column">{% trans "Date" %}</th>
+                                            <th class="amount-column">{% trans "Amount" %}</th>
+                                            <th class="document-column">{% trans "Document" %}</th>
+                                            <th class="actions-column">{% trans "Actions" %}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for payment in parent1_payments %}
-                                            <tr class="{% if payment.status == 'validated' %} bg-success {% elif payment.status == 'pending' %} bg-warning {% elif payment.status == 'rejected' %} bg-danger {% endif %}">
-                                                <td>{{ payment.date|date:"d/m/Y" }}</td>
-                                                <td>{{ payment.amount }} €</td>
-                                                <td>
+                                            <tr>
+                                                <td class="date-column">{{ payment.date|date:"d/m/Y" }}</td>
+                                                <td class="amount-column">{{ payment.amount }} €</td>
+                                                <td class="document-column">
                                                     {% if payment.document %}
                                                         <a href="{{ payment.document.url }}" class="btn btn-primary btn-sm" target="_blank">
-                                                            {% trans "View Document" %}
+                                                            <i class="bi bi-file-earmark-text"></i>
                                                         </a>
                                                     {% else %}
                                                         {% trans "No Document" %}
                                                     {% endif %}
                                                 </td>
+                                                {% if request.user.role == 'lawyer' or user == payment.user %}
+                                                    <td class="actions-column">
+                                                        <form action="{% url 'payments:delete-payment' payment.id case.id category.id %}" method="post" onsubmit="return confirm('{% trans "Are you sure you want to delete this payment?" %}')">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                {% endif %}
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -79,25 +90,36 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                 <table class="table table-bordered">
                                     <thead>
                                         <tr>
-                                            <th>{% trans "Date" %}</th>
-                                            <th>{% trans "Amount" %}</th>
-                                            <th>{% trans "Document" %}</th>
+                                            <th class="date-column">{% trans "Date" %}</th>
+                                            <th class="amount-column">{% trans "Amount" %}</th>
+                                            <th class="document-column">{% trans "Document" %}</th>
+                                            <th class="actions-column">{% trans "Actions" %}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for payment in parent2_payments %}
-                                            <tr class="{% if payment.status == 'validated' %} bg-success {% elif payment.status == 'pending' %} bg-warning {% elif payment.status == 'rejected' %} bg-danger {% endif %}">
-                                                <td>{{ payment.date|date:"d/m/Y" }}</td>
-                                                <td>{{ payment.amount }} €</td>
-                                                <td>
+                                            <tr>
+                                                <td class="date-column">{{ payment.date|date:"d/m/Y" }}</td>
+                                                <td class="amount-column">{{ payment.amount }} €</td>
+                                                <td class="document-column">
                                                     {% if payment.document %}
                                                         <a href="{{ payment.document.url }}" class="btn btn-primary btn-sm" target="_blank">
-                                                            {% trans "View Document" %}
+                                                            <i class="bi bi-file-earmark-text"></i>
                                                         </a>
                                                     {% else %}
                                                         {% trans "No Document" %}
                                                     {% endif %}
                                                 </td>
+                                                {% if request.user.role == 'lawyer' or user == payment.user %}
+                                                    <td class="actions-column">
+                                                        <form action="{% url 'payments:delete-payment' payment.id case.id category.id %}" method="post" onsubmit="return confirm('{% trans "Are you sure you want to delete this payment?" %}')">
+                                                            {% csrf_token %}
+                                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                {% endif %}
                                             </tr>
                                         {% endfor %}
                                     </tbody>
@@ -115,4 +137,46 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </div>
     </div>
 </div>
+
+<style>
+    .table th, .table td {
+        text-align: center;
+    }
+
+    .table .date-column {
+        width: 20%;
+    }
+
+    .table .amount-column {
+        width: 20%;
+    }
+
+    .table .document-column {
+        width: 40%;
+    }
+
+    .table .actions-column {
+        width: 20%;
+    }
+
+    @media (max-width: 767px) {
+        .table th, .table td {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .table th, .table td {
+            text-align: left;
+        }
+
+        .table .date-column,
+        .table .amount-column,
+        .table .document-column,
+        .table .actions-column {
+            width: 100%;
+        }
+    }
+</style>
+
 {% endblock %}

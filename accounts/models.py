@@ -1,23 +1,3 @@
-"""
-Neok-Budget: A Django-based web application for budgeting.
-Copyright (C) 2024  David Botton, Arnaud Mahieu
-
-Developed for Jurinet and its branch Neok-Budget.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-"""
-
 import uuid
 from django.core.validators import validate_email as django_validate_email
 from django.conf import settings
@@ -126,7 +106,6 @@ class User(AbstractUser, PermissionsMixin):
         self.profile_image = validate_image(self.profile_image) if self.profile_image else None
 
 
-
 class AvocatCase(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     avocat = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents', on_delete=models.CASCADE)
@@ -149,3 +128,16 @@ class JugeCase(models.Model):
 
     def __str__(self):
         return f"{self.juge.email} assigned to case {self.case.id}"
+
+
+class ParentCase(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    case = models.ForeignKey(get_case_model(), on_delete=models.CASCADE, related_name='parent_cases')
+    parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='parent_cases')
+    percentage = models.FloatField(default=50)
+
+    class Meta:
+        unique_together = (('parent', 'case'),)
+
+    def __str__(self):
+        return f"{self.parent} - {self.case} ({self.percentage}%)"

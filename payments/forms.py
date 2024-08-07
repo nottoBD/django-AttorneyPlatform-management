@@ -23,7 +23,9 @@ from datetime import date
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.utils import timezone
 
+from accounts.models import ParentCase
 from accounts.views import User
 from .models import Document, Case, Category, Child
 
@@ -53,6 +55,12 @@ class PaymentDocumentForm(forms.ModelForm):
         else:
             self.fields['parent'].widget = forms.HiddenInput()
 
+    def clean_category(self):
+        category = self.cleaned_data.get('category')
+        if not category:
+            raise ValidationError('Ce champ est obligatoire.')
+        return category
+
     def clean_document(self):
         document = self.cleaned_data.get('document')
         if document:
@@ -64,6 +72,8 @@ class PaymentDocumentForm(forms.ModelForm):
 
 
 class CaseForm(forms.ModelForm):
+    parent1 = forms.ModelChoiceField(queryset=User.objects.filter(role='parent'), required=True)
+    parent2 = forms.ModelChoiceField(queryset=User.objects.filter(role='parent'), required=False)
     lawyer = forms.ModelChoiceField(queryset=User.objects.filter(role='lawyer'), required=False)
 
     class Meta:
@@ -73,14 +83,38 @@ class CaseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super(CaseForm, self).__init__(*args, **kwargs)
+
         self.fields['parent1'].queryset = User.objects.filter(role='parent')
         self.fields['parent2'].queryset = User.objects.filter(role='parent')
+
         if self.instance and self.instance.draft:
             self.fields['parent2'].required = False
+
         if self.user and self.user.role == 'administrator':
             self.fields['lawyer'].required = True
         else:
             self.fields.pop('lawyer')
+
+    def save(self, commit=True):
+        case = super(CaseForm, self).save(commit=False)
+
+        if commit:
+            case.save()
+
+            # Clear existing ParentCase entries
+            ParentCase.objects.filter(case=case).delete()
+
+            # Create new ParentCase entries
+            parent1 = self.cleaned_data.get('parent1')
+            parent2 = self.cleaned_data.get('parent2')
+
+            if parent1:
+                ParentCase.objects.create(case=case, parent=parent1, percentage=50)
+
+            if parent2:
+                ParentCase.objects.create(case=case, parent=parent2, percentage=50)
+
+        return case
 
 
 class ConvertDraftCaseForm(forms.ModelForm):
@@ -185,16 +219,23 @@ class ChildForm(forms.ModelForm):
             )
         ]
     )
+    case = forms.ModelChoiceField(queryset=Case.objects.all(), widget=forms.HiddenInput())
 
     class Meta:
         model = Child
-        fields = ['first_name', 'last_name', 'birth_date']
+        fields = ['first_name', 'last_name', 'birth_date', 'case']
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date'})
         }
 
+    def __init__(self, *args, **kwargs):
+        case_id = kwargs.pop('case_id', None)
+        super().__init__(*args, **kwargs)
+        if case_id is not None:
+            self.fields['case'].initial = case_id
+
     def clean_birth_date(self):
         birth_date = self.cleaned_data.get('birth_date')
-        if birth_date and birth_date > date.today():
+        if birth_date and birth_date > timezone.now().date():
             raise ValidationError('La date de naissance ne peut pas être postérieure à aujourd\'hui.')
         return birth_date
