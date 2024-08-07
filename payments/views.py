@@ -330,25 +330,25 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
 
         case = get_object_or_404(Case, id=case_id)
 
-        # Obtenir les paramètres de la requête GET ou les définir à None si non présents
-        selected_year = request.GET.get('year')
-        selected_quarter = request.GET.get('quarter')
+        # Obtenir les paramètres de la requête GET
+        selected_year = request.GET.get('year', None)
+        selected_quarter = request.GET.get('quarter', None)
 
-        if selected_year and selected_year != "None":
+        # Vérifier et convertir les paramètres en entiers si valides
+        if selected_year and selected_year.isdigit():
             selected_year = int(selected_year)
         else:
             selected_year = None
 
-        if selected_quarter and selected_quarter != "None":
+        if selected_quarter and selected_quarter.isdigit():
             selected_quarter = int(selected_quarter)
         else:
             selected_quarter = None
 
+        # Créer une instance de PaymentHistoryView pour obtenir les données
         payment_history_view = PaymentHistoryView()
         payment_history_view.request = request
         payment_history_view.kwargs = {'case_id': case_id}  # Passer case_id comme kwargs
-
-        # Définir self.case pour payment_history_view avant d'appeler get_queryset
         payment_history_view.case = case
 
         # Appeler dispatch pour initialiser la vue correctement
@@ -360,6 +360,7 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
         # Obtenir le contexte de la vue PaymentHistoryView
         context = payment_history_view.get_context_data()
 
+        # Déterminer le nom du fichier PDF
         if selected_year is None or selected_quarter is None:
             context['selected_year'] = datetime.now().year
             context['selected_quarter'] = None
@@ -379,6 +380,7 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
 
         if pisa_status.err:
             return HttpResponse('We had some errors <pre>' + html_string + '</pre>')
+
         return response
 
 
