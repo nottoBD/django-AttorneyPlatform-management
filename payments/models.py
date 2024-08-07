@@ -71,18 +71,32 @@ class Document(models.Model):
 
 class Case(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    parent1 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cases_as_parent1')
-    parent2 = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cases_as_parent2', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     draft = models.BooleanField(default=False)
-    parent1_percentage = models.FloatField(default=50)
-    parent2_percentage = models.FloatField(default=50)
 
     def __str__(self):
         if self.draft:
-            return f"Draft Case: {self.parent1}"
-        return f"Case: {self.parent1} and {self.parent2}"
+            return f"Draft Case: {self.get_parents_display()}"
+        return f"Case: {self.get_parents_display()}"
+
+    @property
+    def parent1(self):
+        return self.get_parent_by_index(0)
+
+    @property
+    def parent2(self):
+        return self.get_parent_by_index(1)
+
+    def get_parent_by_index(self, index):
+        parents = self.parent_cases.all().order_by('id')
+        if index < len(parents):
+            return parents[index].parent
+        return None
+
+    def get_parents_display(self):
+        parents = self.parent_cases.all().order_by('id')
+        return " and ".join([str(parent_case.parent) for parent_case in parents])
 
     @property
     def number_of_children(self):
@@ -90,7 +104,7 @@ class Case(models.Model):
 
     @property
     def latest_index_history(self):
-        return IndexHistory.objects.filter().order_by('-year', '-created_at').first()
+        return IndexHistory.objects.filter(case=self).order_by('-year', '-created_at').first()
 
 
 class Child(models.Model):

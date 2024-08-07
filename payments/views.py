@@ -40,7 +40,7 @@ from django.views.generic import ListView
 from xhtml2pdf import pisa
 
 
-from accounts.models import JugeCase, AvocatCase
+from accounts.models import JugeCase, AvocatCase, ParentCase
 from .forms import PaymentDocumentForm, CaseForm, IndexPaymentForm, AddJugeAvocatForm, \
     ConvertDraftCaseForm, CombineDraftsForm, ChildForm
 from .models import Document, Case, Category, CategoryType, IndexHistory, Child
@@ -56,48 +56,38 @@ class CaseListView(LoginRequiredMixin, ListView):
     context_object_name = 'cases'
 
     def dispatch(self, request, *args, **kwargs):
-        # Appel de la méthode parent pour gérer les permissions de base
         response = super().dispatch(request, *args, **kwargs)
 
-        # Vérifier si l'utilisateur a accès aux dossiers de la vue
-        case_id = self.kwargs.get('pk')  # Récupérer l'ID du dossier depuis l'URL si nécessaire
-
-        # Si l'ID du dossier est fourni dans l'URL, vérifier l'accès
+        case_id = self.kwargs.get('pk')
         if case_id:
             case = get_object_or_404(Case, pk=case_id)
             if not self.has_access_to_case(request.user, case):
-                return Http404("You do not have permission to access this case.")
+                raise Http404("You do not have permission to access this case.")
 
         return response
 
     def get_queryset(self):
         user = self.request.user
 
-        # Filtrer les dossiers associés à l'utilisateur
-        queryset = Case.objects.none()
+        parent_cases = Case.objects.filter(parent_cases__parent=user)
+        avocat_cases = Case.objects.filter(id__in=AvocatCase.objects.filter(avocat=user).values('case_id'))
+        juge_cases = Case.objects.filter(id__in=JugeCase.objects.filter(juge=user).values('case_id'))
 
-        if AvocatCase.objects.filter(avocat=user).exists():
-            queryset = Case.objects.filter(id__in=AvocatCase.objects.filter(avocat=user).values('case_id'))
-        elif JugeCase.objects.filter(juge=user).exists():
-            queryset = Case.objects.filter(id__in=JugeCase.objects.filter(juge=user).values('case_id'))
-
-        # Ajouter les dossiers où l'utilisateur est parent1 ou parent2
-        parent_cases = Case.objects.filter(Q(parent1=user) | Q(parent2=user))
-        queryset = queryset | parent_cases
+        queryset = parent_cases | avocat_cases | juge_cases
 
         return queryset.distinct()
 
     def has_access_to_case(self, user, case):
-        # Vérifier si l'utilisateur a accès au dossier
-        return AvocatCase.objects.filter(avocat=user, case=case).exists() or \
-            JugeCase.objects.filter(juge=user, case=case).exists() or \
-            case.parent1 == user or \
-            case.parent2 == user
+        return ParentCase.objects.filter(parent=user, case=case).exists() or \
+               AvocatCase.objects.filter(avocat=user, case=case).exists() or \
+               JugeCase.objects.filter(juge=user, case=case).exists()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        context['can_create_draft'] = not Case.objects.filter(Q(parent1=user) | Q(parent2=user), draft=False).exists()
+
+        context['can_create_draft'] = not Case.objects.filter(parent_cases__parent=user, draft=False).exists()
+
         return context
 
 
@@ -110,30 +100,23 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         case_id = kwargs.get('case_id')
 
         if case_id:
-            # Vérifiez que le dossier avec cet ID existe
             self.case = get_object_or_404(Case, pk=case_id)
         else:
-            # Si case_id est requis mais non fourni, gérer le cas ici
             return self.handle_no_case_id()
 
-        # Assurez-vous que l'utilisateur a accès au dossier
         if not self.user_has_access_to_case(request.user, self.case):
             return self.handle_no_access()
 
-        # Appeler la méthode dispatch parent pour continuer le traitement
         return super().dispatch(request, *args, **kwargs)
 
     def handle_no_case_id(self):
-        # Gérer le cas où case_id est requis mais non fourni
         return HttpResponseNotFound("Case ID is required but was not provided.")
 
     def handle_no_access(self):
-        # Gérer le cas où l'utilisateur n'a pas accès au dossier
         return HttpResponseForbidden("You do not have permission to access this case.")
 
     def user_has_access_to_case(self, user, case):
-        # Exemple de vérification des permissions, à ajuster selon vos besoins
-        return case.parent1 == user or case.parent2 == user or user.role == "lawyer" or user.role == "judge" or user.role == "administrator" or (case.draft and case.parent1 == user)
+        return case.parent1 == user or case.parent2 == user or user.role in ["lawyer", "judge", "administrator"] or (case.draft and case.parent1 == user)
 
     def get_queryset(self):
         queryset = Document.objects.filter(case=self.case)
@@ -148,8 +131,8 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
                 start_month = (selected_quarter - 1) * 3 + 1
                 end_month = start_month + 2
 
-                start_date = datetime(selected_year, start_month, 1)
-                end_date = datetime(selected_year, end_month + 1, 1) if end_month < 12 else datetime(selected_year + 1, 1, 1)
+                start_date = timezone.datetime(selected_year, start_month, 1)
+                end_date = timezone.datetime(selected_year, end_month + 1, 1) if end_month < 12 else timezone.datetime(selected_year + 1, 1, 1)
 
                 queryset = queryset.filter(date__gte=start_date, date__lt=end_date)
             except (TypeError, ValueError):
@@ -158,8 +141,6 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['case_id'] = self.case.id
-        context['categories'] = Category.objects.all()
         case = self.case
         parent1 = case.parent1
         parent2 = case.parent2
@@ -168,64 +149,56 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         selected_year = self.request.GET.get('year')
         selected_quarter = self.request.GET.get('quarter')
 
-        # Récupérer le dernier montant d'indexation
-        latest_index_history = case.latest_index_history
+        latest_index_history = IndexHistory.objects.order_by('-created_at').first()
         contribution_amount = 0
         if latest_index_history:
             contribution_amount = latest_index_history.amount * case.number_of_children
 
         if selected_year and selected_quarter:
             try:
-                parent1_valid_payments = Document.objects.filter(
-                    case=case, user=parent1, category__type__isnull=False, status='validated', date__year=selected_year,
-                    date__quarter=selected_quarter
-                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-                parent2_valid_payments = Document.objects.filter(
-                    case=case, user=parent2, category__type__isnull=False, status='validated', date__year=selected_year,
-                    date__quarter=selected_quarter
-                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-
-                parent1_pending_payments = Document.objects.filter(
-                    case=case, user=parent1, category__type__isnull=False, status='pending', date__year=selected_year,
-                    date__quarter=selected_quarter
-                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-                parent2_pending_payments = Document.objects.filter(
-                    case=case, user=parent2, category__type__isnull=False, status='pending', date__year=selected_year,
-                    date__quarter=selected_quarter
-                ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+                parent1_valid_payments = self.get_payments(case, parent1, 'validated', selected_year, selected_quarter)
+                parent2_valid_payments = self.get_payments(case, parent2, 'validated', selected_year, selected_quarter)
+                parent1_pending_payments = self.get_payments(case, parent1, 'pending', selected_year, selected_quarter)
+                parent2_pending_payments = self.get_payments(case, parent2, 'pending', selected_year, selected_quarter)
             except (TypeError, ValueError):
                 parent1_valid_payments = []
                 parent2_valid_payments = []
                 parent1_pending_payments = []
                 parent2_pending_payments = []
         else:
-            parent1_valid_payments = Document.objects.filter(
-                case=case, user=parent1, category__type__isnull=False, status='validated'
-            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-            parent2_valid_payments = Document.objects.filter(
-                case=case, user=parent2, category__type__isnull=False, status='validated'
-            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+            parent1_valid_payments = self.get_payments(case, parent1, 'validated')
+            parent2_valid_payments = self.get_payments(case, parent2, 'validated')
+            parent1_pending_payments = self.get_payments(case, parent1, 'pending')
+            parent2_pending_payments = self.get_payments(case, parent2, 'pending')
 
-            parent1_pending_payments = Document.objects.filter(
-                case=case, user=parent1, category__type__isnull=False, status='pending'
-            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
-            parent2_pending_payments = Document.objects.filter(
-                case=case, user=parent2, category__type__isnull=False, status='pending'
-            ).values('category__type', 'category').annotate(total_amount=Sum('amount'))
+        context.update(self.build_context(case, parent1, parent2, parent1_valid_payments, parent2_valid_payments, parent1_pending_payments, parent2_pending_payments, contribution_amount))
 
-        parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
-                                       payment in parent1_valid_payments}
-        parent2_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for
-                                       payment in parent2_valid_payments}
-        parent1_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in
-                                parent1_pending_payments}
-        parent2_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in
-                                parent2_pending_payments}
+        payments_with_permissions = [{'payment': payment, 'can_delete': payment.user_can_delete(user)} for payment in self.get_queryset()]
+        context['payments_with_permissions'] = payments_with_permissions
+
+        return context
+
+    def get_payments(self, case, parent, status, year=None, quarter=None):
+        queryset = Document.objects.filter(case=case, user=parent, category__type__isnull=False, status=status)
+        if year and quarter:
+            queryset = queryset.filter(date__year=year, date__quarter=quarter)
+        return queryset.values('category__type', 'category').annotate(total_amount=Sum('amount'))
+
+    def build_context(self, case, parent1, parent2, parent1_valid_payments, parent2_valid_payments, parent1_pending_payments, parent2_pending_payments, contribution_amount):
+        parent1_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent1_valid_payments}
+        parent2_valid_payments_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent2_valid_payments}
+        parent1_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent1_pending_payments}
+        parent2_pending_dict = {(payment['category__type'], payment['category']): payment['total_amount'] for payment in parent2_pending_payments}
+
+        # Calculer les pourcentages à partir des ParentCase
+        parent_cases = case.parent_cases.all()
+        parent1_percentage = parent_cases.filter(parent=case.parent1).first().percentage if case.parent1 else 0
+        parent2_percentage = parent_cases.filter(parent=case.parent2).first().percentage if case.parent2 else 0
 
         categories = Category.objects.filter(type__isnull=False)
-
         categories_by_type = {}
         category_ids = []
+
         for category in categories:
             category_type_id = category.type_id
             parent1_amount = parent1_valid_payments_dict.get((category_type_id, category.id), 0)
@@ -257,22 +230,19 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
         difference = abs(parent1_total - parent2_total)
         in_favor_of = parent1 if parent1_total > parent2_total else parent2
 
-        payment_years = Document.objects.filter(case=self.case).dates('date', 'year')
+        payment_years = Document.objects.filter(case=case).dates('date', 'year')
         years = [year.year for year in payment_years]
 
-        # Obtenir les trimestres avec des paiements pour les années disponibles
         active_quarters = Document.objects.annotate(
             quarter=ExtractQuarter('date'),
             year=ExtractYear('date')
-        ).filter(case=self.case).values_list('year', 'quarter').distinct()
+        ).filter(case=case).values_list('year', 'quarter').distinct()
 
         active_quarters_per_year = {year: set() for year in years}
         for year, quarter in active_quarters:
             active_quarters_per_year[year].add(quarter)
 
-        print("quarter : " + str(active_quarters_per_year))
-
-        context.update({
+        return {
             'case': case,
             'parent1_user': parent1,
             'parent2_user': parent2,
@@ -283,25 +253,13 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
             'difference': difference,
             'in_favor_of': in_favor_of,
             'years': years,
-            'selected_year': selected_year,
-            'selected_quarter': selected_quarter,
             'category_ids': category_ids,
             'is_draft': case.draft,
             'contribution_amount': contribution_amount,
-            'parent1_percentage': case.parent1_percentage,
-            'parent2_percentage': case.parent2_percentage,
+            'parent1_percentage': parent1_percentage,
+            'parent2_percentage': parent2_percentage,
             'active_quarters_per_year': active_quarters_per_year,
-        })
-
-        payments_with_permissions = [
-            {
-                'payment': payment,
-                'can_delete': payment.user_can_delete(user)
-            } for payment in self.get_queryset()
-        ]
-        context['payments_with_permissions'] = payments_with_permissions
-
-        return context
+        }
 
 
 class CategoryPaymentsView(LoginRequiredMixin, ListView):
@@ -518,10 +476,10 @@ def submit_payment_document(request, case_id):
     user = request.user
     case = get_object_or_404(Case, id=case_id)
 
-    # Determine if the user is a parent or a lawyer
-    is_parent = Case.objects.filter(Q(parent1=user) | Q(parent2=user), id=case_id).exists()
+    # Determine if the user is a parent
+    is_parent = case.parent_cases.filter(parent=user).exists()
 
-    categories = Category.objects.order_by('type_id', 'name')
+    categories = Category.objects.order_by('type', 'name')
     grouped_categories = {}
     for category in categories:
         if category.type not in grouped_categories:
@@ -534,7 +492,7 @@ def submit_payment_document(request, case_id):
         else:
             form = PaymentDocumentForm(request.POST, request.FILES, parent_choices=get_parent_choices(case))
 
-        new_category_name = request.POST.get('new_category', '').strip()
+        new_category_name = request.POST.get('new_category_name', '').strip()
 
         if form.is_valid():
             payment_document = form.save(commit=False)
@@ -544,10 +502,13 @@ def submit_payment_document(request, case_id):
             if is_parent:
                 payment_document.user = user
             else:
-                parent_user_id = form.cleaned_data['parent']
-                payment_document.user = get_user_model().objects.get(id=parent_user_id)
+                parent_user_id = form.cleaned_data.get('parent')
+                if parent_user_id:
+                    payment_document.user = get_user_model().objects.get(id=parent_user_id)
+                else:
+                    # Handle case where parent_user_id is not provided or invalid
+                    payment_document.user = None
 
-            new_category_name = request.POST.get('new_category', '').strip()
             if new_category_name:
                 other_type, created = CategoryType.objects.get_or_create(name='Autre')
                 new_category, created = Category.objects.get_or_create(
@@ -634,22 +595,16 @@ def combine_drafts(request):
 # MAGISTRATE
 # ----------------------------------------------------------------------------------------------------------------------
 def get_parent_choices(case):
-    # Retrieve parent IDs from the case in question
-    parent1_id = case.parent1_id
-    parent2_id = case.parent2_id
+    # Retrieve parent cases from the case in question
+    parent_cases = case.parent_cases.all()
 
     # Initialize an empty list for choices
     choices = []
 
-    # Retrieve parent1's full name using ID
-    if parent1_id:
-        parent1 = get_user_model().objects.get(id=parent1_id)
-        choices.append((parent1.id, f"{parent1.first_name} {parent1.last_name}"))
-
-    # Check if parent2 exists, then retrieve parent2's full name using ID
-    if parent2_id:
-        parent2 = get_user_model().objects.get(id=parent2_id)
-        choices.append((parent2.id, f"{parent2.first_name} {parent2.last_name}"))
+    # Retrieve parent details and prepare choices
+    for parent_case in parent_cases:
+        parent = parent_case.parent
+        choices.append((parent.id, f"{parent.first_name} {parent.last_name}"))
 
     return choices
 
@@ -666,7 +621,15 @@ def create_case(request):
             parent1 = form.cleaned_data['parent1']
             parent2 = form.cleaned_data['parent2']
             # Check if a case with the same parent1 and parent2 already exists
-            existing_case = Case.objects.filter(parent1=parent1, parent2=parent2).exists() or Case.objects.filter(parent1=parent2, parent2=parent1).exists()
+            existing_case = Case.objects.filter(
+                parent_cases__parent=parent1
+            ).filter(
+                parent_cases__parent=parent2
+            ).exists() or Case.objects.filter(
+                parent_cases__parent=parent2
+            ).filter(
+                parent_cases__parent=parent1
+            ).exists()
 
             if parent1 == parent2:
                 messages.error(request, "Impossible de créer un dossier avec le même parent.")
@@ -686,12 +649,15 @@ def create_case(request):
                     case=case
                 )
 
+                # Create ParentCase entries
+                ParentCase.objects.create(case=case, parent=parent1, percentage=50)
+                if parent2:
+                    ParentCase.objects.create(case=case, parent=parent2, percentage=50)
+
                 # Redirect to a list of cases or other success page
                 return redirect('payments:list_case')
     else:
         form = CaseForm(initial={'parent1': request.user}, user=request.user)  # Initialiser avec l'utilisateur connecté par défaut
-        form.fields['parent1'].queryset = form.fields['parent1'].queryset
-        form.fields['parent2'].queryset = form.fields['parent2'].queryset
 
     return render(request, 'payments/create_case.html', {'form': form})
 
@@ -841,9 +807,20 @@ def convert_draft_case(request, case_id):
 @require_POST
 def update_percentages(request, case_id):
     case = get_object_or_404(Case, pk=case_id)
-    case.parent1_percentage = float(request.POST['parent1_percentage'])
-    case.parent2_percentage = float(request.POST['parent2_percentage'])
-    case.save()
+
+    # Mettez à jour les pourcentages des parents
+    parent1_percentage = float(request.POST.get('parent1_percentage', 0))
+    parent2_percentage = float(request.POST.get('parent2_percentage', 0))
+
+    # Mettez à jour les objets ParentCase associés
+    parent_cases = case.parent_cases.all().order_by('id')
+    if len(parent_cases) > 0:
+        parent_cases[0].percentage = parent1_percentage
+        parent_cases[0].save()
+    if len(parent_cases) > 1:
+        parent_cases[1].percentage = parent2_percentage
+        parent_cases[1].save()
+
     return redirect('payments:payment-history', case_id=case_id)
 
 

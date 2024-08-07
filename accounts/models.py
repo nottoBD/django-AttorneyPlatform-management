@@ -106,7 +106,6 @@ class User(AbstractUser, PermissionsMixin):
         self.profile_image = validate_image(self.profile_image) if self.profile_image else None
 
 
-
 class AvocatCase(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     avocat = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='assigned_parents', on_delete=models.CASCADE)
@@ -129,3 +128,16 @@ class JugeCase(models.Model):
 
     def __str__(self):
         return f"{self.juge.email} assigned to case {self.case.id}"
+
+
+class ParentCase(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    case = models.ForeignKey(get_case_model(), on_delete=models.CASCADE, related_name='parent_cases')
+    parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='parent_cases')
+    percentage = models.FloatField(default=50)
+
+    class Meta:
+        unique_together = (('parent', 'case'),)
+
+    def __str__(self):
+        return f"{self.parent} - {self.case} ({self.percentage}%)"
