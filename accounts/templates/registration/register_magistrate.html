@@ -1,0 +1,13 @@
+{% extends 'fExtra/base.html' %}
+
+{% load i18n crispy_forms_tags %}
+
+{% block title %}{% trans "Register Magistrate" %}{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    {{ form|crispy }}
+    <button type="submit" class="btn btn-outline-primary">{% trans "Register Magistrate" %}</button>
+</form>
+{% endblock %}
