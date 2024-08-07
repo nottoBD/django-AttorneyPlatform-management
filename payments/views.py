@@ -25,6 +25,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Sum, Q, F
 from django.db.models.functions import ExtractQuarter, ExtractYear
@@ -451,18 +452,21 @@ def add_child(request, case_id):
     case = get_object_or_404(Case, id=case_id)
 
     if request.method == 'POST':
-        form = ChildForm(request.POST, case_id=case.id)
+        form = ChildForm(request.POST, case_id=case_id)
         if form.is_valid():
             child = form.save(commit=False)
             child.case = case
             child.save()
-            return redirect('payments:child', case_id=case.id)
+
+            return redirect('payments:child', case_id=case_id)
+        else:
+            print(form.errors)
     else:
-        form = ChildForm()
+        form = ChildForm(case_id=case_id)
 
     children = case.children.all()
 
-    return render(request, 'payments/child.html', {'form': form, 'case': case, 'children': children})
+    return render(request, 'payments/child.html', {'form': form, 'case': case_id, 'children': children})
 
 
 @login_required
@@ -534,6 +538,21 @@ def submit_payment_document(request, case_id):
     }
 
     return render(request, 'payments/submit_payment_document.html', context)
+
+
+@login_required
+def delete_payment(request, payment_id, case_id, category_id):
+    payment = get_object_or_404(Document, id=payment_id)
+    case = get_object_or_404(Case, id=case_id)
+
+    if request.user == case.parent1 or request.user == case.parent2:
+        if request.user != payment.user:
+            raise PermissionDenied
+    elif not request.user.is_staff:
+        raise PermissionDenied
+
+    payment.delete()
+    return redirect('payments:category-payments', case_id=case_id, category_id=category_id)
 
 
 # PARENT
