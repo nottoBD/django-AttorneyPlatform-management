@@ -794,9 +794,10 @@ class DraftCaseListView(ListView):
     def get_queryset(self):
         user = self.request.user
         if user.role in ['administrator', 'lawyer']:
-            return Case.objects.filter(draft=True).order_by('parent1__username')
+            return Case.objects.filter(draft=True).order_by('parent_cases__parent__email')
         else:
             return Case.objects.none()
+
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.role not in ['administrator', 'lawyer']:
