@@ -107,8 +107,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                                 {% endif %}
                                             </td>
                                             <td style="text-align: center;" class="col-custom">
-                                                <a href="{% url 'payments:category-payments' case.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm">
-                                                    {% trans "View Details" %}
+                                                <a href="{% url 'payments:category-payments' case.id category_entry.category_id %}?year={{ selected_year }}&quarter={{ selected_quarter }}" class="btn btn-primary btn-sm" aria-label="{% trans "View Details" %}">
+                                                    <i class="bi bi-search"></i> <!-- Icône de loupe -->
                                                 </a>
                                             </td>
                                         </tr>

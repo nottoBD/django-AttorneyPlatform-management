@@ -31,7 +31,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <div class="card shadow-sm">
                 <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                     <h3 class="mb-0">{% trans "Liste des enfants" %}</h3>
-                    <a href="{% url 'payments:payment-history' case.id %}" class="btn btn-secondary">{% trans "Retour au dossier" %}</a>
+                    <a href="{% url 'payments:payment-history' case %}" class="btn btn-secondary">{% trans "Retour au dossier" %}</a>
                 </div>
                 <div class="card-body">
                     <table class="table table-bordered">
@@ -50,7 +50,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                     <td>{{ child.last_name }}</td>
                                     <td>{{ child.birth_date }}</td>
                                     <td>
-                                        <a href="{% url 'payments:delete_child' case.id child.id %}" class="btn btn-danger btn-sm">{% trans "Supprimer" %}</a>
+                                        <a href="{% url 'payments:delete_child' case child.id %}" class="btn btn-danger btn-sm delete-btn" data-child-id="{{ child.id }}">{% trans "Supprimer" %}</a>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -72,9 +72,35 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                         {{ form|crispy }}
                         <button type="submit" class="btn btn-primary btn-block mt-3">{% trans "Ajouter l'enfant" %}</button>
                     </form>
+                    {% if form.errors %}
+                        <div class="errors">
+                            {{ form.errors }}
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Ajout du script JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sélectionner tous les boutons de suppression
+    var deleteButtons = document.querySelectorAll('.delete-btn');
+
+    deleteButtons.forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            // Afficher une boîte de dialogue de confirmation
+            var confirmed = confirm("Êtes-vous sûr de vouloir supprimer cet enfant ?");
+
+            // Si l'utilisateur annule, empêcher la suppression
+            if (!confirmed) {
+                event.preventDefault();
+            }
+        });
+    });
+});
+</script>
+
 {% endblock %}
