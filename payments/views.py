@@ -28,7 +28,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Sum, Q, F
-from django.db.models.functions import ExtractQuarter, ExtractYear
+from django.db.models.functions import ExtractQuarter, ExtractYear, Abs
 from django.http import JsonResponse, HttpResponse, HttpResponseNotFound, HttpResponseForbidden, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
@@ -133,11 +133,22 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
                 end_month = start_month + 2
 
                 start_date = timezone.datetime(selected_year, start_month, 1)
-                end_date = timezone.datetime(selected_year, end_month + 1, 1) if end_month < 12 else timezone.datetime(selected_year + 1, 1, 1)
+                end_date = timezone.datetime(selected_year, end_month + 1, 1) if end_month < 12 else timezone.datetime(
+                    selected_year + 1, 1, 1)
 
                 queryset = queryset.filter(date__gte=start_date, date__lt=end_date)
             except (TypeError, ValueError):
                 queryset = Document.objects.filter(case=self.case)
+
+        elif selected_year:
+            # Filtrer par année seulement si le trimestre n'est pas sélectionné
+            try:
+                selected_year = int(selected_year)
+                queryset = queryset.filter(date__year=selected_year)
+            except (TypeError, ValueError):
+                queryset = Document.objects.filter(case=self.case)
+
+        # Si aucun filtre n'est défini, tous les documents pour le case sont retournés
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -176,6 +187,8 @@ class PaymentHistoryView(LoginRequiredMixin, ListView):
 
         payments_with_permissions = [{'payment': payment, 'can_delete': payment.user_can_delete(user)} for payment in self.get_queryset()]
         context['payments_with_permissions'] = payments_with_permissions
+        context['selected_year'] = selected_year
+        context['selected_quarter'] = selected_quarter
 
         return context
 
@@ -332,8 +345,8 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
         case = get_object_or_404(Case, id=case_id)
 
         # Obtenir les paramètres de la requête GET
-        selected_year = request.GET.get('year', None)
-        selected_quarter = request.GET.get('quarter', None)
+        selected_year = request.GET.get('year')
+        selected_quarter = request.GET.get('quarter')
 
         # Vérifier et convertir les paramètres en entiers si valides
         if selected_year and selected_year.isdigit():
@@ -355,21 +368,89 @@ class PaymentHistoryPDFView(LoginRequiredMixin, View):
         # Appeler dispatch pour initialiser la vue correctement
         payment_history_view.dispatch(request, *args, **kwargs)
 
-        # Obtenir object_list en appelant get_queryset()
-        payment_history_view.object_list = payment_history_view.get_queryset()
+        # Obtenir le queryset basé sur les filtres ou récupérer tous les paiements
+        if selected_year and selected_quarter:
+            payment_history_view.object_list = payment_history_view.get_queryset().filter(
+                date__year=selected_year,
+                date__quarter=selected_quarter
+            )
+        elif selected_year:
+            payment_history_view.object_list = payment_history_view.get_queryset().filter(
+                date__year=selected_year
+            )
+        else:
+            # S'il n'y a pas de filtre, récupérer tous les paiements
+            payment_history_view.object_list = payment_history_view.get_queryset()
 
         # Obtenir le contexte de la vue PaymentHistoryView
         context = payment_history_view.get_context_data()
 
         # Déterminer le nom du fichier PDF
-        if selected_year is None or selected_quarter is None:
+        if selected_year is None:
             context['selected_year'] = datetime.now().year
-            context['selected_quarter'] = None
-            filename = f'PaymentHistory_{context["selected_year"]}.pdf'
         else:
             context['selected_year'] = selected_year
-            context['selected_quarter'] = selected_quarter
+
+        context['selected_quarter'] = selected_quarter
+
+        if selected_quarter is None:
+            filename = f'PaymentHistory_{context["selected_year"]}.pdf'
+        else:
             filename = f'PaymentHistory_{context["selected_year"]}_Q{context["selected_quarter"]}.pdf'
+
+        # Récupérer les pourcentages des parents
+        parent_cases = ParentCase.objects.filter(case=case)
+        parent1_percentage = parent_cases.filter(parent=case.parent1).first().percentage if case.parent1 else 0
+        parent2_percentage = parent_cases.filter(parent=case.parent2).first().percentage if case.parent2 else 0
+
+        # Calcul des totaux pour chaque parent
+        parent1_total = 0
+        parent2_total = 0
+
+        for type_id, type_data in context['categories_by_type'].items():
+            for category_entry in type_data['categories']:
+                parent1_total += float(category_entry['parent1_amount'])
+                parent2_total += float(category_entry['parent2_amount'])
+
+        # Calculer le montant de contribution basé sur l'indexation et le nombre d'enfants
+        index_history = IndexHistory.objects.filter(year=selected_year).first()
+
+        if not index_history:
+            # Si aucune entrée avec l'année exacte, rechercher l'année la plus proche
+            index_history = IndexHistory.objects.annotate(
+                diff=Abs(F('year') - selected_year)
+            ).order_by('diff').first()
+
+        if index_history:
+            contribution_amount = index_history.amount * case.number_of_children
+        else:
+            contribution_amount = 0
+
+        # Calcul des montants dus
+        total_amount = float(parent1_total + parent2_total)
+        parent1_amount_due = (float(parent1_percentage) / 100) * total_amount
+        parent2_amount_due = (float(parent2_percentage) / 100) * total_amount
+
+        # Calcul de la différence
+        difference = ((parent1_total - parent1_amount_due) - (parent2_total - parent2_amount_due)) / 2
+        if difference > 0:
+            in_favor_of = case.parent1
+        elif difference < 0:
+            in_favor_of = case.parent2
+            difference = difference * -1
+        else:
+            in_favor_of = None
+
+        # Ajouter les résultats au contexte
+        context.update({
+            'parent1_total': parent1_total,
+            'parent2_total': parent2_total,
+            'parent1_amount_due': parent1_amount_due,
+            'parent2_amount_due': parent2_amount_due,
+            'difference': difference,
+            'in_favor_of': in_favor_of,
+            'contribution_amount': contribution_amount  # Montant calculé basé sur IndexHistory et nombre d'enfants
+        })
 
         # Rendre le template avec les données de contexte
         html_string = render_to_string('payments/pdf_template.html', context)

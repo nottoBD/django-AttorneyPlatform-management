@@ -70,9 +70,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                                         </a></li>
                                         <li><hr class="dropdown-divider"></li>
                                     {% endif %}
-                                    <li><a class="dropdown-item" href="{% url 'payments:download_pdf' case_id=case.id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
-                                        {% trans "Télécharger en PDF" %}
-                                    </a></li>
+                                   <li>
+                                        <a class="dropdown-item" href="{% url 'payments:download_pdf' case_id=case.id %}?year={{ selected_year }}&quarter={{ selected_quarter }}">
+                                            {% trans "Télécharger en PDF" %}
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -390,6 +392,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     if (yearInput && quarterInput) {
                         yearInput.value = year;
                         quarterInput.value = quarter;
+
 
                         console.log('Année sélectionnée :', year);
                         console.log('Trimestre sélectionné :', quarter);

@@ -11,8 +11,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
@@ -26,6 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
+        .empty-row { height: 20px; }
     </style>
 </head>
 <body>
@@ -65,20 +65,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <tr>
                 <th>{% trans "Total pour" %} {{ parent1_user.first_name }} {{ parent1_user.last_name }}</th>
                 <th>{{ parent1_total }} €</th>
+                <th>{% trans "Pourcentage :" %} {{ parent1_percentage }} %</th>
             </tr>
             <tr>
                 <th>{% trans "Total pour" %} {{ parent2_user.first_name }} {{ parent2_user.last_name }}</th>
                 <th>{{ parent2_total }} €</th>
+                <th>{% trans "Pourcentage :" %} {{ parent2_percentage }} %</th>
             </tr>
             <tr>
                 <th>{% trans "Balance" %}</th>
-                <th>
+                <th colspan="2">
                     {% if difference != 0 %}
                         {{ difference }} € {% trans "en faveur de" %} {{ in_favor_of.get_full_name }}.
                     {% else %}
                         {% trans "Montant équilibré" %}.
                     {% endif %}
                 </th>
+            </tr>
+            <tr class="empty-row">
+                <td colspan="2"></td>
+            </tr>
+            <tr>
+                <th>{% trans "Montant de la contribution alimentaire" %}</th>
+                <th>{{ contribution_amount }} €</th>
             </tr>
         </thead>
     </table>
