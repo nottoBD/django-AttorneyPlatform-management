@@ -35,38 +35,40 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
     <div class="container-fluid">
         <div class="row">
-            <!-- Administrators List -->
-            <div class="col-md-12">
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h2 class="card-title">{% trans "Administrators" %}</h2>
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>{% trans "Last Name" %}</th>
-                                    <th>{% trans "First Name" %}</th>
-                                    <th>{% trans "Email" %}</th>
-                                    <th>{% trans "Role" %}</th>
-                                </tr>
-                                </thead>
-                                <tbody class="administrators-list">
-                                {% for admin in administrators %}
-                                    <tr class="administrator-item" data-user-id="{{ admin.id }}">
-                                        <td><img src="{{ admin.profile_image_url }}" alt="{{ admin.first_name }} {{ admin.last_name }}" width="30" height="30" class="rounded-circle"></td>
-                                        <td>{{ admin.last_name }}</td>
-                                        <td>{{ admin.first_name }}</td>
-                                        <td>{{ admin.email }}</td>
-                                        <td>{{ admin.role }}</td>
+            {% if request.user.role == "administrator" %}
+                <!-- Administrators List -->
+                <div class="col-md-12">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h2 class="card-title">{% trans "Administrators" %}</h2>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>{% trans "Last Name" %}</th>
+                                        <th>{% trans "First Name" %}</th>
+                                        <th>{% trans "Email" %}</th>
+                                        <th>{% trans "Role" %}</th>
                                     </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody class="administrators-list">
+                                    {% for admin in administrators %}
+                                        <tr class="administrator-item" data-user-id="{{ admin.id }}">
+                                            <td><img src="{{ admin.profile_image_url }}" alt="{{ admin.first_name }} {{ admin.last_name }}" width="30" height="30" class="rounded-circle"></td>
+                                            <td>{{ admin.last_name }}</td>
+                                            <td>{{ admin.first_name }}</td>
+                                            <td>{{ admin.email }}</td>
+                                            <td>{{ admin.role }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            {% endif %}
 
             <!-- Magistrates List -->
             <div class="col-md-12">

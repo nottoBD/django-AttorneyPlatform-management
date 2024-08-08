@@ -154,6 +154,8 @@ class UserUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         else:
             messages.error(self.request, _("You are not assigned to this case."))
             return redirect('accounts:user_update', pk=user_to_update.pk)
+
+
 class UserListView(LoginRequiredMixin, ListView):
     model = User
     template_name = 'accounts/user_list.html'
@@ -198,10 +200,10 @@ class UserListView(LoginRequiredMixin, ListView):
                     'last_name': parent.last_name,
                     'email': parent.email,
                     'avocats_assigned': [
-                        avocat.avocat.last_name for avocat in AvocatCase.objects.filter(case__in=list(parent.cases_as_parent1.all()) + list(parent.cases_as_parent2.all())).select_related('avocat')
+                        avocat.avocat.last_name for avocat in AvocatCase.objects.filter(case__in=parent.parent_cases.values_list('case', flat=True)).select_related('avocat')
                     ],
                     'juges_assigned': [
-                        juge.juge.last_name for juge in JugeCase.objects.filter(case__in=list(parent.cases_as_parent1.all()) + list(parent.cases_as_parent2.all())).select_related('juge')
+                        juge.juge.last_name for juge in JugeCase.objects.filter(case__in=parent.parent_cases.values_list('case', flat=True)).select_related('juge')
                     ]
                 } for parent in context['parents_filtered']]
 
@@ -218,19 +220,17 @@ class UserListView(LoginRequiredMixin, ListView):
 
         try:
             # Query for administrators
-            administrators_query = User.objects.filter(
-                Q(is_superuser=True) | Q(role='administrator')
-            )
+            administrators_query = User.objects.filter(role='administrator')
 
             # Query for magistrates excluding administrators
             magistrates_query = User.objects.filter(
-                (Q(role='lawyer') | Q(role='judge')) & ~Q(id__in=administrators_query.values_list('id', flat=True))
-            ).annotate(
+                Q(role='lawyer') | Q(role='judge')
+            ).exclude(id__in=administrators_query.values_list('id', flat=True)).annotate(
                 cases_count=Count('assigned_parents') + Count('assigned_parents_judge')
             )
 
             # Query for parents
-            parents_query = User.objects.filter(role='parent').prefetch_related('cases_as_parent1', 'cases_as_parent2')
+            parents_query = User.objects.filter(role='parent').prefetch_related('parent_cases')
 
             if is_active is not None:
                 administrators_query = administrators_query.filter(is_active=is_active)
@@ -242,13 +242,11 @@ class UserListView(LoginRequiredMixin, ListView):
 
             if self.request.user.role == 'lawyer':
                 context['parents_filtered'] = list(parents_query.filter(
-                    Q(cases_as_parent1__assigned_lawyers__avocat=self.request.user) |
-                    Q(cases_as_parent2__assigned_lawyers__avocat=self.request.user)
+                    Q(parent_cases__case__assigned_lawyers__avocat=self.request.user)
                 ).distinct())
             elif self.request.user.role == 'judge':
                 context['parents_filtered'] = list(parents_query.filter(
-                    Q(cases_as_parent1__assigned_judges__juge=self.request.user) |
-                    Q(cases_as_parent2__assigned_judges__juge=self.request.user)
+                    Q(parent_cases__case__assigned_judges__juge=self.request.user)
                 ).distinct())
             else:
                 context['parents_filtered'] = list(parents_query)
@@ -265,7 +263,9 @@ class UserListView(LoginRequiredMixin, ListView):
         if user.profile_image and hasattr(user.profile_image, 'url'):
             return self.request.build_absolute_uri(user.profile_image.url)
         else:
-            return self.request.build_absolute_uri(settings.MEDIA_URL + 'profile_images/default.jpg')
+            return self.request.build_absolute_uri(settings.MEDIA_URL + 'profile_images/default.png')
+
+
 @login_required
 @permission_required('accounts.add_user', raise_exception=True)
 @user_passes_test(lambda u: u.is_superuser, login_url='/login/')
@@ -279,6 +279,7 @@ def register_jurist(request):
     else:
         form = JusticeRegistrationForm()
     return render(request, 'registration/register_jurist.html', {'form': form})
+
 
 def register(request):
     if request.method == 'POST':
